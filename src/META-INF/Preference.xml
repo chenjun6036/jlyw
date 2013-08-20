@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="GBK"?>
+
+<root> 
+  <Theta> 
+    <property name="theta1">1.0</property>  
+    <property name="theta2">0.5</property>  
+    <property name="theta3">1.0</property> 
+  </Theta>  
+  <LevelPer> 
+    <property name="level1">0.05</property>  
+    <property name="level2">0.05</property>  
+    <property name="level3">0.05</property>  
+    <property name="level4">0.05</property>  
+    <property name="level5">0.05</property>  
+    <property name="level6">0.05</property>  
+    <property name="level7">0.7</property> 
+  </LevelPer> 
+</root>

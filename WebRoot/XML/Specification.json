@@ -1,0 +1,3 @@
+﻿[{"attribute":"SpecificationCode","typeClass":"java.lang.String","desc":"编号"},
+{"attribute":"NameCn","typeClass":"java.lang.String","desc":"名称（中文）"}
+]

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="GB2312"?>
+<Config>
+    <!-- unprotectedurl 不需要验证Session（是否已登录）的URL配置文件； jsp存放html、jsp等相关文件，servlet存放.do的路径 -->
+    <!-- url不带参数，则表示该链接无论带什么参数均为不受保护的资源 -->
+   <unvalidatedurls-jsp>
+	    <unvalidatedurl url="404.htm"/>
+	    <unvalidatedurl url="500.htm"/>
+	    <unvalidatedurl url="noPrivilege.htm"/>
+	    
+	    <unvalidatedurl url="index.jsp"/>
+	    <unvalidatedurl url="index/index.jsp"/>
+	    <unvalidatedurl url="Common/Main.htm"/>
+	    <unvalidatedurl url="Common/Title.jsp"/>
+   </unvalidatedurls-jsp>
+   
+   <unvalidatedurls-servlet>
+   		<unvalidatedurl url="servlet/UserServlet.do?method=4"/>
+   		<unvalidatedurl url="servlet/UserServlet.do?method=5"/>
+   		<unvalidatedurl url="HeartBeatServlet.do"/>
+   		<unvalidatedurl url="FileServlet.do"></unvalidatedurl>
+   </unvalidatedurls-servlet>
+</Config>

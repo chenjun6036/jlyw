@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<system-config>
+	<file-server>
+		<mongodb-host>192.168.0.2</mongodb-host>
+		<mongodb-port>27017</mongodb-port>
+		<mongodb-dbname>czjl</mongodb-dbname>
+		<mongodb-poolsize>200</mongodb-poolsize>
+		<bucket-original-record>originalrecord</bucket-original-record>
+		<bucket-certificate>certificate</bucket-certificate>
+		<bucket-template>template</bucket-template>
+		<bucket-attachment>attachment</bucket-attachment>
+		<bucket-sharing>sharing</bucket-sharing>
+		<bucket-others>others</bucket-others>
+		
+	</file-server>
+	
+	<pdfconverter-server-port>8100</pdfconverter-server-port>
+	
+	<OverdueThreSholdShort>15</OverdueThreSholdShort>
+	<OverdueThresholdLong>30</OverdueThresholdLong>
+</system-config>

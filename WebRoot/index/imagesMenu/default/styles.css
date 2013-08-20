@@ -1,0 +1,39 @@
+﻿
+/* 对Button、TextBox等XHTML基本元素进行设定 */
+@import "reset/reset.css";
+
+/* 表示不同状态的红绿黄灰球 */
+@import "state/styles.css";
+
+/* table使用的样式单iCubed */
+@import "TableDesigns/iCubed/iqcontent.css";
+
+/* 边框 */
+@import "border/border.css";
+
+/*jquery.datePicker*/
+@import "JQueryDatePicker/ui.datepicker.css";
+
+/*JQueryTreeview*/
+@import "JQueryTreeview/jquery.treeview.css";
+
+/* 产品使用的图标 */
+@import "part/styles.css";
+
+/* 组织机构使用的图标 */
+@import "organization/styles.css";
+
+/* 自定义样式单，主要用于页面布局 */
+@import  "custom/custom.css";
+
+/*定义几个回归分析做背景的css*/
+@import "statistic/styles.css";
+
+/*提示的界面*/
+@import "JqueryCluetip/jquery.cluetip.css";
+
+/*ui tabs*/
+@import "ui/flora.tabs.css";
+
+/* jqModal */
+@import "jqModal/jqModal.css";

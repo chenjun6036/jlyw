@@ -1,0 +1,4 @@
+﻿{"total":1,"rows":[
+	{"Id":1,"SpecificationCode":"1111","NameCn":"量杯","NameEn":"Measuringcup","Brief":"LB","Type":"器具","InCharge":"是","Status":"正常","LocaleCode":"123456","IssueDate":"2012/1/2","EffectiveDate":"2012/2/2","RepealDate":"2013/1/2","OldSpecification":"量杯旧规程","Copy":"...","MethodConfirm":"..."},
+	{"Id":2,"SpecificationCode":"1111","NameCn":"量杯","NameEn":"Measuringcup","Brief":"LB","Type":"器具","InCharge":"是","Status":"正常","LocaleCode":"123456","IssueDate":"2012/1/2","EffectiveDate":"2012/2/2","RepealDate":"2013/1/2","OldSpecification":"量杯旧规程","Copy":"...","MethodConfirm":"..."}
+]}

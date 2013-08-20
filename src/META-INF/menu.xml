@@ -1,0 +1,645 @@
+<?xml version='1.0' encoding='GBK'?>
+<tree-menu-nodes>
+	<node text="首页">
+		<attributes url="/jlyw/index/index.jsp"/>
+	</node>
+	
+	<node text="系统管理" state="closed">
+		<children>
+			
+			<node text="用户管理" state="closed">
+				<children>
+					<node text="角色分配">
+						<attributes url="/jlyw/UserManage/GrantRole.jsp"/>
+					</node>
+					<node text="密码重置">
+						<attributes url="/jlyw/UserManage/ResetPassword.jsp"/>
+					</node>
+					<node text="登录设置">
+						<attributes url="/jlyw/BaseData/EmployeeRecord/LoginConfig.jsp"/>
+					</node>
+					<node text="初始化软件狗">
+						<attributes url="/jlyw/Dongle/init.jsp"/>
+					</node>
+				</children>
+			</node>	
+			
+			<node text="角色管理" state="closed">
+				<children>
+					<node text="新建角色">
+						<attributes url="/jlyw/RoleManage/newRole.jsp"/>
+					</node>
+					<node text="角色查询">
+						<attributes url="/jlyw/RoleManage/SearchRole.jsp"/>
+					</node>
+					<node text="角色分配">
+						<attributes url="/jlyw/RoleManage/MultiGrantRole.jsp"/>
+					</node>
+					<node text="角色授权">
+						<attributes url="/jlyw/RoleManage/GrantPrivilege.jsp"/>
+					</node>
+				</children>
+			</node>	
+			
+			<node text="权限管理" state="closed">
+				<children>
+					<node text="新建权限">
+						<attributes url="/jlyw/PrivilegeManage/AddPrivilege.jsp"/>
+					</node>
+					<node text="权限查询">
+						<attributes url="/jlyw/PrivilegeManage/SearchPrivilege.jsp"/>
+					</node>
+					<node text="给角色分配权限">
+						<attributes url="/jlyw/PrivilegeManage/MultiGrantPrivilege.jsp"/>
+					</node>
+				</children>
+			</node>	
+			
+			<node text="系统资源管理" state="closed">
+				<children>
+					<node text="新建系统资源">
+						<attributes url="/jlyw/ResourcesManage/AddResources.jsp"/>
+					</node>
+					<node text="系统资源管理">
+						<attributes url="/jlyw/ResourcesManage/SearchResources.jsp"/>
+					</node>
+				</children>
+			</node>	
+			<node text="系统运行参数配置">
+				<attributes url="/jlyw/SystemManage/SysConfig.jsp"/>
+			</node>
+															
+		</children>
+	</node>
+
+	
+	<node text="业务管理" state="open">
+		<children>
+			<node text="收发管理" state="closed">
+				<children>
+					<node text="新建委托单">
+						<attributes url="/jlyw/SFGL/wtd/CommissionSheet.jsp"/>
+					</node>
+					<node text="预留委托单">
+						<attributes url="/jlyw/SFGL/wtd/YLCommissionSheet.jsp"/>
+					</node>
+					<node text="预留委托单修改">
+						<attributes url="/jlyw/SFGL/wtd/YLCommissionSheetUpdate.jsp"/>
+					</node>
+					<node text="录入现场委托单">
+						<attributes url="/jlyw/SFGL/wtd/LocaleCommissionSheet.jsp"/>
+					</node>
+					<node text="查询委托单" iconCls="icon-search">
+						<attributes url="/jlyw/SFGL/wtd/CommissionSheetCX.jsp"/>
+					</node>
+					<node text="补打委托单">
+						<attributes url="/jlyw/SFGL/wtd/CommissionSheetBD.jsp"/>
+					</node>
+					<node text="完工确认列表">
+						<attributes url="/jlyw/SFGL/wtd/CXCommissionSheet.jsp"/>
+					</node>
+					
+					<node text="客户取样">
+						<attributes url="/jlyw/TaskManage/ReceiveConfirm.jsp"/>
+					</node>
+					<node text="委托单修改备注、上传附件">
+						<attributes url="/jlyw/SFGL/wtd/XGCommissionSheet.jsp"/>
+					</node>
+					<node text="注销委托单">
+						<attributes url="/jlyw/SFGL/wtd/ZXCommissionSheet.jsp"/>
+					</node>
+					<node text="委托单工位挡回">
+						<attributes url="/jlyw/SFGL/wtd/DHCommissionSheet.jsp"/>
+					</node>
+				</children>
+			</node>	
+			
+			<node text="任务管理" state="closed">
+				<children>
+				   
+					<node text="任务分配">
+						<attributes url="/jlyw/TaskManage/TaskAllot.jsp"/>
+					</node>
+					<node text="我未完成的检验任务">
+						<attributes url="/jlyw/TaskManage/TaskTime.jsp"/>
+					</node>
+					<node text="检定员核定任务列表">
+						<attributes url="/jlyw/TaskManage/WorkStaffVerifyTask.jsp"/>
+					</node>
+					<node text="核验任务列表">
+						<attributes url="/jlyw/TaskManage/VerifyTask.jsp"/>
+					</node>
+					<node text="代办检验">
+						<attributes url="/jlyw/TaskManage/ComSheetInspectByCode.jsp"/>
+					</node>
+					<node text="下载证书Word文件">
+						<attributes url="/jlyw/TaskManage/DownloadCertificateDoc.jsp"/>
+					</node>
+					<node text="证书授权签字" state="closed">
+						<children>
+							<node text="我的授权签字任务列表">
+								<attributes url="/jlyw/TaskManage/AuthorizeTask.jsp"/>
+							</node>
+							<node text="代办签字">
+								<attributes url="/jlyw/TaskManage/AuthorizeApproveByCode.jsp"/>
+							</node>
+						</children>
+					</node>
+					<node text="现场业务管理" state="closed">
+						<children>
+							<node text="现场业务管理">
+								<attributes url="/jlyw/TaskManage/SearchLocaleMission.jsp"/>
+							</node>
+							
+						</children>
+					</node>
+					
+					<node text="车辆调度管理" state="closed">
+						<children>
+							<node text="车辆调度安排">
+								<attributes url="/jlyw/TaskManage/VehicleSchedule.jsp"/>
+							</node>
+							<node text="车辆任务查询">
+								<attributes url="/jlyw/TaskManage/VehicleMissionSearch.jsp"/>
+							</node>
+						</children>
+					</node>
+					
+					<node text="任务延期管理" state="closed">
+						<children>
+							<node text="延期审批列表">
+								<attributes url="/jlyw/TaskManage/OverdueTask.jsp"/>
+							</node>
+							<node text="延期申请">
+								<attributes url="/jlyw/TaskManage/OverdueApply.jsp"/>
+							</node>
+						</children>
+					</node>
+					
+					<node text="退样管理" state="closed">
+						<children>
+							<node text="退样审批列表">
+								<attributes url="/jlyw/TaskManage/WithdrawTask.jsp"/>
+							</node>
+							<node text="退样申请">
+								<attributes url="/jlyw/TaskManage/WithdrawApply.jsp"/>
+							</node>
+						</children>
+					</node>
+					
+					<node text="重新编制证书管理" state="closed">
+						<children>
+							<node text="新增任务">
+								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateApply.jsp"/>
+							</node>
+							<node text="我未审查的任务列表">
+								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateApproveTask.jsp"/>
+							</node>
+							<node text="我未完成的任务列表">
+								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateTask.jsp"/>
+							</node>
+							
+						</children>
+					</node>
+			
+					<node text="报价单管理" state="closed">
+						<children>
+							<node text="新增报价单">
+								<attributes url="/jlyw/FeeManage/Quotation.jsp"/>
+							</node>
+							<node text="报价单管理">
+								<attributes url="/jlyw/FeeManage/QuotationCX.jsp"/>
+							</node>
+						</children>
+					</node>
+				</children>
+			</node>	
+			
+			<node text="转包管理" state="closed">
+				<children>
+					<node text="转包业务查询">
+						<attributes url="/jlyw/ContractorManage/ContractorBusinessCX.jsp"/>
+					</node>
+					<node text="转包业务管理">
+						<attributes url="/jlyw/ContractorManage/ContractorBusiness.jsp"/>
+					</node>
+					
+					<node text="转包方信息管理" state="closed">
+						<children>
+							<node text="增加转包方信息">
+								<attributes url="/jlyw/ContractorManage/ContractorInfo.jsp"/>
+							</node>
+							<node text="转包方信息管理">
+								<attributes url="/jlyw/ContractorManage/SearchContractorInfo.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+				</children>
+			</node>	
+			
+			<node text="模板文件管理" state="closed">
+				<children>
+					<node text="原始记录模板文件管理">
+						<attributes url="/jlyw/BaseData/Appliance/StandardName.jsp"/>
+					</node>
+					<node text="证书模板文件管理">
+						<attributes url="/jlyw/BaseData/Template/CertificateTemplate.jsp"/>
+					</node>
+					<node text="模板配置文件（XML文件）编制" state="closed">
+						<children>
+							<node text="原始记录XML文件编制">
+								<attributes url="/jlyw/XML/OriginalRecordXML.jsp"/>
+							</node>
+							<node text="证书XML文件编制">
+								<attributes url="/jlyw/XML/CertificateXML.jsp"/>
+							</node>
+						</children>
+					</node>
+				</children>
+			</node>
+			
+			<node text="费用管理" state="closed">
+				<children>
+					
+					<node text="转包费/技术服务费录入">
+						<attributes url="/jlyw/TaskManage/FeeAssignWithoutCertificate.jsp"/>
+					</node>
+					<node text="证书费用修改">
+						<attributes url="/jlyw/FeeManage/CertificateFeeUpdate.jsp"/>
+					</node>
+					<node text="校准证书费用修改">
+						<attributes url="/jlyw/FeeManage/JZCertificateFeeUpdate.jsp"/>
+					</node>
+					<node text="出车费用分配">
+						<attributes url="/jlyw/FeeManage/DrivingVehicleFeeAssign.jsp"/>
+					</node>
+					<node text="生成费用清单">
+						<attributes url="/jlyw/FeeManage/GenerateDetailList.jsp"/>
+					</node>
+					<node text="账户管理">
+						<attributes url="/jlyw/FeeManage/AccountManage.jsp"/>
+					</node>
+					<node text="打印费用清单">
+						<attributes url="/jlyw/FeeManage/PrintFeeList.jsp"/>
+					</node>
+					
+					<node text="结账管理">
+						<attributes url="/jlyw/FeeManage/Checkout2.jsp"/>
+					</node>
+					
+					<node text="折扣申请管理" state="closed">
+						<children>
+							<node text="折扣审批列表">
+								<attributes url="/jlyw/FeeManage/DiscountTask.jsp"/>
+							</node>
+							
+							<node text="折扣申请(委托单)">
+								<attributes url="/jlyw/FeeManage/DiscountApply.jsp"/>
+							</node>
+						</children>
+					</node>
+					
+				</children>
+			</node>	
+		
+			<node text="基础数据管理" state="closed">
+				<children>
+					<node text="强检通知单管理">
+						<attributes url="/jlyw/BaseData/QJTZ/SearchQJTZ.jsp"/>
+					</node>
+					<node text="原因管理">
+						<attributes url="/jlyw/ReasonManage/ReasonSearch.jsp"/>
+					</node>
+					<node text="机构信息管理">
+						<attributes url="/jlyw/BaseData/Address/Address.jsp"/>
+					</node>
+					<node text="地区管理">
+						<attributes url="/jlyw/BaseData/Region/Region.jsp"/>
+					</node>	
+					<node text="基础信息管理">
+						<attributes url="/jlyw/BaseData/BaseType/BaseType.jsp"/>
+					</node>	
+					<node text="委托单位管理" state="closed">
+						<children>
+							<node text="新建委托单位">
+								<attributes url="/jlyw/BaseData/wtUnit/Customer.jsp"/>
+							</node>
+							<node text="委托单位信息管理">
+								<attributes url="/jlyw/BaseData/wtUnit/CustomerCX.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="标准器具管理" state="closed">
+						<children>
+							<node text="新建标准器具">
+								<attributes url="/jlyw/BaseData/bzAppliance/bzAppliance.jsp"/>
+							</node>
+							<node text="标准器具信息管理">
+								<attributes url="/jlyw/BaseData/bzAppliance/bzApplianceCX.jsp"/>
+							</node>
+							<node text="查询所有量值溯源记录">
+								<attributes url="/jlyw/BaseData/bzAppliance/TestLogCX.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="受检器具管理" state="closed">
+						<children>
+							<node text="受检器具分类管理">
+								<attributes url="/jlyw/BaseData/Appliance/ApplianceClassifi.jsp"/>
+							</node>
+							<node text="器具标准名信息管理">
+								<attributes url="/jlyw/BaseData/Appliance/StandardName.jsp"/>
+							</node>
+							<node text="新建受检器具">
+								<attributes url="/jlyw/BaseData/Appliance/Appliance.jsp"/>
+							</node>
+							<node text="受检器具信息管理">
+								<attributes url="/jlyw/BaseData/Appliance/ApplianceCX.jsp"/>
+							</node>
+							<node text="标准项目的关系管理">
+								<attributes url="/jlyw/BaseData/Appliance/Relationship.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="技术规范管理" state="closed">
+						<children>
+							<node text="新建技术规范">
+								<attributes url="/jlyw/BaseData/Specification/Specification.jsp"/>
+							</node>
+							<node text="技术规范信息管理">
+								<attributes url="/jlyw/BaseData/Specification/SpecificationCX.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="计量标准管理" state="closed">
+						<children>
+							<node text="新建计量标准">
+								<attributes url="/jlyw/BaseData/Standard/Standard.jsp"/>
+							</node>
+							<node text="计量标准信息管理">
+								<attributes url="/jlyw/BaseData/Standard/StandardCX.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="员工档案管理" state="closed">
+						<children>
+							<node text="新建员工">
+								<attributes url="/jlyw/BaseData/EmployeeRecord/EmployeeRecord.jsp"/>
+							</node>
+							<node text="员工基本信息管理">
+								<attributes url="/jlyw/BaseData/EmployeeRecord/EmployeeRecordCX.jsp"/>
+							</node>
+							<node text="检验人员资质管理">
+								<attributes url="/jlyw/BaseData/EmployeeRecord/EmpQualification.jsp"/>
+							</node>
+						</children>
+					</node>	
+					<node text="协议管理" state="closed">
+						<children>
+							<node text="新建协议">
+								<attributes url="/jlyw/BaseData/Deal/Deal.jsp"/>
+							</node>
+							<node text="协议管理">
+								<attributes url="/jlyw/BaseData/Deal/DealCX.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="车辆信息管理" state="closed">
+						<children>
+							<node text="新建车辆">
+								<attributes url="/jlyw/BaseData/Vehicle/Vehicle.jsp"/>
+							</node>
+							<node text="车辆信息管理">
+								<attributes url="/jlyw/BaseData/Vehicle/VehicleCX.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="项目组信息管理" state="closed">
+						<children>
+							<node text="新建项目组">
+								<attributes url="/jlyw/BaseData/ProjectTeam/ProjectTeam.jsp"/>
+							</node>
+							<node text="项目组信息管理">
+								<attributes url="/jlyw/BaseData/ProjectTeam/ProjectTeamCX.jsp"/>
+							</node>
+							<!-- <node text="器具标准名称与检验项目关系管理">
+								<attributes url="/jlyw/BaseData/ProjectTeam/StandardName_ProjectTeam.jsp"/>
+							</node> -->
+						</children>
+					</node>
+					
+					<node text="部门信息管理" state="closed">
+						<children>
+							<node text="新建部门">
+								<attributes url="/jlyw/BaseData/Department/Department.jsp"/>
+							</node>
+							<node text="部门信息管理">
+								<attributes url="/jlyw/BaseData/Department/DepartmentCX.jsp"/>
+							</node>
+						</children>
+					</node>
+					
+												
+				</children>
+			</node>
+		
+		  <node text="查询与统计" state="closed">
+				<children>
+					<node text="业务查询" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/MissionLook.jsp"/>
+					</node>
+					<node text="证书查询" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/CertificateLook.jsp"/>
+					</node>
+					<node text="根据委托单号查询业务" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/MissionLookByCommissionSheetCode.jsp"/>
+					</node>
+					<node text="根据员工查询折扣信息" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/DiscountsByEmployee.jsp"/>
+					</node>
+					<node text="按委托单位查询业务" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/MissionLookByCustomer.jsp"/>
+					</node>
+					<node text="查询未使用预留委托单号" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/MissionLookByYLCode.jsp"/>
+					</node>
+					<node text="基础数据查询" state="closed">
+						<children>
+							<node text="计量标准查询" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/BaseDataQuery/StandardCX.jsp"/>
+							</node>
+							<node text="技术规范查询" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/BaseDataQuery/SpecificationCX.jsp"/>
+							</node>
+							<node text="标准器具查询" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/BaseDataQuery/bzApplianceCX.jsp"/>
+							</node>
+							<node text="量值溯源记录查询" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/BaseDataQuery/TestLogCX.jsp"/>
+							</node>
+						</children>
+					</node>
+					<node text="收发室业务统计" state="closed">
+						<children>
+							<node text="统计收发室业务" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/SFSStatistic/SFSMissionStatistic.jsp"/>
+							</node>
+							<node text="查询已完工业务" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/SFSStatistic/FinishMissionLook.jsp"/>
+							</node>
+							<node text="查询已结账业务" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/SFSStatistic/CheckOutMissionLook.jsp"/>
+							</node>
+						</children>
+					</node>	
+					<node text="业务量查询与统计" state="closed">
+						<children>
+							<node text="按个人查" iconCls="icon-search" >
+								<attributes url="/jlyw/StatisticLook/TransactionLook/Person.jsp"/>
+							</node>
+							<node text="按科室查" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/TransactionLook/Dept.jsp"/>
+							</node>
+							<node text="按全所查" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/TransactionLook/Company.jsp"/>
+							</node>
+							<node text="按委托单位查" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/TransactionLook/Customer.jsp"/>
+							</node>
+						</children>
+					</node>	
+					
+					<node text="产值查询与统计" state="closed">
+						<children>
+							<node text="按个人查" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/OutputLook/Person.jsp"/>
+							</node>
+							
+							<node text="按科室查" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/OutputLook/Dept.jsp"/>
+							</node>
+							<node text="查询所在科室产值" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/OutputLook/DeptByPerson.jsp"/>
+							</node>
+							<node text="按全所查" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/OutputLook/Company.jsp"/>
+							</node>
+						</children>
+					</node>	
+																	
+				</children>
+			</node>
+		
+				
+															
+		</children>
+	</node>
+	
+	
+	<node text="个人服务" state="closed">
+		<children>
+			<node text="修改登录密码">
+				<attributes url="/jlyw/UserManage/PasswordModify.jsp"/>
+			</node>
+			<node text="共享文件夹">
+				<attributes url="/jlyw/XML/Folder.jsp"/>
+			</node>
+			<node text="修改委托单打印机">
+				<attributes url="/jlyw/WebPrint/ConfigPrinter.jsp"/>
+			</node>
+		</children>
+	</node>
+	<node text="客户关系管理" state="open">
+		<children>
+			<node text="客户基本信息管理" state="closed">
+				<children>
+					<node text="录入客户基本信息" state="close">
+						<attributes url="/jlyw/crm/CustomerBase/NewCustomer.jsp"></attributes></node>
+					<node text="修改客户信息" state="open">
+						<attributes url="/jlyw/crm/CustomerBase/CustomerInfoManage.jsp"></attributes></node>
+					<node text="新建内部联系人">
+						<attributes url="/jlyw/crm/CustomerBase/NewInsideContactor.jsp"></attributes></node>
+					<node text="内部联系人管理">
+						<attributes url="/jlyw/crm/CustomerBase/InsideContactorManage.jsp"></attributes></node>
+					<node text="潜在客户信息录入">
+						<attributes url="/jlyw/crm/CustomerBase/NewPotentialCustomer.jsp"></attributes></node>
+					<node text="潜在客户信息管理">
+						<attributes url="/jlyw/crm/CustomerBase/PotentialCustomer.jsp"></attributes></node>
+					<node text="外部联系人管理">
+						<attributes url="/jlyw/crm/CustomerBase/ContactorManage.jsp"></attributes></node>
+					<node text="联系人区域分配">
+						<attributes url="/jlyw/crm/CustomerBase/Region_Contactor.jsp"></attributes></node></children></node>
+			<node text="客户服务管理" state="closed">
+				<children>
+					<node text="新建客户反馈信息">
+						<attributes url="/jlyw/crm/CustomerService/NewCustomerFeedback1.jsp"></attributes></node>
+					<node text="分配处理任务">
+						<attributes url="/jlyw/crm/CustomerService/CustomerFeedbackTrack2.jsp"></attributes></node>
+					<node text="记录处理结果" state="open">
+						<attributes url="/jlyw/crm/CustomerService/CustomerFeedback3.jsp"></attributes></node>
+					<node text="分析处理意见" state="open">
+						<attributes url="/jlyw/crm/CustomerService/FeedbackReview4.jsp"></attributes></node>
+					<node text="录入回访信息" state="open">
+						<attributes url="/jlyw/crm/CustomerService/ReturnBack5.jsp"></attributes></node>
+					<!-- <node text="新建客户服务费用">
+						<attributes url="/jlyw/crm/CustomerService/NewCustomerServiceFee.jsp"></attributes></node> -->
+					<node text="客户关怀信息录入">
+						<attributes url="/jlyw/crm/CustomerService/NewCustomerCareness.jsp"></attributes></node>
+					<node text="预警信息">
+						<attributes url="/jlyw/crm/CustomerService/WarningList.jsp"></attributes></node>
+				</children>
+			</node>
+			<node text="统计" state="closed">
+				<children>
+					<!-- <node text="客户服务费用统计">
+						<attributes
+							url="/jlyw/crm/CustomerStatistics/ServiceFee.jsp">
+						</attributes>
+					</node> -->
+					<node text="客户反馈统计">
+						<attributes
+							url="/jlyw/crm/CustomerStatistics/Feedbacks.jsp">
+						</attributes>
+					</node>
+					<node text="关怀统计">
+						<attributes url="/jlyw/crm/CustomerStatistics/Careness.jsp"></attributes></node>
+					<node text="各种产值明细查询">
+						<attributes
+							url="/jlyw/crm/CustomerStatistics/FullYear.jsp">
+						</attributes>
+					</node>
+					<node text="按产值下限查">
+						<attributes url="/jlyw/crm/CustomerStatistics/FullYear2.jsp"></attributes>
+					</node>
+					<node text="内部联系人产值查询">
+						<attributes url="/jlyw/crm/CustomerStatistics/InsideContactorOutput.jsp"></attributes></node>
+					<node text="同比环比">
+						<attributes url="/jlyw/crm/CustomerStatistics/OutputRatio.jsp"></attributes>
+					</node>
+					<node text="器具分类(分类到计量标准一级)统计产值">
+						<attributes url="/jlyw/crm/CustomerStatistics/QueryOutputByRatio.jsp"></attributes>
+					</node>
+					<node text="器具大类产值统计">
+						<attributes url="/jlyw/crm/CustomerStatistics/TopLevelStatistics.jsp"></attributes></node>
+					<node text="按年份汇总">
+						<attributes url="/jlyw/crm/CustomerStatistics/Continus3Years.jsp"></attributes></node>
+				</children>
+			</node>
+			<node text="等级管理" state="closed">
+				<children>
+					<node text="等级查看">
+						<attributes url="/jlyw/crm/CustomerLevel/CustomerLevel.jsp"></attributes></node>
+					<node text="设置等级选项">
+						<attributes url='/jlyw/crm/CustomerLevel/LevelOptions.jsp'></attributes></node></children></node>
+			<node text="内部联系人产值分配">
+				<attributes url="/jlyw/crm/InsideContactorFeeAssign.jsp"></attributes></node></children></node>
+
+</tree-menu-nodes>

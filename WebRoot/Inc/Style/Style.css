@@ -1,0 +1,55 @@
+﻿table.art-vMenu td
+{
+    height:30px;
+    padding-left:50px;
+}
+a
+{
+    color: #1A1D16;
+    text-decoration:none;
+}
+a:active
+{
+    color: #1D2018;
+    text-decoration:none;
+}
+a:hover
+{
+    color: #1A1D16;
+    text-decoration:none;
+}
+
+.JlywMainLayoutDiv{
+	width:100%; 
+	height:100%; 
+	margin:0; 
+	padding:0;
+	position:absolute;
+	top:0px;
+	bottom:0px;
+	left:0px;
+	right:0px;
+}
+.JlywMainLayoutDiv .JlywTopLayoutDIV{
+	margin:0;
+	padding:0;
+	width:100%;
+	height:33px;
+	min-width:1005px;
+	position:absolute;
+	left:0px;
+	top:0px;
+}
+.JlywMainLayoutDiv .JlywCenterLayoutDIV{
+	margin:0;
+	margin-left:20px;
+	padding:0;
+	min-width:1005px;
+	width:1005px;
+	height:auto;
+	min-height:400px;
+	position:absolute;
+	left:20px;
+	top:35px;
+	bottom:1px;
+}

@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>常州计量业务管理系统</title>
+    <link rel="stylesheet" type="text/css" href="../Inc/Style/themes/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="../Inc/Style/themes/icon.css" />
+    <link rel="stylesheet" type="text/css" href="../Inc/Style/Style.css" />
+    <script type="text/javascript" src="../Inc/JScript/jquery-1.6.min.js"></script>
+    <script type="text/javascript" src="../Inc/JScript/jquery.easyui.min.js"></script>
+</head>
+<body class="easyui-layout">
+    <!-- 主界面框架 -->
+    <!-- 系统名、版本、版权…… -->
+    <div region="north" split="false" border="false" style="height:70px;overflow:hidden">
+        <div class="easyui-layout" fit="true" scroll="no">
+			<div region="south" split="false" border="false" style="height:5px; background-color:#D2E0F2; padding-top:0px; padding-bottom:0px" align="center">
+				<div style="margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px"><img id="top-spilter-img" src="../images/datagrid_sort_asc.gif" width="13px" height="5px" onclick="doTopWin()" title="点击隐藏" border="0" style="cursor:pointer; margin-top:0px; margin-bottom:0px" /></div>
+			</div>
+			<div region="center" style="overflow:hidden">
+				<img src="../images/banner.jpg" />
+			</div>
+		</div>
+    </div>
+    <!-- 系统名、版本、版权…… -->
+	
+    <!-- 菜单 -->
+    <div id="menu" region="west" split="true" title="功能菜单" style="width: 240px;">
+       <iframe id="MenuFrame" src="../menu.html" frameborder="0" width="100%" height="100%"></iframe>
+    </div>
+    <!-- 菜单 -->
+	
+	<!--版权信息-->
+	<div region="south" split="false" border="false" style="height:50px;overflow:hidden">
+		<div class="easyui-layout" fit="true" scroll="no">
+			<div region="north" split="false" border="false" style="height:5px; background-color:#D2E0F2; padding-top:0px; padding-bottom:0px" align="center">
+				<div style="margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px"><img id="bott-spilter-img" src="../images/datagrid_sort_desc.gif" width="13px" height="5px" onclick="doBottWin()" title="点击隐藏" border="0" style="cursor:pointer; margin-top:0px; margin-bottom:0px" /></div>
+			</div>
+			<div region="center" align="center" style="padding-top:15px; overflow:hidden">
+				<p>© 2012 综合平台. 版权所有. </p>
+			</div>
+		</div>
+	</div>
+	<!--版权信息-->
+	
+	<!-- 内容区域 -->
+    <div id="tt" region="center" style="background: #fafafa;">
+        <iframe id="MainFrame" src="../index/index.html" frameborder="0" width="100%" height="100%"></iframe>
+    </div>
+    <!-- 内容区域 -->
+    <!-- 主界面框架 -->
+</body>
+</html>
+<script language="javascript">
+    var topExpand = true, bottExpand = true;
+	function doTopWin()
+	{
+		if(topExpand)
+		{
+			$('body').layout('panel','north').panel('resize',{height:5});
+			$('body').layout('resize');
+			$('#top-spilter-img').attr("src","../images/datagrid_sort_desc.gif");
+			$('#top-spilter-img').attr("title","点击展开");
+			topExpand = false;
+		}
+		else
+		{
+			$('body').layout('panel','north').panel('resize',{height:70});
+			$('body').layout('resize');
+			$('#top-spilter-img').attr("src","../images/datagrid_sort_asc.gif");
+			$('#top-spilter-img').attr("title","点击隐藏");
+			topExpand = true;
+		}
+	}
+	function doBottWin()
+	{
+		if(bottExpand)
+		{
+			$('body').layout('panel','south').panel('resize',{height:5});
+			$('body').layout('resize');
+			$('#bott-spilter-img').attr("src","../images/datagrid_sort_asc.gif");
+			$('#bott-spilter-img').attr("title","点击展开");
+			bottExpand = false;
+		}
+		else
+		{
+			$('body').layout('panel','south').panel('resize',{height:50});
+			$('body').layout('resize');
+			$('#bott-spilter-img').attr("src","../images/datagrid_sort_desc.gif");
+			$('#bott-spilter-img').attr("title","点击隐藏");
+			bottExpand = true;
+		}
+	}
+</script>

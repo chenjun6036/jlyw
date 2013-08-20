@@ -1,0 +1,45 @@
+
+.right_title{
+		background:url(rightbg01.gif) repeat-x;
+		color:#595a5b;
+		text-align:left;
+		line-height:23px;
+		font-weight:bold;
+		padding-top:2px;
+		width:99%;
+		border-top:1px solid #d6e9fc;
+		border-left:1px solid #d6e9fc;
+		border-right:1px solid #d6e9fc;
+		float:left;
+		
+}	
+
+.right_con{
+	float:left;
+		width:99%;
+		border-bottom:1px solid #d6e9fc;
+		border-left:1px solid #d6e9fc;
+		border-right:1px solid #d6e9fc;
+		margin-bottom:20px;
+		padding-bottom:10px;
+		padding-top:10px;
+}
+
+.right_con div{
+	float:left;
+	width:120px;
+	text-align:center;
+}
+
+.right_con a{
+	color:#666;
+	text-decoration:none;
+}
+
+.right_con img{
+	border:0 none;
+	height:80px;
+	width:80px;
+}
+
+span.CountStatistic {color:blue}

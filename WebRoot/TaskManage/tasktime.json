@@ -1,0 +1,11 @@
+﻿{"total":8,"rows":[
+	{"id":"1","name":"平台1","consumer":"常州仪器厂1", "time":"2011-11-01","remaintime":"1","isurgent":"No","ismiss":"No", "warn":"yes"},
+	{"id":"2","name":"平台2","consumer":"常州仪器厂2", "time":"2011-11-05","remaintime":"1","isurgent":"yes","ismiss":"No", "warn":"No"},
+        {"id":"3","name":"平台3","consumer":"常州仪器厂3", "time":"2011-11-09","remaintime":"1","isurgent":"No","ismiss":"No", "warn":"No"},
+        {"id":"4","name":"平台4","consumer":"常州仪器厂4", "time":"2011-11-10","remaintime":"1","isurgent":"No","ismiss":"No", "warn":"No"},
+        {"id":"5","name":"平台5","consumer":"常州仪器厂5", "time":"2011-11-15","remaintime":"1","isurgent":"No","ismiss":"No", "warn":"yes"},
+        {"id":"6","name":"平台6t","consumer":"常州仪器厂6", "time":"2011-11-19","remaintime":"1","isurgent":"No","ismiss":"No", "warn":"No"},
+        {"id":"7","name":"N平台7","consumer":"常州仪器厂7", "time":"2011-11-20","remaintime":"1","isurgent":"yes","ismiss":"No", "warn":"No"},
+        {"id":"8","name":"平台8t","consumer":"常州仪器厂8", "time":"2011-11-21","remaintime":"1","isurgent":"No","ismiss":"No", "warn":"No"}
+	
+]}

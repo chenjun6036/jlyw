@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "./log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" threshold="debug">
+	<appender name="debug" class="com.jlyw.util.log.TimeSizeRollingFileAppender">
+		<param name="File" value="/logs/debug/debug.log" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="Encoding" value="GB2312" />
+		<param name="MaxFileSize" value="8MB" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-5p %d{ISO8601} [%c] - %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+	       		<param name="LevelMin" value="debug" />
+	        	<param name="LevelMax" value="debug" />
+	        	<param name="acceptOnMatch" value="true" />
+      		</filter>
+	</appender>
+	<appender name="error" class="com.jlyw.util.log.TimeSizeRollingFileAppender">
+		<param name="threshold" value="error" />
+		<param name="File" value="/logs/error/error.log" />
+		<param name="Encoding" value="GB2312" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} [%c]- %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="debug2" class="com.jlyw.util.log.TimeSizeRollingFileAppender">
+		<param name="File" value="/logs/debug/debug2.log" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="Encoding" value="GB2312" />
+		<param name="MaxFileSize" value="8MB" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-5p %d{ISO8601} [%c] - %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+	       		<param name="LevelMin" value="debug" />
+	        	<param name="LevelMax" value="debug" />
+	        	<param name="acceptOnMatch" value="true" />
+      		</filter>
+	</appender>
+	<appender name="error2" class="com.jlyw.util.log.TimeSizeRollingFileAppender">
+		<param name="threshold" value="error" />
+		<param name="File" value="/logs/error/error2.log" />
+		<param name="Encoding" value="GB2312" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} [%c]- %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="debug3" class="com.jlyw.util.log.TimeSizeRollingFileAppender">
+		<param name="File" value="/logs/debug/debug3.log" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="Encoding" value="GB2312" />
+		<param name="MaxFileSize" value="8MB" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-5p %d{ISO8601} [%c] - %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+	       		<param name="LevelMin" value="debug" />
+	        	<param name="LevelMax" value="debug" />
+	        	<param name="acceptOnMatch" value="true" />
+      		</filter>
+	</appender>
+	<appender name="error3" class="com.jlyw.util.log.TimeSizeRollingFileAppender">
+		<param name="threshold" value="error" />
+		<param name="File" value="/logs/error/error3.log" />
+		<param name="Encoding" value="GB2312" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} [%c]- %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out"/>
+		<param name="threshold" value="info" />
+		<param name="Encoding" value="GB2312" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-5p %d{ISO8601} [%c]- %m%n" />
+		</layout>
+	</appender>
+ 	<logger name="com.jlyw" additivity="false">
+		<level value="debug"/>
+		<appender-ref ref="debug"/>
+		<appender-ref ref="error"/>
+	</logger>
+
+ 	<logger name="org.springframework" additivity="false">
+		<level value="debug"/>
+		<appender-ref ref="debug2"/>
+		<appender-ref ref="error2"/>
+	</logger>
+
+ 	<logger name="org.hibernate" additivity="false">
+		<level value="debug"/>
+		<appender-ref ref="debug3"/>
+		<appender-ref ref="error3"/>
+	</logger>
+
+	<root>
+		<level value="error" />
+		<appender-ref ref="debug" />
+		<appender-ref ref="error" />
+	</root>
+</log4j:configuration>

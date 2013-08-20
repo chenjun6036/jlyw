@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system-config>
+<TaskAllotRule value="0"/>
+<SecondLoginPeriod value="3"/>
+<SpecialLetters value="&#13;&#10;&#13;&#10;～°′″±μ‰℃ΩⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ≈≤≥≠"/>
+<DonglePID value="FFC5EB78"/>
+<DonglePIN value="FFFFFFFFFFFFFFFF"/>
+</system-config>

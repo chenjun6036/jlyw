@@ -1,0 +1,42 @@
+﻿[{"attribute":"Model","typeClass":"java.lang.String","desc":"型号规格"},
+ {"attribute":"Range","typeClass":"java.lang.String","desc":"测量范围"},
+ {"attribute":"Accuracy","typeClass":"java.lang.String","desc":"准确度/不确定度等级"},
+ {"attribute":"Manufacturer","typeClass":"java.lang.String","desc":"制造厂"},
+ {"attribute":"ApplianceCode","typeClass":"java.lang.String","desc":"出厂编号"},
+ {"attribute":"ManageCode","typeClass":"java.lang.String","desc":"管理编号"},
+ {"attribute":"WorkType","typeClass":"java.lang.String","desc":"工作性质"},
+ {"attribute":"WorkLocation","typeClass":"java.lang.String","desc":"工作地点"},
+ {"attribute":"Temp","typeClass":"java.lang.String","desc":"环境温度"},
+ {"attribute":"Humidity","typeClass":"java.lang.String","desc":"相对湿度"},
+ {"attribute":"Pressure","typeClass":"java.lang.String","desc":"大气压"},
+ 
+ {"attribute":"OtherCond","typeClass":"java.lang.String","desc":"其它"},
+ {"attribute":"StdOrStdAppUsageStatus","typeClass":"java.lang.String","desc":"标准(器具)使用前后状态检查"},
+ {"attribute":"AbnormalDesc","typeClass":"java.lang.String","desc":"异常情况说明"},
+ 
+ {"attribute":"Conclusion","typeClass":"java.lang.String","desc":"结论"},
+ {"attribute":"WorkDate","typeClass":"java.sql.Date","desc":"检/校日期"},
+ {"attribute":"Validity","typeClass":"java.sql.Date","desc":"有效期"},
+ {"attribute":"ApplianceName","typeClass":"java.lang.String","desc":"器具名称（常用名称）"},
+ {"attribute":"Quantity","typeClass":"java.lang.Integer","desc":"器具数量"},
+ 
+  {"attribute":"TestFee","typeClass":"java.lang.Double","desc":"检定费"},
+ {"attribute":"RepairFee","typeClass":"java.lang.Double","desc":"修理费"},
+  {"attribute":"MaterialFee","typeClass":"java.lang.Double","desc":"材料/配件费"},
+ {"attribute":"CarFee","typeClass":"java.lang.Double","desc":"交通费"},
+  {"attribute":"DebugFee","typeClass":"java.lang.Double","desc":"调试费"},
+ {"attribute":"OtherFee","typeClass":"java.lang.Double","desc":"其它费"}, 
+ {"attribute":"TotalFee","typeClass":"java.lang.Double","desc":"总计费用"},
+ 
+ {"attribute":"RepairLevel","typeClass":"java.lang.String","desc":"修理级别"},
+ {"attribute":"RepairContent","typeClass":"java.lang.String","desc":"修理内容"},
+ {"attribute":"MaterialDetail","typeClass":"java.lang.String","desc":"配件明细"},
+ {"attribute":"Mandatory","typeClass":"java.lang.String","desc":"是否强管"},
+ {"attribute":"MandatoryCode","typeClass":"java.lang.String","desc":"强检唯一性编号"},
+ {"attribute":"MandatoryItemType","typeClass":"java.lang.String","desc":"强检目录对应项别"},
+ {"attribute":"MandatoryType","typeClass":"java.lang.String","desc":"强检目录对应种别"},
+ {"attribute":"MandatoryPurpose","typeClass":"java.lang.String","desc":"强管类型（用途）"},
+ {"attribute":"MandatoryApplyPlace","typeClass":"java.lang.String","desc":"使用/安装地点"},
+ {"attribute":"Remark","typeClass":"java.lang.String","desc":"备注"}
+ 
+]

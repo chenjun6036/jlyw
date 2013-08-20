@@ -1,0 +1,4 @@
+﻿{"total":1,"rows":[
+	{"Id":1,"StandardNameId":"量具","Name":"量杯","NameEn":"MeasuringCup","Model":"大","ModelEn":"large","Accuracy":"0.01mm","AccuracyEn":"0.01mm","Range":"111","RangeEn":"111","Code":"123","Fee":"111","SRFee":"11","MRFee":"11","LRFee":"111","PromiseDuration":"12","TestCycle":"1","Status":"正常","Remark":""},
+	{"Id":2,"StandardNameId":"量具","Name":"量杯","NameEn":"MeasuringCup","Model":"大","ModelEn":"large","Accuracy":"0.01mm","AccuracyEn":"0.01mm","Range":"111","RangeEn":"111","Code":"123","Fee":"111","SRFee":"11","MRFee":"11","LRFee":"111","PromiseDuration":"12","TestCycle":"1","Status":"正常","Remark":""}
+]}

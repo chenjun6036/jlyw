@@ -1,0 +1,89 @@
+* {FONT-SIZE: 12px}
+
+.hidden{display:none;}
+
+/* Clear Fix */
+.clearfix:after
+{
+    content:".";
+    display:block;
+    height:0;
+    clear:both;
+    visibility:hidden;
+}
+.clearfix
+{
+    display:inline-block;
+}
+/* Hide from IE Mac \*/
+.clearfix {display:block;}
+/* End hide from IE Mac */
+/* end of clearfix  */
+
+h1 { font-size: 160%; font-weight: normal; }
+h2 { font-size: 150%; font-weight: normal; }
+h3 { font-size: 120%; }
+h4 { font-size: 100%; }
+h5 { font-size: 90%; }
+h6 { font-size: 90%; border: 0; }
+
+.TextBox 
+{
+    BACKGROUND-COLOR: #FFFFFF; 
+    color: #333333; 
+    border: 1px #6699CC solid;
+}
+
+
+A
+{
+	color: #006699;
+	text-decoration: none;
+}
+A:ACTIVE {
+
+	color : #006699;	
+	text-decoration: none;
+}
+A:FOCUS
+{
+	color: black;
+	text-decoration: none;
+}
+A:HOVER
+{
+	color: #ff4500;
+	text-decoration: underline;
+}
+A:LINK {
+	
+	text-decoration: none;
+}
+
+.Button{ 
+    cursor: hand;     
+    color: #336699; 
+    background-color: #f5f4f3; 
+    left: auto; 
+    height:1.8em;
+    vertical-align:middle;
+    clip:  rect(auto   ); 
+    border: 1px #336699 solid; 
+    font-weight: bold; 
+    background-image: url(images/Button.gif)
+}
+
+textarea{
+	color: #0066cc;
+	background-color: #ffffff;
+	border-top: 1px solid #93BEE2;
+	border-right: 1px solid #93BEE2;
+	border-bottom: 1px solid #93BEE2;
+	border-left: 1px solid #93BEE2;
+}
+
+Select {
+	color: #0066cc;
+	border: 1px #c8e4ff solid;
+	background-color:  #e8f4ff;
+}

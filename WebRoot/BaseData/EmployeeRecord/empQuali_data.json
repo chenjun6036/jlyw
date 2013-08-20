@@ -1,0 +1,4 @@
+﻿{"total":1,"rows":[
+	{"Id":1,"UserId":"张三","JobNum":"001","Type":"检定员","QualNum":"001","AuthItems":"新项目","AuthDate":"2010-02-03","Expiration":"2012-02-03","AuthDept":"质监局","Remark":""},
+	{"Id":2,"UserId":"李四","JobNum":"002","Type":"检定员","QualNum":"001","AuthItems":"新项目","AuthDate":"2010-02-03","Expiration":"2012-02-03","AuthDept":"质监局","Remark":""}
+]}

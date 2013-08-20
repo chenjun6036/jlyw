@@ -1,0 +1,11 @@
+﻿{"total":8,"rows":[
+	{"id":"1","commissionid":"任务1","consumername":"常州仪器厂1","date":"2011-11-01","appliancename":"1","item":"No","assemblyname":"No", "assemblyfee":"yes","fee":"60"},
+	{"id":"2","commissionid":"任务2","consumername":"常州仪器厂2","date":"2011-11-05","appliancename":"1","item":"yes","assemblyname":"No", "assemblyfee":"No","fee":"60"},
+        {"id":"3","commissionid":"任务3","consumername":"常州仪器厂3","date":"2011-11-09","appliancename":"1","item":"No","assemblyname":"No", "assemblyfee":"No","fee":"60"},
+        {"id":"4","commissionid":"任务4","consumername":"常州仪器厂4","date":"2011-11-10","appliancename":"1","item":"No","assemblyname":"No", "assemblyfee":"No","fee":"60"},
+        {"id":"5","commissionid":"任务5","consumername":"常州仪器厂5","date":"2011-11-15","appliancename":"1","item":"No","assemblyname":"No", "assemblyfee":"yes","fee":"60"},
+        {"id":"6","commissionid":"任务6t","consumername":"常州仪器厂6","date":"2011-11-19","appliancename":"1","item":"No","assemblyname":"No", "assemblyfee":"No","fee":"60"},
+        {"id":"7","commissionid":"N任务7","consumername":"常州仪器厂7","date":"2011-11-20","appliancename":"1","item":"yes","assemblyname":"No", "assemblyfee":"No","fee":"60"},
+        {"id":"8","commissionid":"任务8t","consumername":"常州仪器厂8","date":"2011-11-21","appliancename":"1","item":"No","assemblyname":"No", "assemblyfee":"No","fee":"60"}
+	
+]}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="GB2312"?>
+<Config>
+    <!-- unprotectedurl 系统不受访问限制的URL配置文件； jsp存放html、jsp等相关文件，servlet存放.do的路径 -->
+    <!-- url不带参数，则表示该链接无论带什么参数均为不受保护的资源 -->
+   <unprotectedurls-jsp>
+	    <unprotectedurl url="404.htm"/>
+	    <unprotectedurl url="500.htm"/>
+	    <unprotectedurl url="noPrivilege.htm"/>
+	    
+	    <unprotectedurl url=""/>
+	    <unprotectedurl url="index.jsp"/>
+	    <unprotectedurl url="index/index.jsp"/>
+	    <unprotectedurl url="Common/Main.jsp"/>
+	    <unprotectedurl url="Common/Title.jsp"/>
+	    <unprotectedurl url="index/index.html"/>
+	    
+   </unprotectedurls-jsp>
+   
+   <unprotectedurls-servlet>
+   		<unprotectedurl url="UserServlet.do?method=4"/>
+   		<unprotectedurl url="HeartBeatServlet.do" />
+   		<unprotectedurl url="servlet/UserServlet.do?method=4" />
+   </unprotectedurls-servlet>
+</Config>

@@ -1,0 +1,13 @@
+﻿{"total":11,"rows":[
+	{"id":1,"consumername":"常州仪器厂1","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":2,"consumername":"常州仪器厂2","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":3,"consumername":"常州仪器厂3","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":4,"consumername":"常州仪器厂4","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":5,"consumername":"常州仪器厂5","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":6,"consumername":"常州仪器厂6","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":7,"consumername":"常州仪器厂7","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":8,"consumername":"常州仪器厂8","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":9,"consumername":"常州仪器厂9","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":10,"consumername":"常州仪器厂10","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"},
+	{"id":11,"consumername":"常州仪器厂11","date":"2011-11-01","number1":"10","number2":"8","number3":"2", "remark":"yes","pid":"p1","dept":"检验科"}
+]}

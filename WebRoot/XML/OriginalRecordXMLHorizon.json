@@ -1,0 +1,81 @@
+﻿{"total":57,"rows":[
+	{"attribute":"CertificateCode","fieldClass":"证书","desc":"证书编号","sheetName":"原始记录","rowIndex":"AT2","typeClass":"java.lang.String","type":"w","indexStr":""},
+	
+	{"attribute":"CustomerName","fieldClass":"委托单","desc":"委托单位名称","sheetName":"原始记录","rowIndex":"D3","typeClass":"java.lang.String","type":"w","indexStr":""},
+	{"attribute":"CustomerAddress","fieldClass":"委托单","desc":"委托单位地址","sheetName":"原始记录","rowIndex":"W3","typeClass":"java.lang.String","type":"w","indexStr":""},
+	
+	{"attribute":"Name","fieldClass":"器具标准名","desc":"标准名称","sheetName":"原始记录","rowIndex":"AT3","typeClass":"java.lang.String","type":"w","indexStr":""},
+	
+	{"attribute":"ApplianceName","fieldClass":"原始记录","desc":"仪器名称","sheetName":"原始记录","rowIndex":"AI3","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Model","fieldClass":"原始记录","desc":"型号规格","sheetName":"原始记录","rowIndex":"D4","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Range","fieldClass":"原始记录","desc":"测量范围","sheetName":"原始记录","rowIndex":"L4","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Accuracy","fieldClass":"原始记录","desc":"准确度/不确定等级","sheetName":"原始记录","rowIndex":"W4","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Manufacturer","fieldClass":"原始记录","desc":"制造厂","sheetName":"原始记录","rowIndex":"AD4","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"ApplianceCode","fieldClass":"原始记录","desc":"出厂编号","sheetName":"原始记录","rowIndex":"D5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"ManageCode","fieldClass":"原始记录","desc":"管理编号","sheetName":"原始记录","rowIndex":"L5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"WorkType","fieldClass":"原始记录","desc":"工作性质","sheetName":"原始记录","rowIndex":"W5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"WorkLocation","fieldClass":"原始记录","desc":"工作地点","sheetName":"原始记录","rowIndex":"AD5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Temp","fieldClass":"原始记录","desc":"环境温度","sheetName":"原始记录","rowIndex":"AK5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Humidity","fieldClass":"原始记录","desc":"相对湿度","sheetName":"原始记录","rowIndex":"AQ5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Pressure","fieldClass":"原始记录","desc":"大气压","sheetName":"原始记录","rowIndex":"AV5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	
+	{"attribute":"OtherCond","fieldClass":"原始记录","desc":"其它","sheetName":"原始记录","rowIndex":"AV4","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"StdOrStdAppUsageStatus","fieldClass":"原始记录","desc":"标准(器具)使用前后状态检查","sheetName":"原始记录","rowIndex":"AL6","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"AbnormalDesc","fieldClass":"原始记录","desc":"异常情况说明","sheetName":"原始记录","rowIndex":"AV6","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	
+	
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"F6","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"K6","typeClass":"java.lang.String","type":"w","indexStr":"2"},
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"P6","typeClass":"java.lang.String","type":"w","indexStr":"3"},
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"U6","typeClass":"java.lang.String","type":"w","indexStr":"4"},
+	
+	{"attribute":"Name","fieldClass":"计量标准","desc":"名称","sheetName":"原始记录","rowIndex":"F8","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"Range","fieldClass":"计量标准","desc":"测量范围","sheetName":"原始记录","rowIndex":"M8","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"Uncertain","fieldClass":"计量标准","desc":"准确度等级","sheetName":"原始记录","rowIndex":"Z8","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"CertificateCode","fieldClass":"计量标准","desc":"证书编号","sheetName":"原始记录","rowIndex":"AL8","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"ValidDate","fieldClass":"计量标准","desc":"有效期","sheetName":"原始记录","rowIndex":"AV8","typeClass":"java.sql.Date","type":"w","indexStr":"1"},
+	
+	{"attribute":"Name","fieldClass":"标准器具","desc":"名称","sheetName":"原始记录","rowIndex":"F9","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"Range","fieldClass":"标准器具","desc":"测量范围","sheetName":"原始记录","rowIndex":"M9","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"Uncertain","fieldClass":"标准器具","desc":"准确度等级","sheetName":"原始记录","rowIndex":"Z9","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"SeriaNumber","fieldClass":"标准器具","desc":"证书编号","sheetName":"原始记录","rowIndex":"AL9","typeClass":"java.lang.String","type":"w","indexStr":"1"},
+	{"attribute":"ValidDate","fieldClass":"标准器具","desc":"有效期","sheetName":"原始记录","rowIndex":"AV9","typeClass":"java.sql.Date","type":"w","indexStr":"1"},
+	
+	{"attribute":"Name","fieldClass":"标准器具","desc":"名称","sheetName":"原始记录","rowIndex":"F10","typeClass":"java.lang.String","type":"w","indexStr":"2"},
+	{"attribute":"Range","fieldClass":"标准器具","desc":"测量范围","sheetName":"原始记录","rowIndex":"M10","typeClass":"java.lang.String","type":"w","indexStr":"2"},
+	{"attribute":"Uncertain","fieldClass":"标准器具","desc":"准确度等级","sheetName":"原始记录","rowIndex":"Z10","typeClass":"java.lang.String","type":"w","indexStr":"2"},
+	{"attribute":"SeriaNumber","fieldClass":"标准器具","desc":"证书编号","sheetName":"原始记录","rowIndex":"AL10","typeClass":"java.lang.String","type":"w","indexStr":"2"},
+	{"attribute":"ValidDate","fieldClass":"标准器具","desc":"有效期","sheetName":"原始记录","rowIndex":"AV10","typeClass":"java.sql.Date","type":"w","indexStr":"2"},
+	
+	{"attribute":"Name","fieldClass":"标准器具","desc":"名称","sheetName":"原始记录","rowIndex":"F11","typeClass":"java.lang.String","type":"w","indexStr":"3"},
+	{"attribute":"Range","fieldClass":"标准器具","desc":"测量范围","sheetName":"原始记录","rowIndex":"M11","typeClass":"java.lang.String","type":"w","indexStr":"3"},
+	{"attribute":"Uncertain","fieldClass":"标准器具","desc":"准确度等级","sheetName":"原始记录","rowIndex":"Z11","typeClass":"java.lang.String","type":"w","indexStr":"3"},
+	{"attribute":"SeriaNumber","fieldClass":"标准器具","desc":"证书编号","sheetName":"原始记录","rowIndex":"AL11","typeClass":"java.lang.String","type":"w","indexStr":"3"},
+	{"attribute":"ValidDate","fieldClass":"标准器具","desc":"有效期","sheetName":"原始记录","rowIndex":"AV11","typeClass":"java.sql.Date","type":"w","indexStr":"3"},
+	
+	{"attribute":"Conclusion","fieldClass":"原始记录","desc":"结论","sheetName":"原始记录","rowIndex":"F12","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Name","fieldClass":"检校人员","desc":"姓名","sheetName":"原始记录","rowIndex":"R12","typeClass":"java.lang.String","type":"w","indexStr":""},
+	{"attribute":"WorkDate","fieldClass":"原始记录","desc":"检/校日期","sheetName":"原始记录","rowIndex":"AL12","typeClass":"java.sql.Date","type":"rw","indexStr":""},
+	{"attribute":"Validity","fieldClass":"原始记录","desc":"有效期","sheetName":"原始记录","rowIndex":"AV12","typeClass":"java.sql.Date","type":"rw","indexStr":""},
+	{"attribute":"Name","fieldClass":"核验人员","desc":"姓名","sheetName":"原始记录","rowIndex":"Z12","typeClass":"java.lang.String","type":"w","indexStr":""},
+	
+	
+	{"attribute":"TestFee","fieldClass":"原始记录","desc":"检定费","sheetName":"原始记录","rowIndex":"BD1","typeClass":"java.lang.Double","type":"rw","indexStr":""},
+	{"attribute":"RepairFee","fieldClass":"原始记录","desc":"修理费","sheetName":"原始记录","rowIndex":"BD2","typeClass":"java.lang.Double","type":"rw","indexStr":""},
+	{"attribute":"MaterialFee","fieldClass":"原始记录","desc":"材料/配件费","sheetName":"原始记录","rowIndex":"BD3","typeClass":"java.lang.Double","type":"rw","indexStr":""},	
+	{"attribute":"CarFee","fieldClass":"原始记录","desc":"交通费","sheetName":"原始记录","rowIndex":"BD4","typeClass":"java.lang.Double","type":"rw","indexStr":""},
+	{"attribute":"DebugFee","fieldClass":"原始记录","desc":"调试费","sheetName":"原始记录","rowIndex":"BD5","typeClass":"java.lang.Double","type":"rw","indexStr":""},
+	{"attribute":"OtherFee","fieldClass":"原始记录","desc":"其它费","sheetName":"原始记录","rowIndex":"BD6","typeClass":"java.lang.Double","type":"rw","indexStr":""},
+	{"attribute":"RepairLevel","fieldClass":"原始记录","desc":"修理级别","sheetName":"原始记录","rowIndex":"BD7","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"RepairContent","fieldClass":"原始记录","desc":"修理内容","sheetName":"原始记录","rowIndex":"BD8","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"MaterialDetail","fieldClass":"原始记录","desc":"配件明细","sheetName":"原始记录","rowIndex":"BD9","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"Mandatory","fieldClass":"原始记录","desc":"是否强管","sheetName":"原始记录","rowIndex":"BF1","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"MandatoryCode","fieldClass":"原始记录","desc":"强检唯一性编号","sheetName":"原始记录","rowIndex":"BF2","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"MandatoryPurpose","fieldClass":"原始记录","desc":"强管类型（用途）","sheetName":"原始记录","rowIndex":"BF3","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"MandatoryItemType","fieldClass":"原始记录","desc":"强检目录对应项别","sheetName":"原始记录","rowIndex":"BF4","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"MandatoryType","fieldClass":"原始记录","desc":"强检目录对应种别","sheetName":"原始记录","rowIndex":"BF5","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	{"attribute":"MandatoryApplyPlace","fieldClass":"原始记录","desc":"使用/安装地点","sheetName":"原始记录","rowIndex":"BF6","typeClass":"java.lang.String","type":"rw","indexStr":""},
+	
+	{"attribute":"Quantity","fieldClass":"原始记录","desc":"器具数量","sheetName":"原始记录","rowIndex":"BD10","typeClass":"java.lang.Integer","type":"rw","indexStr":""}
+	
+]}

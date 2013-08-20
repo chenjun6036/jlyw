@@ -1,0 +1,4 @@
+﻿{"total":1,"rows":[
+	{"Id":1,"Name":"量杯","NameEn":"MeasuringCup","Brief":"lb","CertificateCode":"123456","StandardCode":"123","ProjectCode":"111","Status":"正常","CreatedBy":"制造公司","IssuedBy":"质监所","IssueDate":"2012-02-02","ValidDate":"2012-02-02","Range":"5mm","Uncertain":"0.02mm","SIssuedBy":"社会","SCertificateCode":"001","SIssueDate":"2012-03-05","SValidDate":"2012-03-15","SRegion":"江苏","SAuthorizationCode":"002","SLocaleCode":"所内编号","Copy":"计量标准扫描件","SCopy":"社会证扫描件"},
+	{"Id":2,"Name":"量杯","NameEn":"MeasuringCup","Brief":"lb","CertificateCode":"123456","StandardCode":"123","ProjectCode":"111","Status":"正常","CreatedBy":"制造公司","IssuedBy":"质监所","IssueDate":"2012-02-02","ValidDate":"2012-02-02","Range":"5mm","Uncertain":"0.02mm","SIssuedBy":"社会","SCertificateCode":"001","SIssueDate":"2012-03-05","SValidDate":"2012-03-15","SRegion":"江苏","SAuthorizationCode":"002","SLocaleCode":"所内编号","Copy":"计量标准扫描件","SCopy":"社会证扫描件"}
+]}

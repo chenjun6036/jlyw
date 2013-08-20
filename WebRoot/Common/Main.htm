@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<META http-equiv=Content-Type content="text/html; charset=GBK">
+    <title>常州计量业务管理系统</title>
+	
+    <link rel="stylesheet" id="easyuiTheme" type="text/css" href="../Inc/Style/themes/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="../Inc/Style/themes/icon.css" />
+    <link rel="stylesheet" type="text/css" href="../Inc/Style/Style.css" />
+    <script type="text/javascript" src="../Inc/JScript/jquery-1.6.min.js"></script>
+    <script type="text/javascript" src="../Inc/JScript/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../JScript/main.js"></script>
+
+<style type="text/css">
+TD.TopLink {
+	PADDING-RIGHT: 3px;
+	PADDING-LEFT: 3px;
+	PADDING-BOTTOM: 10px;
+	VERTICAL-ALIGN:bottom;
+	COLOR: #000000;
+	PADDING-TOP: 3px;
+	FONT-FAMILY: Arial, Verdana, Helvetica, sans-serif
+}
+TD.TopLink_over {
+	BORDER-RIGHT: #adc9ff 1px solid;
+	PADDING-RIGHT: 2px;
+	BORDER-TOP: #adc9ff 1px solid;
+	PADDING-LEFT: 2px;
+	PADDING-BOTTOM: 0px;
+	VERTICAL-ALIGN: middle;
+	BORDER-LEFT: #adc9ff 1px solid;
+	COLOR: #ffffff;
+	PADDING-TOP: 2px;
+	BORDER-BOTTOM: #adc9ff 1px solid;
+	FONT-FAMILY: Arial, Verdana, Helvetica, sans-serif;
+	BACKGROUND-COLOR: #5781d5
+}
+TD.TopLink_down {
+	BORDER-RIGHT: #adc9ff 1px solid;
+	PADDING-RIGHT: 2px;
+	BORDER-TOP: #adc9ff 1px solid;
+	PADDING-LEFT: 2px;
+	PADDING-BOTTOM: 0px;
+	VERTICAL-ALIGN: middle;
+	BORDER-LEFT: #adc9ff 1px solid;
+	COLOR: #ffffff;
+	PADDING-TOP: 2px;
+	BORDER-BOTTOM: #adc9ff 1px solid;
+	FONT-FAMILY: Arial, Verdana, Helvetica, sans-serif;
+	BACKGROUND-COLOR: #3063c9
+}
+</style>
+
+</head>
+<body class="easyui-layout" style="background-color:#D2E0F2;" bgcolor="#FFFFFF">
+<bgsound id="snd" loop="0" src="">
+<div id="waiting201200000" style="left: 0%; top: 0%; width: 100%; height: 100%;VISIBILITY: hidden; position: absolute; z-index: 12000;"> 
+	<table width="100%" height="100%" bgcolor="#333333" style="FILTER: Alpha(Opacity=75);" border="0"> 
+		<tr height="100%"> 
+		  <td width="100%"> 
+		   <div align="center"> 
+			<img src="../images/loading32.gif"> 
+			<br />
+		         
+				<div id="display"></div>
+			   
+		   </div> 
+	    </td> 
+	   </tr> 
+	</table>  
+</div> 
+
+    <!-- 主界面框架 -->
+    <!-- 系统名、版本、版权…… -->
+    <div region="north" split="false" border="false" style="height:70px;overflow:hidden">
+        <div class="easyui-layout" fit="true" scroll="no">
+			<div region="south" split="false" border="false" style="height:5px; background-color:#D2E0F2; padding-top:0px; padding-bottom:0px" align="center">
+				<div style="margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px"><img id="top-spilter-img" src="../images/datagrid_sort_asc.gif" width="13px" height="5px" onclick="doTopWin()" title="点击隐藏" border="0" style="cursor:pointer; margin-top:0px; margin-bottom:0px" /></div>
+			</div>
+			<div region="center" style="overflow:hidden">
+				<table id="01" height="70px" width="100%" border="0" cellpadding="0" cellspacing="0">
+					<tr>
+						<td width="799px">
+							<img src="../images/222.gif" width="799" height="70" alt="常州市计量测试技术研究所业务系统" />
+						</td>
+						<TD style="BACKGROUND-REPEAT: repeat-x" vAlign=bottom width="100%" background="/jlyw/images/tc.gif" class="TopLink" align="right">
+							<NOBR><span id=myDate></span>&nbsp;&nbsp;欢迎您，<c:out value="${sessionScope.LOGIN_USER.name}" dafult="" escapeXml=="false"/></NOBR>
+						</TD>
+							
+						
+						<!--<td width="120px">
+							<img src="../images/1_02.gif" width="120" height="70" alt="" />
+						</td>-->
+					</tr>
+				</table>
+			</div>
+		</div>
+    </div>
+    <!-- 系统名、版本、版权…… -->
+	
+    <!-- 菜单 -->
+    <div id="menu" region="west" split="true" title="功能菜单" style="width: 240px;">
+       <iframe id="MenuFrame" src="../menu.html" frameborder="0" width="100%" height="99.5%"></iframe>
+    </div>
+    <!-- 菜单 -->
+	
+	<!--版权信息-->
+	<div region="south" split="false" border="false" style="height:50px;overflow:hidden">
+		<div class="easyui-layout" fit="true" scroll="no">
+			<div region="north" split="false" border="false" style="height:5px; background-color:#D2E0F2; padding-top:0px; padding-bottom:0px" align="center">
+				<div style="margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px"><img id="bott-spilter-img" src="../images/datagrid_sort_desc.gif" width="13px" height="5px" onclick="doBottWin()" title="点击隐藏" border="0" style="cursor:pointer; margin-top:0px; margin-bottom:0px" /></div>
+			</div>
+			<div region="center" align="center" style="padding-top:15px; overflow:hidden">
+				<p>? 2012 综合平台. 版权所有. </p>
+			</div>
+		</div>
+	</div>
+	<!--版权信息-->
+	
+	<!-- 内容区域 -->
+    <div id="tt" region="center" style="background: #fafafa;">
+        <iframe id="MainFrame" src="../index/index.jsp" frameborder="0" width="100%" height="99.5%"></iframe>
+    </div>
+    <!-- 内容区域 -->
+    <!-- 主界面框架 -->
+</body>
+</html>
+<script language="javascript">
+    var topExpand = true, bottExpand = true;
+	function doTopWin()
+	{
+		if(topExpand)
+		{
+			$('body').layout('panel','north').panel('resize',{height:5});
+			$('body').layout('resize');
+			$('#top-spilter-img').attr("src","../images/datagrid_sort_desc.gif");
+			$('#top-spilter-img').attr("title","点击展开");
+			topExpand = false;
+		}
+		else
+		{
+			$('body').layout('panel','north').panel('resize',{height:70});
+			$('body').layout('resize');
+			$('#top-spilter-img').attr("src","../images/datagrid_sort_asc.gif");
+			$('#top-spilter-img').attr("title","点击隐藏");
+			topExpand = true;
+		}
+	}
+	function doBottWin()
+	{
+		if(bottExpand)
+		{
+			$('body').layout('panel','south').panel('resize',{height:5});
+			$('body').layout('resize');
+			$('#bott-spilter-img').attr("src","../images/datagrid_sort_asc.gif");
+			$('#bott-spilter-img').attr("title","点击展开");
+			bottExpand = false;
+		}
+		else
+		{
+			$('body').layout('panel','south').panel('resize',{height:50});
+			$('body').layout('resize');
+			$('#bott-spilter-img').attr("src","../images/datagrid_sort_desc.gif");
+			$('#bott-spilter-img').attr("title","点击隐藏");
+			bottExpand = true;
+		}
+	}
+</script>

@@ -1,0 +1,22 @@
+﻿[{"attribute":"Code","typeClass":"java.lang.String","desc":"委托单编号"},
+ {"attribute":"CommissionDate","typeClass":"java.sql.Date","desc":"委托日期"},
+ {"attribute":"CustomerName","typeClass":"java.lang.String","desc":"委托单位名称"},
+ {"attribute":"CustomerTel","typeClass":"java.lang.String","desc":"委托单位电话"},
+ {"attribute":"CustomerAddress","typeClass":"java.lang.String","desc":"委托单位地址"},
+ {"attribute":"CustomerZipCode","typeClass":"java.lang.String","desc":"委托单位邮编"},
+ {"attribute":"CustomerContactor","typeClass":"java.lang.String","desc":"委托单位联系人"},
+ {"attribute":"CustomerContactorTel","typeClass":"java.lang.String","desc":"委托单位联系人电话"},
+ {"attribute":"SampleFrom","typeClass":"java.lang.String","desc":"证书单位名称"},
+ {"attribute":"BillingTo","typeClass":"java.lang.String","desc":"开票单位名称"},
+
+ {"attribute":"ApplianceName","typeClass":"java.lang.String","desc":"器具名称"},
+ {"attribute":"AppFactoryCode","typeClass":"java.lang.String","desc":"器具出厂编号"},
+ {"attribute":"AppManageCode","typeClass":"java.lang.String","desc":"器具管理编号"},
+ {"attribute":"Manufacturer","typeClass":"java.lang.String","desc":"制造厂"},
+ {"attribute":"Quantity","typeClass":"java.lang.Integer","desc":"数量"},
+
+ {"attribute":"MandatoryCode","typeClass":"java.lang.String","desc":"强检唯一性编号"},
+ {"attribute":"Appearance","typeClass":"java.lang.String","desc":"外观附件"},
+
+ {"attribute":"OtherRequirements","typeClass":"java.lang.String","desc":"其它要求"}
+]

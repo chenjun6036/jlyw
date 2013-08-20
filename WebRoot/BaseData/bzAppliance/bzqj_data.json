@@ -1,0 +1,4 @@
+﻿{"total":1,"rows":[
+	{"Id":1,"Name":"量杯","Brief":"lb","Model":"大","Range":"123","Uncertain":"0.02mm","TestCycle":"一年","SeriaNumber":"22222","Manufacturer":"制造公司","ReleaseDate":"2010-01-02","Num":"2","Price":"2.00","Status":"正常","KeeperId":"张三","LocaleCode":"12334","PermanentCode":"111111","ProjectCode":"222","Budget":"2000.00"},
+	{"Id":2,"Name":"量杯","Brief":"lb","Model":"大","Range":"123","Uncertain":"0.02mm","TestCycle":"一年","SeriaNumber":"22222","Manufacturer":"制造公司","ReleaseDate":"2010-01-02","Num":"2","Price":"2.00","Status":"正常","KeeperId":"张三","LocaleCode":"12334","PermanentCode":"111111","ProjectCode":"222","Budget":"2000.00"}
+]}

@@ -1,0 +1,266 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+	<title>常州计量业务管理系统</title>
+
+	<link href="imagesMenu/style.css" rel="stylesheet" type="text/css"/>
+
+	<link href="imagesMenu/default/styles.css" type="text/css" rel="stylesheet"/>
+
+	<style type="text/css">	
+
+		#dock {position:absolute; top:45px; left:0px;}
+
+		/*{
+
+			bottom:48px;
+
+			left:0px;
+
+			margin:0 auto;
+
+			max-width:400px;
+
+			min-width:20px;
+
+			position:fixed;
+
+			z-index:9999;
+
+		}*/
+
+		
+
+		#dock img {
+
+			float:left;
+
+		}
+
+		/***************************
+
+		**  JQDOCK : EXAMPLE CSS  **
+
+		***************************/
+
+		/*dock styling...*/
+
+		/*docks (div.jqDock) get absolute position, zero padding and margin, and visible overflow; width and height are calculated*/
+
+		  /*...set a default dock background colour...*/
+
+		  div.jqDock {		  
+
+			background-color:transparent;
+
+			/*border:2px solid #999999;*/
+
+		}
+
+		  /*...override background colour and/or border for specific demo docks...*/
+
+
+
+
+
+		/*label styling...*/
+
+		/*labels (div.jqDockLabel) only get absolute position and zero margin (with top and left being calculated); the rest is up to you*/
+
+		  /*...let's set some defaults...*/
+
+		  div.jqDockLabel{
+
+		    border:0px none;
+
+		    padding:0px 4px 0px 4px; 
+
+		    font-weight:bold; 
+
+		    font-size:14px; 
+
+		    white-space:nowrap; 
+
+		    color:#000000; 
+
+		    background-color:transparent;
+
+		  }
+
+		  div.jqDockLabelLink {cursor:pointer;}
+
+		  div.jqDockLabelImage {cursor:default;}		  
+
+	</style>
+
+
+
+	<script type="text/javascript" src="script/jquery.js"></script>
+
+	<script type="text/javascript" src="script/RightMenu.js"></script>
+
+</head>
+
+
+
+<body style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px;">
+
+	<form name="form2" method="post" action="Right.aspx" id="form2">
+
+<div>
+
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKLTg2ODkzMjY4MA9kFgICAQ9kFggCAQ8WAh4HVmlzaWJsZWgWDAIBDxYCHwBoZAIDDxYCHwBoZAIFDxYCHwBoZAIHDxYCHwBoZAIJDxYCHwBoZAILDxYCHwBoZAIRDxYCHwBoZAITDxYCHwBoZAIXDxYCHwBoZGQ=" />
+
+</div>
+
+  
+
+	 
+
+	    <div id="DivHint" class="hidden" style="float:right; position:absolute; top: 44px; right: 30px; overflow:hidden; width: 90px; height:80px;z-index:99;">
+
+	        <img alt="Loading..." src="imagesMenu/ball_busy.gif" /><br />正在统计数据...
+
+	    </div>
+
+          
+
+        
+
+
+
+        <div class="right_title">　收发管理</div>
+
+        <div class="right_con">
+
+             <div><a href="#" target="_self"><img src="imagesMenu/TrendChart.png" title="新建委托单" alt="新建委托单" /></a><br />
+		    <a href="#" target="_self">新建委托单</a></div>
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/SampleExplorer.png" title="完工确认"/></a><br />
+		    <a href="#" id="linkSampleManager" target="_self">完工确认</a></div>		    
+			
+			<div><a href="#" target="_self"><img src="imagesMenu/ScatterDiagramExplorer.png" title="客户取样"/></a><br />
+	      <a href="#" id="linkScatterDiagramManager" target="_self">客户取样</a></div>
+
+
+        </div>
+
+        
+
+        <div class="right_title">　任务管理</div>
+
+        <div class="right_con">
+
+            <div><a href="#" target="_self"><img src="imagesMenu/OnlineUsers.png" title="我的任务列表"/></a><br />
+			<a href="#" id="linkOnlineUsers" target="_self">查看任务列表</a></div>		    
+
+		    
+
+		    
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/AlarmRuleManager.png" title="车辆调度" alt="车辆调度" /></a><br />
+			<a href="#" id="linkAlarmRuleManager" target="_self">车辆调度</a></div>
+
+		    
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/Help.png" title="任务分配"/></a><br />
+			<a href="QuickStart.aspx" target="_self">任务分配</a></div>		    		  
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/About.png" title="超期管理"/></a><br />
+			<a href="#" target="_self">超期管理</a></div>		    
+
+		</div>
+
+		
+
+		<div class="right_title">　证书管理</div>
+
+        <div class="right_con">            
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/TrendChart.png" title="证书编制" alt="证书编制" /></a><br />
+		    <a href="#" target="_self">证书编制</a></div>
+			
+			<div><a href="#" target="_self"><img src="imagesMenu/PartExplorer.png" title="证书查询"/></a><br />
+			<a href="#" id="linkPartExplorer" target="_self">证书查询</a></div>	
+			
+
+        </div>
+
+        
+
+		<div class="right_title">　费用管理</div>
+
+        <div class="right_con">
+
+            <div><a href="#" target="_self"><img src="imagesMenu/PartsTree.png" title="在线报价"/></a><br />
+			<a href="#" target="_self">在线报价</a></div>
+			
+			 <div><a href="#" target="_self"><img src="imagesMenu/UscUserExplorer.png" title="预付款管理"/></a><br />
+			 <a href="#" id="linkUscUserExplorer" target="_self">预付款管理</a></div>
+			
+			<div><a href="#" target="_self"><img src="imagesMenu/UscDepartmentExplorer.png" title="结账管理"/></a><br />
+			<a href="#" id="linkUscDepartmentExplorer" target="_self">结账管理</a></div>
+			
+
+        </div>
+		
+		
+		<div class="right_title">　基础数据管理</div>
+
+        <div class="right_con">
+
+             <div><a href="#" target="_self"><img src="imagesMenu/OrganizationsTree.png" title="新增委托单位"/></a><br />
+			 <a href="#" target="_self">新增委托单位</a></div>
+			
+			<div><a href="#" target="_self"><img src="imagesMenu/PartExplorer.png" title="车辆信息管理"/></a><br />
+	      <a href="#" id="linkPartExplorer" target="_self">车辆信息管理</a></div>	
+						
+			<div><a href="#" target="_self"><img src="imagesMenu/UscUserExplorer.png" title="员工档案管理"/></a><br />
+			 <a href="#" id="linkUscUserExplorer" target="_self">员工档案管理</a></div>
+			
+			<div><a href="#" target="_self"><img src="imagesMenu/ScatterDiagramExplorer.png" title="收费项目与收费标准管理"/></a><br />
+			<a href="#" id="linkScatterDiagramManager" target="_self">收费项目与收费标准管理</a></div> 	    
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/SampleExplorer.png" title="强检通知单管理"/></a><br />
+			<a href="#" id="linkSampleManager" target="_self">强检通知单管理</a></div>		    
+        </div>
+		
+		
+		<div class="right_title">　查询与统计管理</div>
+
+        <div class="right_con">
+
+            <div><a href="#" target="_self"><img src="imagesMenu/RealMonitor.png" title="业务查询"/></a><br />
+			<a href="#" id="linkRealTimeMonitor" target="_self">业务查询</a></div>		    	    
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/SampleExplorer.png" title="检验单浏览"/></a><br />
+			<a href="#" id="linkSampleManager" target="_self">业务量查询与统计</a></div>		    
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/PDCAExplorer.png" title="产值查询与统计"/></a><br />
+			<a href="#" id="linkPDCAManager" target="_self">产值查询与统计</a></div>		    
+
+        </div>
+	    
+		
+		<div class="right_title">　其他</div>
+
+        <div class="right_con">
+
+		    <div><a href="#" target="_self"><img src="imagesMenu/Password.png" title="修改用户密码"/></a><br />
+			<a href="#" target="_self">修改用户密码</a></div>
+			
+			<div><a href="#" target="_self"><img src="imagesMenu/Help.png" title="快速上手"/></a><br />
+			<a href="QuickStart.aspx" target="_self">快速上手</a></div>		    
+
+        </div>
+
+	</form>
+
+	
+
+</body>
+
+</html>

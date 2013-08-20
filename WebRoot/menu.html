@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="Inc/Style/themes/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="Inc/Style/themes/icon.css" />
+	<link rel="stylesheet" type="text/css" href="Inc/Style/themes/icon2.css" />
+    <link rel="stylesheet" type="text/css" href="Inc/Style/Style.css" />
+    <script type="text/javascript" src="Inc/JScript/jquery-1.6.min.js"></script>
+	
+    <script type="text/javascript" src="Inc/JScript/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="Inc/JScript/unback.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$('#tt2').tree({
+				checkbox: false,
+				animate : false,
+				url: '/jlyw/MenuServlet.do?method=0',
+				onClick:function(node){
+					if($(this).tree('isLeaf',node.target))  //是叶子节点
+					{
+						ClickNode(node.attributes.url, node.attributes.title);
+					}
+					else
+					{
+						$(this).tree('toggle', node.target);
+					}
+				},
+				onContextMenu: function(e, node){
+					e.preventDefault();
+					if($(this).tree('isLeaf',node.target))  //是叶子节点
+					{
+						$('#tt2').tree('select', node.target);				
+						$('#mm').menu('show', {
+							left: e.pageX,
+							top: e.pageY
+						 });
+					 }
+				}
+			});
+		});
+		function isLessThanIe8() {/* 判断浏览器是否是IE并且版本小于8 */
+			return ($.browser.msie && $.browser.version < 8);
+		};
+		function collapseAll(){
+		//	var node = $('#tt2').tree('getSelected');
+		//	if (node){
+		//		$('#tt2').tree('collapseAll', node.target);
+		//	} else {
+				$('#tt2').tree('collapseAll');
+		//	}
+		}
+		function expandAll(){
+		//	var node = $('#tt2').tree('getSelected');
+		//	if (node){
+		//		$('#tt2').tree('expandAll', node.target);
+		//	} else {
+				$('#tt2').tree('expandAll');
+		//	}
+		}
+		
+		
+		//点击菜单出发的事件
+		function ClickNode(href, title) {
+			if(href != null)
+			{
+				if(title != null)
+				{
+					$("#MainFrame",parent.document.body).attr("src",href+"?_title="+title);
+				}
+				else
+				{
+					$("#MainFrame",parent.document.body).attr("src",href);
+				}
+				
+			}			
+		}
+		
+		
+		//点击菜单出发的事件
+		function RightClickNode() {
+			var node = $('#tt2').tree('getSelected');
+			if($('#tt2').tree('isLeaf',node.target)){
+				var href = node.attributes.url, title = node.attributes.title;
+				
+				if(href != null)
+				{
+					if(title != null)
+					{
+						$("#newWindow").attr("action",href+"?_title="+title);
+						$('#newWindow').submit();
+					}
+					else
+					{
+						$("#newWindow").attr("action",href+"?_title="+title);
+						$('#newWindow').submit();
+					}
+					
+				}			
+			}
+			
+		}
+	</script>
+	
+
+</head>
+
+<body>
+	<div style="padding:0px;background:#fafafa;width:100%;">
+		<a href="javascript:void(0)" class="easyui-linkbutton" plain="true" iconCls="icon-expand" onclick="expandAll()">展开全部</a>
+		<a href="javascript:void(0)" class="easyui-linkbutton" plain="true" iconCls="icon-collapse" onclick="collapseAll()">收起全部</a>
+	</div>
+	<br/>
+	<ul id="tt2"></ul>
+	
+	<div id="mm" class="easyui-menu" style="width:120px;">
+		<div onclick="RightClickNode()" iconCls="icon-add">新窗口打开</div>
+	</div>
+	<form  action="" target="_blank" id="newWindow" method="post">
+	</form>
+</body>
+</html>

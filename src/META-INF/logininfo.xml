@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="GB2312"?>
+<Login-Info>
+    <!-- 存放系统用户上次登录的信息 -->
+   <User Id="-1" LastLoginIp="127.0.0.1" LastLoginTime="1337762253656" />
+</Login-Info>

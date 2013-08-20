@@ -1,0 +1,56 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+
+	<table name="TaskAssign" schema="dbo" catalog="czjl_new"></table>
+	<table name="CommissionSheet" schema="dbo" catalog="czjl_new">
+		<column name="PromiseDate" type="java.sql.Date"></column>
+	</table>
+	<table name="SysUser" schema="dbo" catalog="czjl_new">
+		<column name="Birthday" type="java.sql.Date"></column>
+		<column name="WorkSince" type="java.sql.Date"></column>
+		<column name="WorkHereSince" type="java.sql.Date"></column>
+		<column name="PartyDate" type="java.sql.Date"></column>
+	</table>
+	<table name="OriginalRecord" schema="dbo" catalog="czjl_new">
+		<column name="Validity" type="java.sql.Date"></column>
+		<column name="WorkDate" type="java.sql.Date"></column>
+		<column name="WorkType"></column>
+		<column name="StaffId"></column>
+	</table>
+	<table name="SharingFolder" schema="dbo" catalog="czjl_new">
+		<column name="ParentId"></column>
+	</table>
+	<table name="UserQual" schema="dbo" catalog="czjl_new">
+		<column name="AuthDate" type="java.sql.Date"></column>
+		<column name="Expiration" type="java.sql.Date"></column>
+	</table>
+	<table name="Standard" schema="dbo" catalog="czjl_new">
+		<column name="IssueDate" type="java.sql.Date"></column>
+		<column name="ValidDate" type="java.sql.Date"></column>
+		<column name="SIssueDate" type="java.sql.Date"></column>
+		<column name="SValidDate" type="java.sql.Date"></column>
+	</table>
+	<table name="Specification" schema="dbo" catalog="czjl_new">
+		<column name="IssueDate" type="java.sql.Date"></column>
+		<column name="EffectiveDate" type="java.sql.Date"></column>
+		<column name="RepealDate" type="java.sql.Date"></column>
+	</table>
+	<table name="StandardAppliance" schema="dbo" catalog="czjl_new">
+		<column name="ReleaseDate" type="java.sql.Date"></column>
+		<column name="ValidDate" type="java.sql.Date"></column>
+	</table>
+	<table name="TestLog" schema="dbo" catalog="czjl_new">
+		<column name="TestDate" type="java.sql.Date"></column>
+		<column name="ValidDate" type="java.sql.Date"></column>
+		<column name="ConfirmDate" type="java.sql.Date"></column>
+	</table>
+	<table name="Certificate" schema="dbo" catalog="czjl_new">
+		<column name="LastEditorId"></column>
+	</table>
+	<table name="Deal" schema="dbo" catalog="czjl_new">
+		<column name="SignDate" type="java.sql.Date"></column>
+		<column name="Validity" type="java.sql.Date"></column>
+	</table>
+</hibernate-reverse-engineering>

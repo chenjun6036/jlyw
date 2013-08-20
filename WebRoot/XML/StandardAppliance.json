@@ -1,0 +1,8 @@
+﻿[{"attribute":"Name","typeClass":"java.lang.String","desc":"名称"},
+{"attribute":"LocaleCode","typeClass":"java.lang.String","desc":"所内编号"},
+{"attribute":"SeriaNumber","typeClass":"java.lang.String","desc":"证书编号"},
+{"attribute":"Model","typeClass":"java.lang.String","desc":"型号规格"},
+{"attribute":"Range","typeClass":"java.lang.String","desc":"测量范围"},
+{"attribute":"Uncertain","typeClass":"java.lang.String","desc":"准确度等级"},
+{"attribute":"ValidDate","typeClass":"java.sql.Date","desc":"有效期"}
+]

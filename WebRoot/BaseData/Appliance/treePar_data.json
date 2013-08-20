@@ -1,0 +1,12 @@
+﻿{"total":123,"rows":[
+	{"id":1,"Name":"声学","Status":"0","Hierarchy":1},
+	{"id":11,"Name":"声学仪器","Status":"0","_parentId":1,"Hierarchy":2},
+	{"id":111,"Name":"超声探伤仪","Status":"1","_parentId":11,"Hierarchy":3},
+	{"id":112,"Name":"测试电容传声器","Status":"0","_parentId":11,"Hierarchy":3},
+	{"id":113,"Name":"声校准器","Status":"0","_parentId":11,"Hierarchy":3},
+	{"id":2,"Name":"光学","Status":"0","Hierarchy":1},
+	{"id":21,"Name":"光学仪器","Status":"0","_parentId":2,"Hierarchy":2},
+	{"id":211,"Name":"显微仪器","Status":"0","_parentId":21,"Hierarchy":3},
+	{"id":212,"Name":"望远镜","Status":"0","_parentId":21,"Hierarchy":3},
+	{"id":213,"Name":"放大镜","Status":"0","_parentId":21,"Hierarchy":3}
+]}

@@ -1,0 +1,33 @@
+#loading{
+	position:absolute;
+	left:0px;
+	top:0px;
+	padding:2px;
+	z-index:20001;
+	height:100%;
+	width:100%;
+	text-align:center;
+	background:#CCCCCC;
+	filter: alpha(opacity=83);
+}
+#loading a {
+	color:#225588;
+}
+#loading .loading-indicator{
+	position:absolute;
+	top: 50%; 
+	left: 50%;
+	background:white;
+	filter: alpha(opacity=100);/*IE透明度100%(不透明)*/
+	color:#444;
+	font:bold 13px tahoma,arial,helvetica;
+	padding:10px;
+	margin-left:-100px;
+	margin-top:-50px;
+	width:200px;
+	height:100px;
+	z-index:20005;
+}
+#loading-msg {
+	font: normal 10px arial,tahoma,sans-serif;
+}
