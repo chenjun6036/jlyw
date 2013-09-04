@@ -7,7 +7,7 @@
 <hibernate-configuration>
 
 	<session-factory>
-		<property name="connection.url">jdbc:sqlserver://192.168.0.123:1433</property>
+		<property name="connection.url">jdbc:sqlserver://192.168.0.55:1433</property>
 		<property name="connection.driver_class">
 			com.microsoft.sqlserver.jdbc.SQLServerDriver
 		</property>

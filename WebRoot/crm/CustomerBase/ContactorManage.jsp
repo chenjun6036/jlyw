@@ -22,6 +22,8 @@
 
 		$(function(){
 		
+	
+		
 		
 		$('#customerName').combobox({
 			//	url:'/jlyw/CustomerServlet.do?method=6',
@@ -274,6 +276,7 @@
 				  	<td align="left"><input class="easyui-validate" id="name" name="Name"></input></td>
                     <td align="right">状态：</td>
 				  	<td align="left"><select id="status" name="Status" class="easyui-combobox">
+				  	<option value="">==显示全部==</option>
 				  	<option value="0">正常</option>
 				  	<option value="1">已注销</option>
 				  	</select></td>

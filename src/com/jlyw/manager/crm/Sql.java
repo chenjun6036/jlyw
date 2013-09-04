@@ -32,6 +32,7 @@ public class Sql {
 	
 	private static String Driver;
 	private static String Url;
+	private String path = "hibernate.cfg.xml";
 	public static String getUrl() {
 		return Url;
 	}
@@ -68,7 +69,7 @@ public class Sql {
 	public boolean init () throws SAXException, DocumentException, ClassNotFoundException {
 		//File f = new File(System.getProperty("user.dir")+"\\src\\hibernate.cfg.xml");
 		//File f = new File(System.getProperty("user.dir")+"\\src\\hibernate.cfg.xml");
-		File f = new File(Sql.class.getResource("/").toString());
+		File f= new File(this.getClass().getClassLoader().getResource(path).getPath());
 		SAXReader reader = new SAXReader();
 
 		reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -141,15 +142,20 @@ public class Sql {
 	/**
 	 * 得到链接
 	 * @return
+	 * @throws Exception 
+	 * @throws DocumentException 
+	 * @throws SAXException 
 	 */
-	public Connection getMyConn(){
+	public Connection getMyConn() throws SAXException, DocumentException, Exception{
 		
 		Connection conn = null;
 		
 		try {
+			init();
 			//得到链接
-			//conn =DriverManager.getConnection(Url+";databasename=czjl_new",UserName,Password);
-			conn =DriverManager.getConnection("jdbc:sqlserver://192.168.0.123:1433;databasename=czjl_new","sa","123456");
+			
+			conn =DriverManager.getConnection(Url+";databasename=czjl_new",UserName,Password);
+//			conn =DriverManager.getConnection("jdbc:sqlserver://192.168.0.123:1433;databasename=czjl_new","sa","123456");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 

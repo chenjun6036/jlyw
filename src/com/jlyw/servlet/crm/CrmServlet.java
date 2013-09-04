@@ -3735,7 +3735,7 @@ public class CrmServlet extends HttpServlet {
 				response.getWriter().write(retObj48.toString());
 			}
 			break;
-		case 49://查询预警信息
+		case 49://查询预警数量
 			JSONObject retObj49=new JSONObject();
 			try {
 				SysUser sysUser = (SysUser)(request.getSession().getAttribute("LOGIN_USER"));

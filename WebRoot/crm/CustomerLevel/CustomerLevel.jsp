@@ -74,8 +74,7 @@
 				pagination:true,
 				rownumbers:true,
 				showFooter:true,
-				onSelect:function()
-				{ alert();},
+				
 				toolbar:[/* {
 					text:'…Ë÷√µ»º∂',
 					iconCls:'icon-edit',
