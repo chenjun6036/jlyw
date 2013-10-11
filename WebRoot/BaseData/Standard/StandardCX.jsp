@@ -147,12 +147,12 @@
 							$('#ProjectCode').val(select.ProjectCode);
 							$('#Status').combobox('setValue',select.Status);
 							$('#CreatedBy').val(select.CreatedBy);
-							$('#IssuedBy').val(select.IssuedBy);
+							$('#IssuedBy').combobox('setValue',select.IssuedBy);
 							$('#IssueDate').datebox('setValue',select.IssueDate);
 							$('#ValidDate').datebox('setValue',select.ValidDate);
 							$('#Range').val(select.Range);
 							$('#Uncertain').val(select.Uncertain);
-							$('#SIssuedBy').val(select.SIssuedBy);
+							$('#SIssuedBy').combobox('setValue',select.SIssuedBy);
 							$('#SIssueDate').datebox('setValue',select.SIssueDate);
 							$('#SValidDate').datebox('setValue',select.SValidDate);
 							$('#SCertificateCode').val(select.SCertificateCode);
@@ -286,6 +286,7 @@
 		
 		function query()
 		{
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/StandardServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'queryName':encodeURI($('#queryName').val()),'queryIssuedBy':encodeURI($('#queryIssuedBy').val()),'queryStatus':encodeURI($('#queryStatus').combobox('getValue')),'queryType':encodeURI($('#queryType').combobox('getValue')),'queryStart':encodeURI($('#dateTimeFrom').combobox('getValue')),'queryEnd':encodeURI($('#dateTimeEnd').datebox('getValue')),'queryHandler':encodeURI($('#queryHandler').combobox('getValue')),'queryDept':encodeURI($('#queryDept').val())};
 			$('#table2').datagrid('reload');
@@ -459,7 +460,7 @@
                             <td align="right">建标单位：</td>
                             <td align="left"><input id="CreatedBy" name="CreatedBy" type="text" class="easyui-validatebox" required="true"/></td>
                             <td align="right">发证单位：</td>
-                            <td align="left"><input id="IssuedBy" name="IssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=14"/></td>
+                            <td align="left"><input id="IssuedBy" name="IssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=14"/></td>
                         </tr>
                         
                         <tr height="30px">
@@ -478,7 +479,7 @@
                         
                         <tr height="30px">
                             <td align="right">社&nbsp;会&nbsp;证&nbsp;&nbsp;<br />发证机关：</td>
-                            <td align="left"><input id="SIssuedBy" name="SIssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=15"/></td>
+                            <td align="left"><input id="SIssuedBy" name="SIssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=15"/></td>
                             <td align="right">社&nbsp;会&nbsp;证&nbsp;&nbsp;<br />证&nbsp;书&nbsp;号：</td>
                             <td align="left"><input id="SCertificateCode" name="SCertificateCode" type="text"  class="easyui-validatebox" required="true"/></td>
                         </tr>

@@ -69,7 +69,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			
@@ -86,6 +86,7 @@
 		});
 		
 		function query(){
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/UserServlet.do?method=0';
 			$('#table2').datagrid('options').queryParams={'queryGender':encodeURI($("input[name='queryGender']:checked").val()),'queryname':encodeURI($('#queryname').combobox('getValue')),'queryJobTitle':encodeURI($('#queryJobTitle').val()),'queryDepartment': encodeURI($('#querydept').val()),'queryProjectTeam': encodeURI($('#queryproteam').val()),'queryStatus': encodeURI($('#querystatus').combobox('getValue')),'queryPolStatus': encodeURI($('#querypolstatus').combobox('getValue')),'queryType': encodeURI($('#querytype').combobox('getValue')),'queryTel': encodeURI($('#querytel').val()),'queryIDNum': encodeURI($('#queryidnum').val())};
 			$('#table2').datagrid('reload');
@@ -1228,7 +1229,7 @@
                         </tr>
                         <tr>
                             <td align="right">入党时间：</td>
-                            <td align="left"><input id="PartyDate" name="PartyDate" type="text" class="easyui-datebox" style="width:150px" editable="false"/></td>
+                            <td align="left"><input id="PartyDate" name="PartyDate" type="text" class="easyui-datebox" style="width:150px"/></td>
                             <td align="right">家庭住址：</td>
                             <td align="left"><input id="HomeAdd" name="HomeAdd" type="text" class="easyui-validatebox" required="true"/></td>
                             <td align="right">工作地点：</td>

@@ -387,7 +387,7 @@ private QualificationDAO m_dao = new QualificationDAO();
 			}
 			
 			List list = queryObject.list();
-			if(list.size()==0){//若该类没有任何有资质的人员，则加载该分类下所有类别有资质的人
+			if(list.size()==0&&AuthItemType==1){//若该类没有任何有资质的人员，则加载该分类下所有类别有资质的人
 				String queryStr = "with appspe as( " + 
 								"select a.Id, a.ParentId, 1 as Type from" +  SystemCfgUtil.DBPrexName + "ApplianceSpecies as a where a.Id = ? " + 
 								"union all " + 

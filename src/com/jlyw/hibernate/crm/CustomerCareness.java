@@ -26,7 +26,7 @@ public class CustomerCareness implements java.io.Serializable {
 	private Integer way;
 	private String careContactor;
 	private String remark;
-	private float fee;
+	private Double fee;
 
 	// Constructors
 
@@ -38,7 +38,7 @@ public class CustomerCareness implements java.io.Serializable {
 	public CustomerCareness(SysUser sysUserByCreateSysUserId,
 			Customer customer, String customerName, Integer priority,
 			Timestamp createTime, Integer status, Timestamp time, Integer way,
-			String careContactor,float fee) {
+			String careContactor,Double fee) {
 		this.sysUserByCreateSysUserId = sysUserByCreateSysUserId;
 		this.customer = customer;
 		this.customerName = customerName;
@@ -56,7 +56,7 @@ public class CustomerCareness implements java.io.Serializable {
 			SysUser sysUserByCreateSysUserId, Customer customer,
 			SysUser sysUserByCareDutySysUserId, String customerName,
 			Integer priority, Timestamp createTime, Integer status,
-			Timestamp time, Integer way, String careContactor, String remark,float fee) {
+			Timestamp time, Integer way, String careContactor, String remark,Double fee) {
 		this.sysUserByRepresentativeId = sysUserByRepresentativeId;
 		this.sysUserByCreateSysUserId = sysUserByCreateSysUserId;
 		this.customer = customer;
@@ -178,11 +178,11 @@ public class CustomerCareness implements java.io.Serializable {
 		this.remark = remark;
 	}
 
-	public float getFee() {
+	public Double getFee() {
 		return fee;
 	}
 
-	public void setFee(float fee) {
+	public void setFee(Double fee) {
 		this.fee = fee;
 	}
 

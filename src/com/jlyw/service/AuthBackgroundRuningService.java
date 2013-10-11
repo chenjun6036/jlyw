@@ -35,56 +35,65 @@ import com.jlyw.util.xmlHandler.ParseXMLAll;
 public class AuthBackgroundRuningService extends TimerTask  {
 	private static final Log log = LogFactory.getLog(AuthBackgroundRuningService.class);
 	private static boolean isRunning = false;
-
+	private final static Byte[] locks = new Byte[0];  
 	public void run() {
-		if (!isRunning) {
-			try {
-				isRunning = true;
-				log.debug("开始执行指定任务：AuthBackgroundRuningService");
-				
-				List<AuthBackgroundRuning> tRetList = AuthBackgroundRuningManager.findPageAllAuthBackgroundRuningBySort(1, 5, "createTime", true);
-				OriginalRecordManager oRecordMgr = new OriginalRecordManager();
-				for(AuthBackgroundRuning t : tRetList){
-					VerifyAndAuthorize v = t.getVerifyAndAuthorize();
-					if(v.getAuthorizeTime() == null || v.getIsAuthBgRuning() == null || !v.getIsAuthBgRuning()){	//签字任务已取消或已经完成：将IsAuthBgRuning设置为null即可
-						AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, true);
-						continue;
-					}
-					List<OriginalRecord> oRecordList = oRecordMgr.findByVarProperty(new KeyValueWithOperator("verifyAndAuthorize.id", v.getId(), "="),
-							new KeyValueWithOperator("status", 1, "<>"),	//原始记录未注销
-							new KeyValueWithOperator("certificate.pdf", null, "is not null"));	//原始记录的证书为正式版本
-					if(oRecordList.size() == 0){	//找不到对应的原始记录:该核验和签字任务无效
-						AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, false);
-						continue;
-					}else{
-						OriginalRecord o = oRecordList.get(0);
-						if(!v.getOriginalRecordExcel().getId().equals(o.getOriginalRecordExcel().getId()) ||
-								!v.getCertificate().getId().equals(o.getCertificate().getId())){	//该签字任务已过期，原因：原始记录或证书有改动！
-							AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, false);
-							continue;
-						}
-						if(v.getAuthorizeResult() == null || !v.getAuthorizeResult()){	//授权签字未通过：将IsAuthBgRuning设置为null即可，不需要将签名图片插入证书中
+		synchronized (locks){ 
+			if (!isRunning) {
+				try {
+					isRunning = true;
+					log.debug("开始执行指定任务：AuthBackgroundRuningService");
+					
+					List<AuthBackgroundRuning> tRetList = AuthBackgroundRuningManager.findPageAllAuthBackgroundRuningBySort(1, 10, "createTime", true);
+					OriginalRecordManager oRecordMgr = new OriginalRecordManager();
+					for(AuthBackgroundRuning t : tRetList){
+						VerifyAndAuthorize v = t.getVerifyAndAuthorize();
+						if(v.getAuthorizeTime() == null || v.getIsAuthBgRuning() == null || !v.getIsAuthBgRuning()){	//签字任务已取消或已经完成：将IsAuthBgRuning设置为null即可
 							AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, true);
 							continue;
 						}
-						
-						
-						try{
-							AuthorizeExecute(o, v);	//执行签名
-							AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, true);
-						}catch(Exception e){
+						log.debug("1执行签名");
+						List<OriginalRecord> oRecordList = oRecordMgr.findByVarProperty(new KeyValueWithOperator("verifyAndAuthorize.id", v.getId(), "="),
+								new KeyValueWithOperator("status", 1, "<>"),	//原始记录未注销
+								new KeyValueWithOperator("certificate.pdf", null, "is not null"));	//原始记录的证书为正式版本
+						if(oRecordList.size() == 0){	//找不到对应的原始记录:该核验和签字任务无效
+							log.debug("2执行签名");
 							AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, false);
-							log.error("error in AuthBackgroundRuningService", e);
-						}	
+							continue;
+							
+						}else{
+							OriginalRecord o = oRecordList.get(0);
+							if(!v.getOriginalRecordExcel().getId().equals(o.getOriginalRecordExcel().getId()) ||
+									!v.getCertificate().getId().equals(o.getCertificate().getId())){	//该签字任务已过期，原因：原始记录或证书有改动！
+								AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, false);
+								log.debug("3执行签名");
+								continue;
+							}
+							if(v.getAuthorizeResult() == null || !v.getAuthorizeResult()){	//授权签字未通过：将IsAuthBgRuning设置为null即可，不需要将签名图片插入证书中
+								AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, true);
+								log.debug("4执行签名");
+								continue;
+							}
+							
+							
+							try{
+								AuthorizeExecute(o, v);	//执行签名
+								log.debug("AuthorizeExecute(o, v);	//执行签名");
+								AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, true);
+							}catch(Exception e){
+								log.debug("exception	//执行签名");
+								AuthBackgroundRuningManager.removeAnAuthBackgroundRuning(t, false);
+								log.error("error in AuthBackgroundRuningService", e);
+							}	
+						}
 					}
+					
+					log.debug("结束执行指定任务：AuthBackgroundRuningService");
+				} catch (Exception e) {
+					log.error("error in AuthBackgroundRuningService", e);
+				} finally {
+					isRunning = false;
+					HibernateSessionFactory.closeSessionForFilter();	//真正关闭Hibernate Session
 				}
-				
-				log.debug("结束执行指定任务：AuthBackgroundRuningService");
-			} catch (Exception e) {
-				log.error("error in AuthBackgroundRuningService", e);
-			} finally {
-				isRunning = false;
-				HibernateSessionFactory.closeSessionForFilter();	//真正关闭Hibernate Session
 			}
 		}
 	}

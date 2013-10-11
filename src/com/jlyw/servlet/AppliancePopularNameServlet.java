@@ -16,12 +16,14 @@ import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
 import com.jlyw.hibernate.AppliancePopularName;
+import com.jlyw.hibernate.ApplianceStandardName;
 import com.jlyw.manager.AppliancePopularNameManager;
 import com.jlyw.manager.ApplianceStandardNameManager;
 import com.jlyw.manager.CustomerManager;
 import com.jlyw.servlet.appliance.TargetApplianceServlet;
 import com.jlyw.util.ExportUtil;
 import com.jlyw.util.KeyValueWithOperator;
+import com.jlyw.util.LetterUtil;
 
 public class AppliancePopularNameServlet extends HttpServlet {
 	private static final Log log = LogFactory.getLog(AppliancePopularNameServlet.class);
@@ -155,7 +157,7 @@ public class AppliancePopularNameServlet extends HttpServlet {
 
 				
 				List<AppliancePopularName> result = new ArrayList<AppliancePopularName>();
-				result = appPopularNameMgr.findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.valueOf(StandardNameId), "="));
+				result = appPopularNameMgr.findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.valueOf(StandardNameId), "="),new KeyValueWithOperator("status", 1, "<>"));
 			
 				
 				if(result!=null&&result.size()!=0)
@@ -214,8 +216,7 @@ public class AppliancePopularNameServlet extends HttpServlet {
 
 				standardNameName = new String(standardNameName.getBytes("ISO-8859-1"), "UTF-8");
 				List<AppliancePopularName> result = new ArrayList<AppliancePopularName>();
-				result = appPopularNameMgr.findByVarProperty(new KeyValueWithOperator("applianceStandardName.name", standardNameName, "="));
-			
+				result = appPopularNameMgr.findByVarProperty(new KeyValueWithOperator("applianceStandardName.name", standardNameName, "="),new KeyValueWithOperator("status", 1, "<>"));
 				
 				if(result!=null&&result.size()!=0)
 				{
@@ -241,6 +242,82 @@ public class AppliancePopularNameServlet extends HttpServlet {
 				resp.getWriter().write(options7.toString());
 			}
 			break;
+		case 8://模糊查询器具常用名称
+			JSONArray jsonArray2 = new JSONArray();
+			try {
+				String appStanNameStr = req.getParameter("AppliancePopularName");
+				if(appStanNameStr != null && appStanNameStr.trim().length() > 0){
+					String appStanName =  new String(appStanNameStr.trim().getBytes("ISO-8859-1"), "GBK");	//解决URL传递中文乱码问题
+					//appStanName = LetterUtil.String2Alpha(appStanName);	//转换成拼音简码
+					String[] queryName = appStanName.split(" \\s+");	//根据空格符分割
+					if(queryName.length == 0){
+						return;
+					}
+					appStanName = "";
+					for(int i = 0; i < queryName.length; i++){
+						appStanName += queryName[i];
+						if(i != queryName.length-1)
+							appStanName += "%";
+					}
+					appStanName = "%" + appStanName + "%";
+					String queryString = String.format("from AppliancePopularName as model where (model.brief like ? or model.popularName like ?) and model.status = 0");
+					List<AppliancePopularName> retList = appPopularNameMgr.findPageAllByHQL(queryString, 1, 30, appStanName, appStanName);
+					if(retList != null){
+						for(AppliancePopularName temp : retList){
+							JSONObject jsonObj = new JSONObject();
+							jsonObj.put("name", temp.getPopularName());
+							jsonObj.put("id", temp.getId());
+							jsonArray2.put(jsonObj);	
+						}
+					}
+				}
+			} catch (Exception e) {
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in AppliancePopularNameServlet-->case 8", e);
+				}else{
+					log.error("error in AppliancePopularNameServlet-->case 8", e);
+				}
+			}finally{
+				resp.setContentType("text/json;charset=gbk");
+				resp.getWriter().write(jsonArray2.toString());
+			}
+			break;
+		case 9://根据常用名称查询标准名称
+			JSONArray option9s = new JSONArray();
+			try{
+				String PopularName = req.getParameter("PopularName");
+				if(PopularName != null && PopularName.trim().length() > 0){
+					String appPopularName =  new String(PopularName.trim().getBytes("ISO-8859-1"), "UTF-8");	//解决URL传递中文乱码问题
+					
+					List<AppliancePopularName> result = new ArrayList<AppliancePopularName>();
+					result = appPopularNameMgr.findByVarProperty(new KeyValueWithOperator("popularName",appPopularName, "="),new KeyValueWithOperator("status",0, "="));
+				
+					
+					if(result!=null&&result.size()!=0)
+					{
+						for(AppliancePopularName temp : result){
+							JSONObject option = new JSONObject();
+							option.put("id", temp.getApplianceStandardName().getId());
+							option.put("standardname", temp.getApplianceStandardName().getName());
+							
+							
+							option9s.put(option);
+						}
+					}
+				}
+			}catch(Exception e){
+				if (e.getClass() == java.lang.Exception.class) { // 自定义的消息
+					log.debug("exception in AppliancePopularNameServlet-->case 9",e);
+				} else {
+					log.error("error in AppliancePopularNameServlet-->case 9", e);
+				}
+				
+			}finally{
+				
+				resp.setContentType("text/json;charset=gbk");
+				resp.getWriter().write(option9s.toString());
+			}
+			break;
 		}
 	}
 	
@@ -250,15 +327,20 @@ public class AppliancePopularNameServlet extends HttpServlet {
 		String Name = req.getParameter("Name");
 		String Brief = req.getParameter("Brief");
 		String Status = req.getParameter("Status");
-		List<AppliancePopularName> popularNameList = (new AppliancePopularNameManager()).findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.valueOf(StandardNameId), "="), new KeyValueWithOperator("popularName", Name, "="));
-		if(popularNameList!=null&&popularNameList.size()>0)
-			throw new Exception("该常用名称已存在！");
+		
 
 		AppliancePopularName popularName ;
 		if(id==0)
 			popularName = new AppliancePopularName();
 		else
 			popularName = (new AppliancePopularNameManager()).findById(id);
+		
+		if(id==0||!popularName.getPopularName().equals(Name)){
+			List<AppliancePopularName> popularNameList = (new AppliancePopularNameManager()).findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.valueOf(StandardNameId), "="), new KeyValueWithOperator("popularName", Name, "="));
+			if(popularNameList!=null&&popularNameList.size()>0)
+				throw new Exception("该常用名称已存在！");
+		}
+		
 		popularName.setApplianceStandardName((new ApplianceStandardNameManager()).findById(Integer.valueOf(StandardNameId)));
 		popularName.setPopularName(Name);
 		popularName.setBrief(Brief);

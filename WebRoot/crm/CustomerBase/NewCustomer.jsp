@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>委托方信息管理</title>
+<title>委托单位信息录入</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -153,7 +153,7 @@ if ($.browser.msie)
    this.style.imeMode='disabled';   // 禁用输入法,禁止输入中文字符
    }).bind("paste",function(){return false;});
 }
-$(function()
+/* $(function()
 {
 //checknum('#crdamount');
 //checknum('#outputExpectation');
@@ -179,7 +179,7 @@ if ($.browser.msie)
    }}).focus(function() { 
    this.style.imeMode='disabled';   // 禁用输入法,禁止输入中文字符
    }).bind("paste",function(){return false;});
-});
+}); */
 
 $(function()
 {
@@ -224,9 +224,9 @@ $(function()
 	<table style="width:700px; height:400px; padding-top:10px; padding-left:20px" class="easyui-panel" title="新增委托单位">
 		<tr height="30px">
 			<td align="right" style="width：20%">单位名称：</td>
-			<td align="left"  style="width：30%"><input id="name" name="Name" type="text" class="easyui-validatebox" required="true" onchange="getBrief()"/></td>
+			<td align="left"  style="width：30%"><input style="width:140px" id="name" name="Name" type="text" class="easyui-validatebox" required="true" onchange="getBrief()"/></td>
             <td align="right" style="width：20%">拼音简码：</td>
-			<td align="left"  style="width：30%"><input id="brief" name="Brief" type="text" class="easyui-validatebox"/></td>
+			<td align="left"  style="width：30%"><input style="width:140px" id="brief" name="Brief" type="text" class="easyui-validatebox"/></td>
 		</tr>
 		<tr>
 		<td align="right">付款方式：</td>
@@ -268,11 +268,8 @@ $(function()
 		<tr height="30px">
 			<td align="right">单位类型：</td>
 			<td align="left" >
-				<select id="customerType" name="CustomerType" class="easyui-combobox" style="width:145px" required="true" panelHeight="auto" editable="false">
-					<option value='0'>国有企业</option>
-					<option value='1'>外资企业</option>
-					<option value='2'>中外合资企业</option>
-					<option value='3'>民营企业</option>
+				<select id="customerType" name="CustomerType" class="easyui-combobox" style="width:145px" required="true" panelHeight="auto" valueField="id" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=29" editable="false">
+					
 				</select>
 			</td>
 			<td align="right">单位地址：</td>
@@ -287,19 +284,20 @@ $(function()
 			<td align="right">邮&nbsp;&nbsp;&nbsp;&nbsp;编：</td>
 			<td align="left" ><input id="zcd" name="ZipCode" type="text" class="easyui-validatebox" required="true"/></td>
 		</tr>
+		<tr ><td align="left" boderwidth="2px;" colspan="5" >-------------------------------------------------------------------------------------------------------------</td>
+		</tr>
 		<tr  height="30px">
 			<td align="right">内部联系人：</td>
 			<td align="left">
-				<select id="insideContactorId" name="InsideContactorId" panelHeight="auto" class="easyui-combobox" style="width:145px" required="true" editable="false" ></select>
+				<select id="insideContactorId" name="InsideContactorId" panelHeight="auto" class="easyui-combobox" style="width:145px"  editable="false" ></select>
 			</td>
 			<td align="right">角&nbsp;&nbsp;&nbsp;&nbsp;色：</td>
-			<td align="left" ><select style="width:145px" id="role" name="Role" type="text" class="easyui-combobox" required="true" panelHeight="auto">
+			<td align="left" ><select style="width:145px" id="role" name="Role" type="text" class="easyui-combobox"  panelHeight="auto">
 			<option value="1" selected="selected">A</option>
 			<option value="2">B</option>
 			</select></td>
 		</tr>
-		<tr ><td align="left" boderwidth="2px;" colspan="5" >-------------------------------------------------------------------------------------------------------------</td>
-		</tr>
+		
 		<tr height="30px">
 			
 			<td align="right">单位代码：</td>
@@ -309,7 +307,7 @@ $(function()
 		</tr>
 		<tr height="30px">
 			<td align="right">英文名称：</td>
-			<td align="left" colspan="3"><input id="nameEn" name="NameEn" type="text" style="width:486px" class="easyui-validatebox"/></td>
+			<td align="left" colspan="3"><input id="nameEn" name="NameEn" type="text" style="width:500px" class="easyui-validatebox"/></td>
 		</tr>
 		<tr height="30px">
 			<td align="right">联系电话：</td>
@@ -332,12 +330,15 @@ $(function()
 			<td align="left">
 				<input id="cla" name="Classification" class="easyui-combobox" style="width:145px" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=11"/>
 			</td>
-			<td align="right">单位状态：</td>
-			<td align="left">
+			<td align="right">所在行业：</td>
+		<td><select style="width:145px" id="industry" name="Industry" class="easyui-combobox" ></select>
+		<input type="hidden" id="industryId" name="IndustryId"/></td>
+			<!-- <td align="right">单位状态：</td> -->
+			<!-- <td align="left">
 				<select id="sta" name="Status" class="easyui-combobox" style="width:145px" panelHeight="auto" editable="false">
 						<option value='0' >正常</option>
 						<option value='1'>注销</option>
-				 </select></td>
+				 </select></td> -->
 		</tr>
 		<tr height="30px">
         	<td align="right">开户银行：</td>
@@ -347,9 +348,9 @@ $(function()
         </tr>
         <tr>
 			<td align="right">信用额度：</td>
-			<td align="left"><input id="crdamount" name="CreditAmount" type="text" class="easyui-numberbox" /></td>
+			<td align="left"><input id="crdamount" name="CreditAmount" type="text" class="easyui-numberbox" min="0"/></td>
 			<td align="right">服务费用限值：</td>
-		<td><input class="easyui-numberbox" id="serviceFeeLimitation" name="ServiceFeeLimitation" /></td>
+		<td><input class="easyui-numberbox" id="serviceFeeLimitation" name="ServiceFeeLimitation" min="0"/></td>
    		</tr>
 		
 		<tr>
@@ -370,7 +371,7 @@ $(function()
 		</select>
 		
 		</td>
-		<td align="right">企业等级：</td>
+		<td align="right">客户分类：</td>
 		<td>
 		<select style="width:145px" class="easyui-combobox" id="customerLevel" name="CustomerLevel"  panelHeight="auto" ediable="false">
 		<option value="1">VIP客户</option>
@@ -390,19 +391,18 @@ $(function()
 		<option value="2">降级可能</option>
 		<option value="3">维持现状</option>
 		</select></td>
-		<td align="right">所在行业：</td>
-		<td><select style="width:145px" id="industry" name="Industry" class="easyui-combobox" ></select>
-		<input type="hidden" id="industryId" name="IndustryId"/></td>
+		<td align="right">产值期望值：</td>
+		<td><input class="easyui-numberbox" min="0" id="outputExpectation" name="OutputExpectation" /></td>
+		
 		</tr>
 		<tr>
-		<td align="right">产值期望值：</td>
-		<td><input class="easyui-numberbox" id="outputExpectation" name="OutputExpectation" /></td>
+		
 		</tr>
 		<tr>
 		<td align="right">忠诚度：</td>
-		<td><input name="Loyalty" class="easyui-numberbox"></input></td>
+		<td><input name="Loyalty" class="easyui-numberbox" min="0" max="100"></input></td>
 		<td align="right">满意度：</td>
-		<td><input name="Satisfaction" class="easyui-numberbox"></input></td>
+		<td><input name="Satisfaction" class="easyui-numberbox" min="0" max="100"></input></td>
 		</tr>
 		<tr height="30px">
 			<td align="right">下厂要求：</td>

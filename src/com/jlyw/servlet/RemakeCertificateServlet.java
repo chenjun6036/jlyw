@@ -19,11 +19,15 @@ import org.json.me.JSONObject;
 
 import com.jlyw.hibernate.Certificate;
 import com.jlyw.hibernate.CommissionSheet;
+import com.jlyw.hibernate.OriginalRecord;
 import com.jlyw.hibernate.RemakeCertificate;
 import com.jlyw.hibernate.SysUser;
 import com.jlyw.manager.CertificateManager;
+import com.jlyw.manager.CommissionSheetManager;
 import com.jlyw.manager.RemakeCertificateManager;
+import com.jlyw.manager.statistic.ExportManager;
 import com.jlyw.util.DateTimeFormatUtil;
+import com.jlyw.util.ExportUtil;
 import com.jlyw.util.KeyValueWithOperator;
 import com.jlyw.util.SystemCfgUtil;
 
@@ -360,6 +364,13 @@ public class RemakeCertificateServlet extends HttpServlet {
 				if(rc.getFinishTime() != null){
 					throw new Exception("该任务已完成，不能重复操作！");
 				}
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
+				String hqlQueryString_FinishQuantity = "select model from OriginalRecord as model where model.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录(签字已通过且不是正在后台执行)
+				
+				List<OriginalRecord> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, rc.getOriginalRecord().getId(), true);	//
+				if(fQuantityList==null||fQuantityList.size()==0){
+					throw new Exception("该证书未完成核验签字");
+				}			
 				rc.setFinishRemark(FinishRemark);
 				rc.setFinishTime(new Timestamp(System.currentTimeMillis()));
 				if(remakeMgr.update(rc)){
@@ -432,6 +443,146 @@ public class RemakeCertificateServlet extends HttpServlet {
 			}finally{
 				resp.setContentType("text/html;charset=utf-8");
 				resp.getWriter().write(retJSON7.toString());
+			}
+			break;
+		case 8 : 	//根据条件查询所有重新编制记录
+			JSONObject retJSON8 = new JSONObject();
+			try {
+				JSONArray jsonArray = new JSONArray();
+				int page = 0;	//当前页面
+				if (req.getParameter("page") != null)
+					page = Integer.parseInt(req.getParameter("page").toString());
+				int rows = 10;	//页面大小
+				if (req.getParameter("rows") != null)
+					rows = Integer.parseInt(req.getParameter("rows").toString());
+				String StartTime = req.getParameter("StartTime");
+				String EndTime = req.getParameter("EndTime");
+				
+				List<KeyValueWithOperator> condList = new ArrayList<KeyValueWithOperator>();	//查询条件
+				if(StartTime != null&& !StartTime.equals("")){
+					StartTime = URLDecoder.decode(StartTime.trim() + " 00:00:00", "UTF-8");
+					condList.add(new KeyValueWithOperator("createTime", Timestamp.valueOf(StartTime), ">="));
+				}
+				if(EndTime != null&& !EndTime.equals("")){
+					EndTime = URLDecoder.decode(EndTime.trim()+" 23:59:59", "UTF-8");
+					condList.add(new KeyValueWithOperator("createTime", Timestamp.valueOf(EndTime), "<="));
+				}
+				
+				int total = remakeMgr.getTotalCount(condList);
+				List<RemakeCertificate> tRetList = remakeMgr.findPagedAllBySort(page, rows, "createTime", true, condList);
+				for(RemakeCertificate rc : tRetList){
+					JSONObject jsonObj = new JSONObject();
+					jsonObj.put("CommissionCode", rc.getOriginalRecord().getCommissionSheet().getCode());
+					jsonObj.put("CommissionPwd", rc.getOriginalRecord().getCommissionSheet().getPwd());
+					jsonObj.put("ApplianceName", rc.getOriginalRecord().getCommissionSheet().getApplianceName());	//器具名称
+					jsonObj.put("CustomerName", rc.getOriginalRecord().getCommissionSheet().getCustomerName());	//委托单位名称
+					jsonObj.put("CustomerContactor", rc.getOriginalRecord().getCommissionSheet().getCustomerContactor());	//委托单位联系人
+					jsonObj.put("CustomerContactorTel", rc.getOriginalRecord().getCommissionSheet().getCustomerContactorTel());	//委托单位联系人电话
+					jsonObj.put("CommissionDate", DateTimeFormatUtil.DateFormat.format(rc.getOriginalRecord().getCommissionSheet().getCommissionDate()));	//委托日期
+					
+					jsonObj.put("Id", rc.getId());
+					jsonObj.put("CertificateCode", rc.getCertificateCode());	//证书编号
+					jsonObj.put("OriginalRecordId", rc.getOriginalRecord().getId());	//原始记录Id
+					jsonObj.put("CreateTime", DateTimeFormatUtil.DateTimeFormat.format(rc.getCreateTime()));	//创建时间
+					jsonObj.put("CreatorId", rc.getSysUserByCreatorId().getId());	//创建人Id
+					jsonObj.put("CreatorName", rc.getSysUserByCreatorId().getName());	//创建人姓名
+					jsonObj.put("CreateRemark", rc.getCreateRemark()==null?"":rc.getCreateRemark());	//创建备注
+					jsonObj.put("ReceiverId", rc.getSysUserByReceiverId().getId());	//接收人Id
+					jsonObj.put("ReceiverName", rc.getSysUserByReceiverId().getName());	//接收人姓名
+					jsonObj.put("FinishTime", rc.getFinishTime()==null?"":DateTimeFormatUtil.DateTimeFormat.format(rc.getFinishTime()));	//完成时间
+					jsonObj.put("FinishRemark", rc.getFinishRemark()==null?"":rc.getFinishRemark());	
+					jsonObj.put("PassedTime", rc.getPassedTime()==null?"":DateTimeFormatUtil.DateTimeFormat.format(rc.getPassedTime()));	//通过时间
+					
+					jsonArray.put(jsonObj);
+				}
+				retJSON8.put("total", total);
+				retJSON8.put("rows", jsonArray);
+
+			} catch (Exception e){
+				
+				try {
+					retJSON8.put("total", 0);
+					retJSON8.put("rows", new JSONArray());
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in RemakeCertificateServlet-->case 8", e);
+				}else{
+					log.error("error in RemakeCertificateServlet-->case 8", e);
+				}
+			}finally{
+				resp.setContentType("text/json;charset=utf-8");
+				resp.getWriter().write(retJSON8.toString());
+			}
+			break;
+		case 9 : 	//根据条件导出所有重新编制记录
+			String paramsStr9 = req.getParameter("paramsStr");
+			JSONObject retJSON9 = new JSONObject();
+			try {
+				
+				JSONObject params = new JSONObject(paramsStr9);
+				List<JSONObject> jsonArray = new ArrayList<JSONObject>();
+				String StartTime = params.has("StartTime")?params.getString("StartTime"):"";
+				String EndTime = params.has("EndTime")?params.getString("EndTime"):"";
+				
+				List<KeyValueWithOperator> condList = new ArrayList<KeyValueWithOperator>();	//查询条件
+				if(StartTime != null&& !StartTime.equals("")){
+					StartTime = URLDecoder.decode(StartTime.trim() + " 00:00:00", "UTF-8");
+					condList.add(new KeyValueWithOperator("createTime", Timestamp.valueOf(StartTime), ">="));
+				}
+				if(EndTime != null&& !EndTime.equals("")){
+					EndTime = URLDecoder.decode(EndTime.trim()+" 23:59:59", "UTF-8");
+					condList.add(new KeyValueWithOperator("createTime", Timestamp.valueOf(EndTime), "<="));
+				}
+				
+				List<RemakeCertificate> tRetList = remakeMgr.findByPropertyBySort("createTime", true, condList);
+				for(RemakeCertificate rc : tRetList){
+					JSONObject jsonObj = new JSONObject();
+					jsonObj.put("CommissionCode", rc.getOriginalRecord().getCommissionSheet().getCode());
+					jsonObj.put("CommissionPwd", rc.getOriginalRecord().getCommissionSheet().getPwd());
+					jsonObj.put("ApplianceName", rc.getOriginalRecord().getCommissionSheet().getApplianceName());	//器具名称
+					jsonObj.put("CustomerName", rc.getOriginalRecord().getCommissionSheet().getCustomerName());	//委托单位名称
+					jsonObj.put("CustomerContactor", rc.getOriginalRecord().getCommissionSheet().getCustomerContactor());	//委托单位联系人
+					jsonObj.put("CustomerContactorTel", rc.getOriginalRecord().getCommissionSheet().getCustomerContactorTel());	//委托单位联系人电话
+					jsonObj.put("CommissionDate", DateTimeFormatUtil.DateFormat.format(rc.getOriginalRecord().getCommissionSheet().getCommissionDate()));	//委托日期
+					
+					jsonObj.put("Id", rc.getId());
+					jsonObj.put("CertificateCode", rc.getCertificateCode());	//证书编号
+					jsonObj.put("OriginalRecordId", rc.getOriginalRecord().getId());	//原始记录Id
+					jsonObj.put("CreateTime", DateTimeFormatUtil.DateTimeFormat.format(rc.getCreateTime()));	//创建时间
+					jsonObj.put("CreatorId", rc.getSysUserByCreatorId().getId());	//创建人Id
+					jsonObj.put("CreatorName", rc.getSysUserByCreatorId().getName());	//创建人姓名
+					jsonObj.put("CreateRemark", rc.getCreateRemark()==null?"":rc.getCreateRemark());	//创建备注
+					jsonObj.put("ReceiverId", rc.getSysUserByReceiverId().getId());	//接收人Id
+					jsonObj.put("ReceiverName", rc.getSysUserByReceiverId().getName());	//接收人姓名
+					jsonObj.put("FinishTime", rc.getFinishTime()==null?"":DateTimeFormatUtil.DateTimeFormat.format(rc.getFinishTime()));	//完成时间
+					jsonObj.put("FinishRemark", rc.getFinishRemark()==null?"":rc.getFinishRemark());	
+					jsonObj.put("PassedTime", rc.getPassedTime()==null?"":DateTimeFormatUtil.DateTimeFormat.format(rc.getPassedTime()));	//通过时间
+					
+					jsonArray.add(jsonObj);
+				}
+				
+				String filePath = ExportUtil.ExportToExcelByResultSet(jsonArray, null, "formatExcel", "formatTitle", RemakeCertificateManager.class);
+				retJSON9.put("IsOK", filePath.equals("")?false:true);
+				retJSON9.put("Path", filePath);
+
+			} catch (Exception e){
+				
+				try {
+					retJSON9.put("IsOK", false);
+					retJSON9.put("Path", "");
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in RemakeCertificateServlet-->case 9", e);
+				}else{
+					log.error("error in RemakeCertificateServlet-->case 9", e);
+				}
+			}finally{
+				resp.setContentType("text/html;charset=utf-8");
+				resp.getWriter().write(retJSON9.toString());
 			}
 			break;
 		}

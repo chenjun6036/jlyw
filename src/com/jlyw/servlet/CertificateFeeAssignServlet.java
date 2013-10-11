@@ -385,6 +385,11 @@ public class CertificateFeeAssignServlet extends HttpServlet {
 				if(loginUser == null){
 					throw new Exception("您尚未登录，不能对委托单分配费用！");
 				}
+			
+				if(!(cSheet.getCommissionType()==3||cSheet.getCommissionType()==4||cSheet.getCommissionType()==5)&&cSheet.getSubcontract()){
+					throw new Exception("该委托单的委托形式不能录入技术服务费或转包费！");
+				}
+				
 				JSONArray feeAssignArray = new JSONArray(FeeAssignInfo);	//费用分配信息
 				
 				Timestamp nowTime = new Timestamp(System.currentTimeMillis());
@@ -456,9 +461,9 @@ public class CertificateFeeAssignServlet extends HttpServlet {
 						allotee = alloteeList.get(0);
 					}
 					
-					if(totalFee <= 0){
-						throw new Exception(String.format("%s 所分配的费用不能为0，如果该人员没有产值，请删除该条目！", alloteeName));
-					}
+//					if(totalFee <= 0){
+//						throw new Exception(String.format("%s 所分配的费用不能为0，如果该人员没有产值，请删除该条目！", alloteeName));
+//					}
 					
 					feeAssign.setSysUserByFeeAlloteeId(allotee);
 					feeAssign.setTestFee(testFee);
@@ -718,8 +723,11 @@ public class CertificateFeeAssignServlet extends HttpServlet {
 					throw new Exception("参数不完整");
 				}
 				
-				List<CertificateFeeAssign> feeAssignList = feeAssignMgr.findByHQL(CertificateFeeAssignManager.queryString_CertificateFeeAssignByCommissionSheetId, Integer.parseInt(CommissionSheetId));
+				List<CertificateFeeAssign> feeAssignList = feeAssignMgr.findByHQL(CertificateFeeAssignManager.queryString_CertificateFeeAssignByCommissionSheetId + " order by a.certificate.certificateCode asc", Integer.parseInt(CommissionSheetId));
 				JSONArray jsonArray = new JSONArray();
+				JSONArray foot = new JSONArray();
+				double TestFee=0,RepairFee=0,MaterialFee=0,CarFee=0,DebugFee=0,OtherFee=0,TotalFee=0;
+				double oldTestFee=0,oldRepairFee=0,oldMaterialFee=0,oldCarFee=0,oldDebugFee=0,oldOtherFee=0,oldTotalFee=0;
 				for(CertificateFeeAssign feeAssign : feeAssignList){
 					JSONObject tempObj = new JSONObject();
 					tempObj.put("CertificateFeeAssignId", feeAssign.getId());
@@ -734,21 +742,21 @@ public class CertificateFeeAssignServlet extends HttpServlet {
 					tempObj.put("Quantity", feeAssign.getOriginalRecord()==null?"":(feeAssign.getOriginalRecord().getQuantity()==null?"":feeAssign.getOriginalRecord().getQuantity()));
 					tempObj.put("FeeAlloteeId", feeAssign.getSysUserByFeeAlloteeId()==null?"":feeAssign.getSysUserByFeeAlloteeId().getId());
 					tempObj.put("FeeAlloteeName", feeAssign.getSysUserByFeeAlloteeId()==null?"":feeAssign.getSysUserByFeeAlloteeId().getName());
-					tempObj.put("TestFee", feeAssign.getTestFee()==null?"":feeAssign.getTestFee());
-					tempObj.put("RepairFee", feeAssign.getRepairFee()==null?"":feeAssign.getRepairFee());
-					tempObj.put("MaterialFee", feeAssign.getMaterialFee()==null?"":feeAssign.getMaterialFee());
-					tempObj.put("CarFee", feeAssign.getCarFee()==null?"":feeAssign.getCarFee());
-					tempObj.put("DebugFee", feeAssign.getDebugFee()==null?"":feeAssign.getDebugFee());
-					tempObj.put("OtherFee", feeAssign.getOtherFee()==null?"":feeAssign.getOtherFee());
-					tempObj.put("TotalFee", feeAssign.getTotalFee()==null?"":feeAssign.getTotalFee());
+					tempObj.put("TestFee", feeAssign.getTestFee()==null?0:feeAssign.getTestFee());
+					tempObj.put("RepairFee", feeAssign.getRepairFee()==null?0:feeAssign.getRepairFee());
+					tempObj.put("MaterialFee", feeAssign.getMaterialFee()==null?0:feeAssign.getMaterialFee());
+					tempObj.put("CarFee", feeAssign.getCarFee()==null?0:feeAssign.getCarFee());
+					tempObj.put("DebugFee", feeAssign.getDebugFee()==null?0:feeAssign.getDebugFee());
+					tempObj.put("OtherFee", feeAssign.getOtherFee()==null?0:feeAssign.getOtherFee());
+					tempObj.put("TotalFee", feeAssign.getTotalFee()==null?0:feeAssign.getTotalFee());
 					
-					tempObj.put("OldTestFee", feeAssign.getTestFeeOld()==null?"":feeAssign.getTestFeeOld());
-					tempObj.put("OldRepairFee", feeAssign.getRepairFeeOld()==null?"":feeAssign.getRepairFeeOld());
-					tempObj.put("OldMaterialFee", feeAssign.getMaterialFeeOld()==null?"":feeAssign.getMaterialFeeOld());
-					tempObj.put("OldCarFee", feeAssign.getCarFeeOld()==null?"":feeAssign.getCarFeeOld());
-					tempObj.put("OldDebugFee", feeAssign.getDebugFeeOld()==null?"":feeAssign.getDebugFeeOld());
-					tempObj.put("OldOtherFee", feeAssign.getOtherFeeOld()==null?"":feeAssign.getOtherFeeOld());
-					tempObj.put("OldTotalFee", feeAssign.getTotalFeeOld()==null?"":feeAssign.getTotalFeeOld());
+					tempObj.put("OldTestFee", feeAssign.getTestFeeOld()==null?0:feeAssign.getTestFeeOld());
+					tempObj.put("OldRepairFee", feeAssign.getRepairFeeOld()==null?0:feeAssign.getRepairFeeOld());
+					tempObj.put("OldMaterialFee", feeAssign.getMaterialFeeOld()==null?0:feeAssign.getMaterialFeeOld());
+					tempObj.put("OldCarFee", feeAssign.getCarFeeOld()==null?0:feeAssign.getCarFeeOld());
+					tempObj.put("OldDebugFee", feeAssign.getDebugFeeOld()==null?0:feeAssign.getDebugFeeOld());
+					tempObj.put("OldOtherFee", feeAssign.getOtherFeeOld()==null?0:feeAssign.getOtherFeeOld());
+					tempObj.put("OldTotalFee", feeAssign.getTotalFeeOld()==null?0:feeAssign.getTotalFeeOld());
 					
 					tempObj.put("LastEditorId", feeAssign.getSysUserByLastEditorId()==null?"":feeAssign.getSysUserByLastEditorId().getId());
 					tempObj.put("LastEditorName", feeAssign.getSysUserByLastEditorId()==null?"":feeAssign.getSysUserByLastEditorId().getName());
@@ -756,15 +764,75 @@ public class CertificateFeeAssignServlet extends HttpServlet {
 					
 					tempObj.put("Remark", feeAssign.getRemark()==null?"":feeAssign.getRemark());
 					jsonArray.put(tempObj);
+
 				}
 				
+				if(jsonArray.length()>0){
+					for(int i=0;i<jsonArray.length();i++){
+						TestFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("TestFee"));
+						RepairFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("RepairFee"));
+						MaterialFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("MaterialFee"));
+						CarFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("CarFee"));
+						DebugFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("DebugFee"));
+						OtherFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OtherFee"));
+						TotalFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("TotalFee"));
+						
+						oldTestFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldTestFee"));
+						oldRepairFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldRepairFee"));
+						oldMaterialFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldMaterialFee"));
+						oldCarFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldCarFee"));
+						oldDebugFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldDebugFee"));
+						oldOtherFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldOtherFee"));
+						oldTotalFee+=Double.parseDouble(((JSONObject)(jsonArray.get(i))).getString("OldTotalFee"));
+					}
+					JSONObject jsonObj = new JSONObject();
+					//jsonObj.put("Id", detail.getId());
+					jsonObj.put("TestFee", TestFee);
+					jsonObj.put("RepairFee",RepairFee);
+					jsonObj.put("MaterialFee", MaterialFee);
+					jsonObj.put("CarFee", CarFee);
+					jsonObj.put("DebugFee", DebugFee);
+					jsonObj.put("OtherFee",OtherFee);
+					jsonObj.put("TotalFee",TotalFee);
+					
+					jsonObj.put("OldTestFee", oldTestFee);
+					jsonObj.put("OldRepairFee",oldRepairFee);
+					jsonObj.put("OldMaterialFee", oldMaterialFee);
+					jsonObj.put("OldCarFee", oldCarFee);
+					jsonObj.put("OldDebugFee", oldDebugFee);
+					jsonObj.put("OldOtherFee",oldOtherFee);
+					jsonObj.put("OldTotalFee",oldTotalFee);
+//					
+					foot.put(jsonObj);
+				}
 				retJSON6.put("total", feeAssignList.size());
 				retJSON6.put("rows", jsonArray);
+				retJSON6.put("footer", foot);
 				
 			}catch (Exception e){
 				try {
 					retJSON6.put("total", 0);
 					retJSON6.put("rows", new JSONArray());
+					JSONArray foot = new JSONArray();
+					JSONObject jsonObj = new JSONObject();
+					//jsonObj.put("Id", detail.getId());
+					jsonObj.put("TestFee", 0);
+					jsonObj.put("RepairFee",0);
+					jsonObj.put("MaterialFee", 0);
+					jsonObj.put("CarFee", 0);
+					jsonObj.put("DebugFee", 0);
+					jsonObj.put("OtherFee",0);
+					jsonObj.put("TotalFee",0);
+					
+					jsonObj.put("OldTestFee", 0);
+					jsonObj.put("OldRepairFee",0);
+					jsonObj.put("OldMaterialFee", 0);
+					jsonObj.put("OldCarFee", 0);
+					jsonObj.put("OldDebugFee", 0);
+					jsonObj.put("OldOtherFee",0);
+					jsonObj.put("OldTotalFee",0);
+					foot.put(jsonObj);
+					retJSON6.put("footer", foot);
 				} catch (JSONException e1) {
 					e1.printStackTrace();
 				}

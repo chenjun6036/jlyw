@@ -189,12 +189,12 @@ public class CustomerServlet extends HttpServlet {
 					option.put("SpecialDemands", cus.getSpecialDemands());
 					option.put("CreditAmount", cus.getCreditAmount());
 					option.put("CancelDate", cus.getCancelDate()==null?"未注销":cus.getCancelDate());
-					option.put("CancelReason", cus.getCancelDate()==null?"":cus.getReason().getReason());
+					option.put("CancelReason", cus.getCancelDate()==null?"":cus.getReason()==null?"":cus.getReason().getReason());
 					option.put("Remark", cus.getRemark());
 					option.put("ModifyDate", cus.getModifyDate());
 					option.put("Modificator", cus.getSysUserByModificatorId().getName());
 					option.put("InsideContactor", cus.getSysUserByInsideContactorId()==null?"":cus.getSysUserByInsideContactorId().getName());
-					
+	
 					CustomerContactorManager cusconmag1 = new CustomerContactorManager();
 					CustomerContactor cuscon ;
 					List<CustomerContactor> resultList = cusconmag1.findByPropertyBySort("lastUse", false,
@@ -305,7 +305,7 @@ public class CustomerServlet extends HttpServlet {
 				if(cusNameStr != null && cusNameStr.trim().length() > 0){
 					String cusName =  new String(cusNameStr.trim().getBytes("ISO-8859-1"), "GBK");	//解决URL传递中文乱码问题
 					
-					cusName = LetterUtil.String2Alpha(cusName);	//转换成拼音简码
+					//cusName = LetterUtil.String2Alpha(cusName);	//转换成拼音简码
 					String[] queryName = cusName.split(" \\s*");	//根据空格符分割
 					if(queryName.length == 0){
 						return;
@@ -318,8 +318,8 @@ public class CustomerServlet extends HttpServlet {
 					}
 					
 					cusName = "%" + cusName + "%";
-					String queryString = String.format("select model.name,model.tel,model.address,model.zipCode,model.region.id,cc.name,cc.cellphone1,model.region.name,model.id from Customer as model, CustomerContactor as cc where model.brief like ? and model.id=cc.customer.id and cc.lastUse in (select max(dd.lastUse) from CustomerContactor as dd where model.id=dd.customer.id)");
-					List<Object[]> retList = cusmag.findPageAllByHQL(queryString, 1, 30, cusName);
+					String queryString = String.format("select model.name,model.tel,model.address,model.zipCode,model.region.id,cc.name,cc.cellphone1,model.region.name,model.id from Customer as model, CustomerContactor as cc where ( model.name like ? or model.nameEn like ? or model.brief like ? or model.code like ?) and model.status=0 and model.id=cc.customerId and cc.lastUse in (select max(dd.lastUse) from CustomerContactor as dd where model.id=dd.customerId)");
+					List<Object[]> retList = cusmag.findPageAllByHQL(queryString, 1, 30, cusName, cusName,cusName,cusName);
 					if(retList != null){
 						for(Object[] objArray : retList){
 							JSONObject jsonObj = new JSONObject();
@@ -484,10 +484,38 @@ public class CustomerServlet extends HttpServlet {
 				resp.getWriter().write(retObj7.toString());
 			}
 			break;
+		case 8:
+			JSONObject retObj8 = new JSONObject();
+			try{
+				String FId = req.getParameter("FId");
+				String LId = req.getParameter("LId");
+				Customer FC = cusmag.findById(Integer.valueOf(FId));
+				Customer LC = cusmag.findById(Integer.valueOf(LId));
+				if(FC.getStatus()==1)
+					throw new Exception("不能合并到已注销的委托单位！");
+				SysUser user = (SysUser)req.getSession().getAttribute("LOGIN_USER");
+				boolean res8 = cusmag.MergeCustomer(FC, LC, user);
+				retObj8.put("IsOK", res8);
+				retObj8.put("msg", res8?"合并成功！":"合并失败，请重试！");
+			}catch(Exception e){
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in CustomerServlet-->case 8", e);
+				}else{
+					log.error("error in CustomerServlet-->case 8", e);
+				}
+				try {
+					retObj8.put("IsOK", false);
+					retObj8.put("msg", String.format("合并失败！错误信息：%s", (e!=null && e.getMessage()!=null)?e.getMessage():"无"));
+				} catch (JSONException e1) {}
+			}finally{
+				resp.setContentType("text/html;charset=utf-8");
+				resp.getWriter().write(retObj8.toString());
+			}
+			break;
 		}
 	}
 
-	public Customer initCustomer(HttpServletRequest req,int id) {
+	public Customer initCustomer(HttpServletRequest req,int id) throws Exception {
 		
 		String Name = req.getParameter("Name");
 		String NameEn = req.getParameter("NameEn");
@@ -529,6 +557,13 @@ public class CustomerServlet extends HttpServlet {
 			customer = cusmag.findById(id);
 		}
 		
+		if(id==0||!customer.getName().equals(Name)){
+			System.out.println(Name);
+			List<Customer> retList = (new CustomerManager()).findByVarProperty(new KeyValueWithOperator("name", Name, "="),new KeyValueWithOperator("id", id==0?0:customer.getId(), "<>"));
+			if(retList!=null&&retList.size()>0){
+				throw new Exception("该单位已存在！");
+			}
+		}
 		customer.setName(Name);
 		customer.setNameEn(NameEn);
 		customer.setBrief(Brief);

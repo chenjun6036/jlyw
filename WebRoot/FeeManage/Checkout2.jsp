@@ -15,6 +15,7 @@
 	<script type="text/javascript"
 			src="../Inc/JScript/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../JScript/StatusInfo.js"></script>
+	<script type="text/javascript" src="../JScript/tool.js"></script>
 	<script>
 	
 $(function(){
@@ -24,15 +25,9 @@ $(function(){
 	$("#DateEnd").datebox('setValue', nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate()));
 	
 	$("#CustomerName").combobox({
-		valueField:'name',
+		valueField:'id',
 		textField:'name',
-		onSelect:function(record){
-			$("#CustomerTel").val(record.tel);
-			$("#CustomerAddress").val(record.address);
-			$("#CustomerZipCode").val(record.zipCode);
-			$("#ContactPerson").val(record.contactor);
-			$("#ContactorTel").val(record.contactorTel);
-		},
+		onSelect:function(record){},
 		onChange:function(newValue, oldValue){
 			var allData = $(this).combobox('getData');
 			if(allData != null && allData.length > 0){
@@ -157,7 +152,8 @@ $(function(){
 			{field:'OtherFee',title:'其他费',width:50,align:'right',formatter:function(val,rec){
 					
 						return '<span style="color:red;">'+val+'</span>';
-				}}
+				}},
+			{field:'FinishLocation',title:'存放位置',width:50,align:'right'}
 		]],
 		pagination:false,
 		rownumbers:true,
@@ -197,9 +193,10 @@ $(function(){
 					}
 				});
 				$('#TotalFee').val(TotalFee);
+				$('#table7').datagrid('unselectAll');
 			}
 		},'-',{
-			text:'预览费用清单',
+			text:'打印费用清单',
 			iconCls:'icon-print',
 			handler:function(){
 		
@@ -212,7 +209,7 @@ $(function(){
 				
 			}
 		},'-',{
-			text:'预览费用详单',
+			text:'打印费用详单',
 			iconCls:'icon-print',
 			handler:function(){
 		
@@ -276,7 +273,8 @@ $(function(){
 			{field:'OtherFee',title:'其他费',width:50,align:'right',formatter:function(val,rec){
 					
 						return '<span style="color:red;">'+val+'</span>';
-				}}
+				}},
+			{field:'FinishLocation',title:'存放位置',width:50,align:'right'}
 		]],
 		pagination:true,
 		rownumbers:true,
@@ -315,10 +313,9 @@ $(function(){
 					DebugFee = DebugFee + getFloat(rows[i].DebugFee);
 					OtherFee = OtherFee + getFloat(rows[i].OtherFee);
 					TotalFee = TotalFee + getFloat(rows[i].TotalFee);
-					$('#table6').datagrid('unselectRow',$('#table6').datagrid('getRowIndex',rows[i]));
-					
-					$('#FeeTotal').form('validate');
+
 				}
+				$('#table6').datagrid('unselectAll');
 				$('#Count').datagrid('updateRow',{
 					index:0,
 					row:{
@@ -332,6 +329,7 @@ $(function(){
 					}
 				});
 				$('#TotalFee').val(TotalFee);
+				$('#FeeTotal').form('validate');
 			}
 		}]
 	});
@@ -404,11 +402,11 @@ $(function(){
 	function doLoadHistoryDeList()
 	{
 		$('#table4').datagrid('options').url='/jlyw/DetailListComServlet.do?method=21';
-		$('#table4').datagrid('options').queryParams={'FeeCode':$('#FeeCode').val(),'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#Code').val()};
+		$('#table4').datagrid('options').queryParams={'FeeCode':$('#FeeCode').val(),'CustomerId':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#Code').val()};
 		$('#table4').datagrid('reload');
 		
 		$('#table6').datagrid('options').url='/jlyw/CommissionSheetServlet.do?method=4';
-		$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#Code').val(),'DateFrom':encodeURI($('#DateFrom').datebox('getValue')),'DateEnd':encodeURI($('#DateEnd').datebox('getValue')),'Status':encodeURI(3)};
+		$('#table6').datagrid('options').queryParams={'CustomerId':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#Code').val(),'DateFrom':encodeURI($('#DateFrom').datebox('getValue')),'DateEnd':encodeURI($('#DateEnd').datebox('getValue')),'Status':encodeURI(3)};
 		$('#table6').datagrid('reload');
 	}
 	function acount(){
@@ -442,6 +440,7 @@ $(function(){
 					 row.DetailListCode = result.DetailListCode;
 					 $("#table7").datagrid("updateRow", {index:index, row:row});
 				 }
+				 NoSubmitAgain('#btn_checkout');
 				 $('#DetailListId').val(result.DetailListId);
 				 $('#DetailListId1').val(result.DetailListId);	
 			 }

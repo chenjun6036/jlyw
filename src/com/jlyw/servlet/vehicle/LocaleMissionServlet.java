@@ -21,6 +21,7 @@ import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
+import com.jlyw.hibernate.Address;
 import com.jlyw.hibernate.ApplianceManufacturer;
 import com.jlyw.hibernate.AppliancePopularName;
 import com.jlyw.hibernate.ApplianceSpecies;
@@ -39,6 +40,7 @@ import com.jlyw.hibernate.SubContractor;
 import com.jlyw.hibernate.SysUser;
 import com.jlyw.hibernate.Vehicle;
 import com.jlyw.hibernate.VehicleMission;
+import com.jlyw.manager.AddressManager;
 import com.jlyw.manager.ApplianceManufacturerManager;
 import com.jlyw.manager.AppliancePopularNameManager;
 import com.jlyw.manager.ApplianceSpeciesManager;
@@ -94,6 +96,12 @@ public class LocaleMissionServlet extends HttpServlet {
 				String Appliances = req.getParameter("Appliances").trim();	//检验的器具
 				JSONArray appliancesArray = new JSONArray(Appliances);	//检查的器具
 				
+				String HeadNameId = req.getParameter("HeadName");
+				if(HeadNameId==null||HeadNameId.length()==0){
+					throw new Exception("抬头名称不能为空！");				
+				}
+				AddressManager addrMgr = new AddressManager();			
+				Address HeadNameAddr = new AddressManager().findById(Integer.parseInt(HeadNameId));	//台头名称的单位
 				
 				/************ 检查输入的人员信息中的用户是否存在 *******************/
 				/*StringBuffer staffs = new StringBuffer("");
@@ -120,9 +128,10 @@ public class LocaleMissionServlet extends HttpServlet {
                 String Brief = com.jlyw.util.LetterUtil.String2Alpha(Name);
 				
                 Customer cus=new Customer();
+                
                 cus.setId(CustomerId);
 				LocaleMission localmission = new LocaleMission();
-				localmission.setAddress(Address==null?"":Address);
+				localmission.setAddress_1(Address==null?"":Address);
 				localmission.setCustomer(cus);
 				localmission.setCustomerName(Name);
 				localmission.setBrief(Brief);
@@ -138,10 +147,57 @@ public class LocaleMissionServlet extends HttpServlet {
 				region.setId(Integer.parseInt(RegionId));
 				localmission.setRegion(region);
 				localmission.setRemark(Remark);
+				localmission.setAddress(HeadNameAddr);
+				
+				/************更新委托单位信息***********/
+				Customer cus0=(new CustomerManager()).findById(CustomerId);
+				if(Name!=null&&Name.length()>0){
+					cus0.setName(Name);
+				}
+				if(Address!=null&&Address.length()>0){
+					cus0.setAddress(Address);
+				}
+				if(Tel!=null&&Tel.length()>0){
+					cus0.setTel(Tel);
+				}
+				if(ZipCode!=null&&ZipCode.length()>0){
+					cus0.setZipCode(ZipCode);
+				}
+				if(!(new CustomerManager()).update(cus0)){
+					throw new Exception("更新委托单位失败！");				
+				}
+				/************更新委托单位联系人信息***********/	
+				  Timestamp now = new Timestamp(System.currentTimeMillis());// 取当前时间
+				CustomerContactorManager cusConMgr = new CustomerContactorManager();
+				List<CustomerContactor> cusConList = cusConMgr.findByVarProperty(new KeyValueWithOperator("customerId", CustomerId, "="), new KeyValueWithOperator("name", Contactor, "="));
+				if(cusConList != null){
+					if(cusConList.size() > 0){
+						CustomerContactor c = cusConList.get(0);
+						if(ContactorTel.length() > 0){
+							if(!ContactorTel.equalsIgnoreCase(c.getCellphone1()) && (c.getCellphone2() == null || c.getCellphone2().length() == 0)){
+								c.setCellphone2(c.getCellphone1());
+							}
+							c.setCellphone1(ContactorTel);
+						}
+						c.setLastUse(now);
+						c.setCount(c.getCount()+1);
+						if(!cusConMgr.update(c))
+							throw new Exception("更新单位联系人失败！");		
+					}else{
+						CustomerContactor c = new CustomerContactor();
+						c.setCustomerId(CustomerId);
+						c.setName(Contactor);
+						c.setCellphone1(ContactorTel);
+						c.setLastUse(now);
+						c.setCount(1);
+						if(!cusConMgr.save(c))
+							throw new Exception("更新单位联系人失败！");		
+					}
+				}
 				
 				//生成现场任务委托书号
 				String year = String.format("%04d", Calendar.getInstance().get(Calendar.YEAR));
-				String queryString = "select max(model.code) from LocaleMission as model where model.code like ?";
+				String queryString = "select max(model.code) from LocaleMission as model where model.code like ? and LENGTH(model.code)=10";
 				List<Object> retList = locmissMgr.findByHQL(queryString, year+"%");
 				Integer codeBeginInt = Integer.parseInt("000000");
 				if(retList.size() > 0 && retList.get(0) != null){
@@ -150,8 +206,7 @@ public class LocaleMissionServlet extends HttpServlet {
 				String Code = year + String.format("%06d", codeBeginInt);
 				localmission.setCode(Code);
 				
-				//System.out.println();
-				
+
 				SysUser newUser = new SysUser();;
 				if(SiteManagerId!=null&&SiteManagerId.length()>0){
 					newUser.setId(Integer.parseInt(SiteManagerId));
@@ -162,10 +217,10 @@ public class LocaleMissionServlet extends HttpServlet {
 				localmission.setStatus(4);// status: 1 未完成 2 已完成 3已删除 4负责人未核定 5负责人已核定				
 
 				
-				Timestamp now = new Timestamp(System.currentTimeMillis());// 取当前时间
-				localmission.setCreateTime(now);// 创建时间为当前时间
+				Timestamp now0 = new Timestamp(System.currentTimeMillis());// 取当前时间
+				localmission.setCreateTime(now0);// 创建时间为当前时间
 				localmission.setSysUserByCreatorId((SysUser) req.getSession().getAttribute(SystemCfgUtil.SessionAttrNameLoginUser));
-				localmission.setModificatorDate(now);// 记录时间为当前时间
+				localmission.setModificatorDate(now0);// 记录时间为当前时间
 				localmission.setSysUserByModificatorId((SysUser) req.getSession().getAttribute(SystemCfgUtil.SessionAttrNameLoginUser));
 				
 				ApplianceSpeciesManager speciesMgr = new ApplianceSpeciesManager();	//器具分类管理Mgr
@@ -342,7 +397,7 @@ public class LocaleMissionServlet extends HttpServlet {
 						option.put("Brief", loc.getBrief());
 						option.put("Region", loc.getRegion().getName());
 						option.put("RegionId", loc.getRegion().getId());
-						option.put("Address", loc.getAddress());
+						option.put("Address", loc.getAddress_1());
 						option.put("Remark", loc.getRemark()==null?"":loc.getRemark());
 						option.put("Tel", loc.getTel());
 						option.put("ZipCode", loc.getZipCode());
@@ -413,6 +468,12 @@ public class LocaleMissionServlet extends HttpServlet {
 				String Contactor = req.getParameter("Contactor");
 				String RegionId = req.getParameter("RegionId");
 				String Remark = req.getParameter("Remark");
+				String HeadNameId = req.getParameter("HeadName");
+				if(HeadNameId==null||HeadNameId.length()==0){
+					throw new Exception("抬头名称不能为空！");				
+				}
+				AddressManager addrMgr = new AddressManager();			
+				Address HeadNameAddr = new AddressManager().findById(Integer.parseInt(HeadNameId));	//台头名称的单位
 				String Appliances = req.getParameter("Appliances").trim();	//检验的器具
 				
 				JSONArray appliancesArray = new JSONArray(Appliances);	//检查的器具
@@ -435,7 +496,7 @@ public class LocaleMissionServlet extends HttpServlet {
                 Timestamp now = new Timestamp(System.currentTimeMillis());// 取当前时间
                 
                 localmission.setCustomerName(CustomerName==null?"":CustomerName);
-				localmission.setAddress(Address==null?"":Address);
+				localmission.setAddress_1(Address==null?"":Address);
 				localmission.setZipCode(ZipCode==null?"":ZipCode);
 				localmission.setContactor(Contactor==null?"":Contactor);
 				localmission.setTel(Tel==null?"":Tel);
@@ -448,6 +509,7 @@ public class LocaleMissionServlet extends HttpServlet {
 				region.setId(Integer.parseInt(RegionId));
 				localmission.setRegion(region);
 				localmission.setRemark(Remark);
+				localmission.setAddress(HeadNameAddr);
 				/************更新委托单位信息***********/
 				Customer cus=(new CustomerManager()).findById(CustomerId);
 				if(CustomerName!=null&&CustomerName.length()>0){
@@ -483,9 +545,7 @@ public class LocaleMissionServlet extends HttpServlet {
 							throw new Exception("更新单位联系人失败！");		
 					}else{
 						CustomerContactor c = new CustomerContactor();
-						Customer a=new Customer();
-						a.setId(CustomerId);
-						c.setCustomer(a);
+						c.setCustomerId(CustomerId);
 						c.setName(Contactor);
 						c.setCellphone1(ContactorTel);
 						c.setLastUse(now);
@@ -494,7 +554,7 @@ public class LocaleMissionServlet extends HttpServlet {
 							throw new Exception("更新单位联系人失败！");		
 					}
 				}
-								
+				localmission.setCustomer(cus);			
 				if(CheckDate!=null&&CheckDate.length()>0){  //核定
 					Timestamp CheckTime = new Timestamp(DateTimeFormatUtil.DateFormat.parse(CheckDate).getTime());
 					localmission.setCheckDate(CheckTime);
@@ -654,6 +714,12 @@ public class LocaleMissionServlet extends HttpServlet {
 				if(localmission.getStatus()==2||localmission.getStatus()==3){
 					throw new Exception("该现场检测业务'已完工'或‘已注销’,不能修改！");
 				}
+				SysUser user = (SysUser) req.getSession().getAttribute(SystemCfgUtil.SessionAttrNameLoginUser);
+		
+				if((!user.getId().equals(localmission.getSysUserByCreatorId().getId()))&&(!user.getName().equals("系统管理员"))){
+					throw new Exception("你不是创建人或者系统管理员，不能删除！");
+				}
+			
 				localmission.setStatus(3);// 将指定Id任务状态置为3，表示已删除
 				if(locmissMgr.update(localmission)){
 					retJSON4.put("IsOK", true);
@@ -935,26 +1001,41 @@ public class LocaleMissionServlet extends HttpServlet {
 					queryStr=queryStr+" and model.department like ?";
 					keys.add("%" + department + "%");
 				}
-				if (BeginDate != null && BeginDate.trim().length() > 0) {
+				
+				if (BeginDate != null && BeginDate.trim().length() > 0&&(EndDate == null || EndDate.trim().length() == 0)) {
 					Timestamp beginTs = Timestamp.valueOf(String.format("%s 00:00:00", BeginDate.trim()));
+					//condList.add(new KeyValueWithOperator("tentativeDate",beginTs, ">="));
 					
 					queryStr=queryStr+" and (model.tentativeDate >= ? or model.checkDate >= ? or model.exactTime >= ?)";
 					keys.add(beginTs);
 					keys.add(beginTs);
 					keys.add(beginTs);
 					
-				}
-				if (EndDate != null && EndDate.trim().length() > 0) {
+				}else if (EndDate != null && EndDate.trim().length() > 0&&(BeginDate == null || BeginDate.trim().length() == 0)) {
 					Timestamp endTs = Timestamp.valueOf(String.format(
 							"%s 23:59:00", EndDate.trim()));
+					
 				   // condList.add(new KeyValueWithOperator("tentativeDate",endTs, "<="));
 					queryStr=queryStr+" and (model.tentativeDate <= ? or model.checkDate <= ? or model.exactTime <= ?)";
 					keys.add(endTs);
 					keys.add(endTs);
 					keys.add(endTs);
+				}else if (BeginDate != null && BeginDate.trim().length() > 0&&EndDate != null && EndDate.trim().length() > 0) {
+					Timestamp endTs = Timestamp.valueOf(String.format(
+							"%s 23:59:00", EndDate.trim()));
+					Timestamp beginTs = Timestamp.valueOf(String.format("%s 00:00:00", BeginDate.trim()));
+				
+				   // condList.add(new KeyValueWithOperator("tentativeDate",endTs, "<="));
+					queryStr=queryStr+" and ((model.tentativeDate >= ? and model.tentativeDate <= ? ) or (model.checkDate >= ? and model.checkDate <= ? ) or (model.exactTime >= ? and model.exactTime <= ?))";
+					keys.add(beginTs);
+					keys.add(endTs);
+					keys.add(beginTs);
+					keys.add(endTs);
+					keys.add(beginTs);
+					keys.add(endTs);
 				}
 
-				List<LocaleMission> result = locmissMgr.findPageAllByHQL(queryStr+" order by model.createTime desc",page,rows, keys);// 
+				List<LocaleMission> result = locmissMgr.findPageAllByHQL(queryStr+" order by model.createTime desc,model.id asc",page,rows, keys);// 
 				int total = locmissMgr.getTotalCountByHQL("select count(model)"+queryStr,keys);// 
 
 				JSONArray options = new JSONArray();
@@ -973,7 +1054,7 @@ public class LocaleMissionServlet extends HttpServlet {
 						option.put("Brief", loc.getBrief());
 						option.put("RegionId", loc.getRegion().getId());
 						option.put("Region", loc.getRegion().getName());
-						option.put("Address", loc.getAddress());
+						option.put("Address", loc.getAddress_1());
 						option.put("Remark", loc.getRemark()==null?"":loc.getRemark());
 						option.put("Tel", loc.getTel());
 						option.put("ZipCode", loc.getZipCode());
@@ -1125,9 +1206,9 @@ public class LocaleMissionServlet extends HttpServlet {
 				
 				/*********************对每一个现场任务，新增一条VehicleMission记录*****************************/
 				if (vehiclearrangeArray.length() > 0&& missionarrangeArray.length() > 0) {//，任务安排和车辆安排不为空				
-					if (beginTs.after(endTs)) {
-						throw new Exception("调度时间错误,任务发车时间和任务确定时间不在同一天");
-					}
+//					if (beginTs.after(endTs)) {
+//						throw new Exception("调度时间错误,任务发车时间和任务确定时间不在同一天");
+//					}
 					for (int i = 0; i < missionarrangeArray.length(); i++) {// 任务JSONArray遍历
 						JSONObject misarr = missionarrangeArray.getJSONObject(i);
 						int missionId = misarr.getInt("Id");// 获取任务id
@@ -1191,6 +1272,7 @@ public class LocaleMissionServlet extends HttpServlet {
 				String EndDate = req.getParameter("History_EndDate");
 				String MissionStatus = req.getParameter("MissionStatus");
 				String Department = req.getParameter("Department");
+				String Code = req.getParameter("Code");
 				if (QueryName == null) {// 避免NullPointerException
 					QueryName = "";
 				}
@@ -1230,10 +1312,16 @@ public class LocaleMissionServlet extends HttpServlet {
 				}
 				if (MissionStatus != null && MissionStatus.trim().length() > 0) {
 					int status = Integer.parseInt(URLDecoder.decode(MissionStatus.trim(),"UTF-8"));
-				
+
+					if(status==0){//未完工
+						queryStr=queryStr+" and model.status <> ?";
+					
+						keys.add(2);
+					}else{
 					//condList.add(new KeyValueWithOperator("status",status, "="));
-					queryStr=queryStr+" and model.status = ?";
-					keys.add(status);
+						queryStr=queryStr+" and model.status = ?";
+						keys.add(status);
+					}
 				}
 				if (Department != null && Department.trim().length() > 0) {
 					String department = URLDecoder.decode(Department.trim(),
@@ -1243,26 +1331,46 @@ public class LocaleMissionServlet extends HttpServlet {
 					queryStr=queryStr+" and model.department like ?";
 					keys.add("%" + department + "%");
 				}
-				if (BeginDate != null && BeginDate.trim().length() > 0) {
-					Timestamp beginTs = Timestamp.valueOf(String.format("%s 00:00:00", BeginDate.trim()));
+				if (BeginDate != null && BeginDate.trim().length() > 0&&(EndDate == null || EndDate.trim().length() == 0)) {
+					Timestamp beginTs = Timestamp.valueOf(String.format("%s 00:00:000", BeginDate.trim()));
 					//condList.add(new KeyValueWithOperator("tentativeDate",beginTs, ">="));
+					
 					queryStr=queryStr+" and (model.tentativeDate >= ? or model.checkDate >= ? or model.exactTime >= ?)";
 					keys.add(beginTs);
 					keys.add(beginTs);
 					keys.add(beginTs);
 					
-				}
-				if (EndDate != null && EndDate.trim().length() > 0) {
+				}else if (EndDate != null && EndDate.trim().length() > 0&&(BeginDate == null || BeginDate.trim().length() == 0)) {
 					Timestamp endTs = Timestamp.valueOf(String.format(
 							"%s 23:59:00", EndDate.trim()));
+					
 				   // condList.add(new KeyValueWithOperator("tentativeDate",endTs, "<="));
 					queryStr=queryStr+" and (model.tentativeDate <= ? or model.checkDate <= ? or model.exactTime <= ?)";
 					keys.add(endTs);
 					keys.add(endTs);
 					keys.add(endTs);
+				}else if (BeginDate != null && BeginDate.trim().length() > 0&&EndDate != null && EndDate.trim().length() > 0) {
+					Timestamp endTs = Timestamp.valueOf(String.format("%s 23:59:00", EndDate.trim()));
+					Timestamp beginTs = Timestamp.valueOf(String.format("%s 00:00:000", BeginDate.trim()));
+				
+				   // condList.add(new KeyValueWithOperator("tentativeDate",endTs, "<="));
+					queryStr=queryStr+" and ((model.tentativeDate >= ? and model.tentativeDate <= ? ) or (model.checkDate >= ? and model.checkDate <= ? ) or (model.exactTime >= ? and model.exactTime <= ?))";
+					keys.add(beginTs);
+					keys.add(endTs);
+					keys.add(beginTs);
+					keys.add(endTs);
+					keys.add(beginTs);
+					keys.add(endTs);
 				}
+				if (Code != null && Code.trim().length() > 0) {
+					String code = URLDecoder.decode(Code.trim(),
+							"UTF-8");
+					queryStr=queryStr+" and model.code like ?";
+					keys.add("%" + code + "%");
+				}
+				
 
-				List<LocaleMission> result = locmissMgr.findPageAllByHQL(queryStr+" order by model.createTime desc",page,rows, keys);// 查询未被删除的任务
+				List<LocaleMission> result = locmissMgr.findPageAllByHQL(queryStr+" order by model.checkDate asc,model.id asc",page,rows, keys);// 查询未被删除的任务
 				int total = locmissMgr.getTotalCountByHQL("select count(model)"+queryStr,keys);// 未被删除的任务总数
 
 				JSONArray options = new JSONArray();
@@ -1281,7 +1389,7 @@ public class LocaleMissionServlet extends HttpServlet {
 						option.put("Brief", loc.getBrief());
 						option.put("RegionId", loc.getRegion().getId());
 						option.put("Region", loc.getRegion().getName());
-						option.put("Address", loc.getAddress());
+						option.put("Address", loc.getAddress_1());
 						option.put("Remark", loc.getRemark()==null?"":loc.getRemark());
 						option.put("Tel", loc.getTel());
 						option.put("ZipCode", loc.getZipCode());
@@ -1312,6 +1420,16 @@ public class LocaleMissionServlet extends HttpServlet {
 								staffs = staffs + loc.getSysUserBySiteManagerId().getName()+";"; 		
 							}
 						}
+						//找现场业务下面的各个器具指派人
+						//String AssistStaff="";
+						//String queryString1="from LocaleApplianceItem as a where a.localeMission.id = ?";
+						List<String> AssistStaffs= locAppItemMgr.findByHQL("select distinct a.assistStaff "+queryString, loc.getId());
+						if(!AssistStaffs.isEmpty()){						
+							for (String staff : AssistStaffs) {
+								if(staff!=null)
+									staffs = staffs + staff +";"; 		
+							}
+						}
 						//找现场业务下面的各个器具信息
 						String missionDesc="";
 						List<LocaleApplianceItem>  locAppList= locAppItemMgr.findByHQL(queryString, loc.getId());
@@ -1339,6 +1457,8 @@ public class LocaleMissionServlet extends HttpServlet {
 							}
 								
 						}	
+						option.put("HeadNameId", loc.getAddress()==null?"":loc.getAddress().getId());
+						option.put("HeadNameName", loc.getAddress()==null?"":loc.getAddress().getHeadName());
 						options.put(option);
 				}
 				res.put("total", total);
@@ -1566,6 +1686,7 @@ public class LocaleMissionServlet extends HttpServlet {
 						String appName = URLDecoder.decode(ApplianceName.trim(), "UTF-8");
 						condList.add(new KeyValueWithOperator("applianceName", "%"+appName+"%", "like"));
 					}
+					condList.add(new KeyValueWithOperator("localeMission.status", 3, "<>"));
 					totalSize = locAppItemMgr.getTotalCount(condList);
 					List<LocaleApplianceItem> retList = locAppItemMgr.findPagedAllBySort(page, rows, "localeMission.exactTime", false, condList);
 					if(retList != null && retList.size() > 0){
@@ -1666,7 +1787,7 @@ public class LocaleMissionServlet extends HttpServlet {
 					total5 = locAppItemMgr.getTotalCount(new KeyValueWithOperator("localeMission.id",Integer.parseInt(localeMissionId),"="));
 				}
 				JSONArray optionsq = new JSONArray();
-				int id=1;
+				int id=0;
 				
 				
 				for (LocaleApplianceItem locAppItem : locAppItemList) {
@@ -1768,7 +1889,7 @@ public class LocaleMissionServlet extends HttpServlet {
 				
 				if(id<=10){
 					int temp=id;
-					for (int i=0;i<(11-temp%10);i++) {   //首页10行
+					for (int i=0;i<(10-temp);i++) {   //首页10行
 						JSONObject option = new JSONObject();
 						option.put("Id", id++);
 						option.put("ApplianceName", " ");	
@@ -1792,7 +1913,7 @@ public class LocaleMissionServlet extends HttpServlet {
 			
 				else{
 					int temp=id-10;
-					for (int i=0;i<(23-temp%22);i++) {   //每页20行
+					for (int i=0;i<(23-temp%22);i++) {   //每页22行
 						JSONObject option = new JSONObject();
 						option.put("Id", id++);
 						option.put("ApplianceName", " ");
@@ -1822,12 +1943,19 @@ public class LocaleMissionServlet extends HttpServlet {
 				resJson7.put("CustomerName", loc.getCustomerName());
 				resJson7.put("Code", loc.getCode());
 				resJson7.put("Department", loc.getDepartment());
-				resJson7.put("Address", loc.getAddress());
+				resJson7.put("Address", loc.getAddress_1());
 				resJson7.put("ZipCode", loc.getZipCode());
 				resJson7.put("Contactor", loc.getContactor());
-				resJson7.put("ContactorTel", loc.getContactorTel()==null?"":loc.getContactorTel());
+				resJson7.put("ContactorTel", loc.getTel()==null?"":loc.getTel());
 				resJson7.put("SiteManager", loc.getSysUserBySiteManagerId()==null?"":loc.getSysUserBySiteManagerId().getName());
+				resJson7.put("HeadNameName", loc.getAddress().getHeadName());
+				resJson7.put("HeadNameAddress", loc.getAddress().getAddress());
+				resJson7.put("HeadNameFax", loc.getAddress().getFax()==null?"":loc.getAddress().getFax());
+				resJson7.put("HeadNameTel", loc.getAddress().getTel()==null?"":loc.getAddress().getTel());//查询电话
+				resJson7.put("HeadNameComplainTel", loc.getAddress().getComplainTel()==null?"":loc.getAddress().getComplainTel());//投诉电话
+				resJson7.put("HeadNameZipCode", loc.getAddress().getZipCode()==null?"":loc.getAddress().getZipCode());//
 				
+				resJson7.put("PrintType", "");//打印类型，0代表正常的表，1代表空表
 				
 				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 				if(loc.getExactTime()!=null){
@@ -1875,7 +2003,7 @@ public class LocaleMissionServlet extends HttpServlet {
 						jsonObj.put("code", loc.getCode());	//现场委托书号	
 						jsonObj.put("Id", loc.getId());	//现场任务ID		
 						jsonObj.put("CustomerName", loc.getCustomerName());					
-						jsonObj.put("CustomerAddress", loc.getAddress());
+						jsonObj.put("CustomerAddress", loc.getAddress_1());
 						jsonObj.put("CustomerTel", loc.getTel());
 						jsonObj.put("CustomerZipCode", loc.getZipCode());
 						jsonObj.put("LocaleCommissionDate",loc.getExactTime()==null?"":DateTimeFormatUtil.DateFormat.format(loc.getExactTime()));
@@ -1920,11 +2048,11 @@ public class LocaleMissionServlet extends HttpServlet {
 						jsonObj.put("code", loc.getCode());	//现场委托书号	
 						jsonObj.put("Id", loc.getId());	//现场任务ID		
 						jsonObj.put("CustomerName", loc.getCustomerName());					
-						jsonObj.put("CustomerAddress", loc.getAddress());
+						jsonObj.put("CustomerAddress", loc.getAddress_1());
 						jsonObj.put("LocaleCommissionDate",loc.getExactTime()==null?"":DateTimeFormatUtil.DateFormat.format(loc.getExactTime()));
 						if(loc.getExactTime() != null){
 							Timestamp eTime = loc.getExactTime();
-							eTime.setDate(eTime.getDate() + 7);
+							eTime.setDate(eTime.getDate() + 9);
 							jsonObj.put("PromiseDate",DateTimeFormatUtil.DateFormat.format(eTime));
 						}else{
 							jsonObj.put("PromiseDate","");
@@ -1970,6 +2098,12 @@ public class LocaleMissionServlet extends HttpServlet {
 				String Contactor = req.getParameter("Contactor");
 				String RegionId = req.getParameter("RegionId");
 				String Remark = req.getParameter("Remark");
+				String HeadNameId = req.getParameter("HeadName");
+				if(HeadNameId==null||HeadNameId.length()==0){
+					throw new Exception("抬头名称不能为空！");				
+				}
+				AddressManager addrMgr = new AddressManager();			
+				Address HeadNameAddr = new AddressManager().findById(Integer.parseInt(HeadNameId));	//台头名称的单位
 				String Appliances = req.getParameter("Appliances").trim();	//检验的器具
 				
 				JSONArray appliancesArray = new JSONArray(Appliances);	//检查的器具
@@ -1992,7 +2126,8 @@ public class LocaleMissionServlet extends HttpServlet {
                 Timestamp now = new Timestamp(System.currentTimeMillis());// 取当前时间
                 
                 localmission.setCustomerName(CustomerName==null?"":CustomerName);
-				localmission.setAddress(Address==null?"":Address);
+				localmission.setAddress_1(Address==null?"":Address);
+				localmission.setAddress(HeadNameAddr);
 				localmission.setZipCode(ZipCode==null?"":ZipCode);
 				localmission.setContactor(Contactor==null?"":Contactor);
 				localmission.setTel(Tel==null?"":Tel);
@@ -2040,9 +2175,7 @@ public class LocaleMissionServlet extends HttpServlet {
 							throw new Exception("更新单位联系人失败！");		
 					}else{
 						CustomerContactor c = new CustomerContactor();
-						Customer a=new Customer();
-						a.setId(CustomerId);
-						c.setCustomer(a);
+						c.setCustomerId(CustomerId);
 						c.setName(Contactor);
 						c.setCellphone1(ContactorTel);
 						c.setLastUse(now);
@@ -2227,6 +2360,9 @@ public class LocaleMissionServlet extends HttpServlet {
 				String Drivername=req.getParameter("Drivername");
 				String Licence=req.getParameter("Licence");
 				
+				String QTway = req.getParameter("QTway");
+				QTway = URLDecoder.decode(new String(QTway.trim().getBytes("ISO-8859-1")),"UTF-8"); 
+				System.out.println(QTway);
 				Timestamp beginTs =  Timestamp.valueOf(String.format("%s 08:30:00", ExactTime.trim()));
 				Timestamp endTs = Timestamp.valueOf(String.format("%s 17:00:00", ExactTime.trim()));
 				
@@ -2241,7 +2377,7 @@ public class LocaleMissionServlet extends HttpServlet {
                 Customer cus=new Customer();
                 cus.setId(CustomerId);
 				LocaleMission localmission = new LocaleMission();
-				localmission.setAddress(Address==null?"":Address);
+				localmission.setAddress_1(Address==null?"":Address);
 				localmission.setCustomer(cus);
 				localmission.setCustomerName(Name);
 				localmission.setBrief(Brief);
@@ -2260,7 +2396,10 @@ public class LocaleMissionServlet extends HttpServlet {
 				localmission.setVehicleLisences(URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8"));
 				
 				String Code=URLDecoder.decode(new String(LocaleMissionCode.trim().getBytes("ISO-8859-1")) , "UTF-8");
-				List<LocaleMission> locMissionList = locmissMgr.findByVarProperty(new KeyValueWithOperator("code",Code,"="));
+				if(Code==null||Code.length()!=7)
+					throw new Exception("委托书号"+Code+"格式不正确，只能是七位");
+				List<LocaleMission> locMissionList = locmissMgr.findByVarProperty(new KeyValueWithOperator("code",Code,"="),new KeyValueWithOperator("status",3,"<>"));
+				
 				if(locMissionList==null||locMissionList.size()==0){
 					localmission.setCode(Code);
 				}else{
@@ -2274,14 +2413,21 @@ public class LocaleMissionServlet extends HttpServlet {
 					newUser.setId(Integer.parseInt(SiteManagerId));
 					localmission.setSysUserBySiteManagerId(newUser);
 				}else{
-					localmission.setSysUserBySiteManagerId(null);
+					throw new Exception("现场负责人不能为空");
 				}
 				Timestamp CheckTime = new Timestamp(DateTimeFormatUtil.DateFormat.parse(ExactTime).getTime());
 				localmission.setCheckDate(CheckTime);
 				localmission.setExactTime(CheckTime);
 				
-				localmission.setStatus(1);// status: 1 已分配 2 已完成 3已删除 4负责人未核定 5负责人已核定				
-
+				localmission.setStatus(1);// status: 1 已分配 2 已完成 3已删除 4负责人未核定 5负责人已核定		
+				
+				String HeadNameId = req.getParameter("HeadName");
+				if(HeadNameId==null||HeadNameId.length()==0){
+					throw new Exception("抬头名称不能为空！");				
+				}
+				AddressManager addrMgr = new AddressManager();			
+				Address HeadNameAddr = new AddressManager().findById(Integer.parseInt(HeadNameId));	//台头名称的单位
+				localmission.setAddress(HeadNameAddr);
 				
 				Timestamp now = new Timestamp(System.currentTimeMillis());// 取当前时间
 				localmission.setCreateTime(now);// 创建时间为当前时间
@@ -2394,64 +2540,79 @@ public class LocaleMissionServlet extends HttpServlet {
 					}					
 					localeAppItemList.add(localeAppItem);
 				}
+				DrivingVehicle drivingvehicle = null; //新建出车记录
 				
-				//车辆处理
-				VehicleManager VeMgr=new VehicleManager();
-				List<Vehicle> vehivleList=VeMgr.findByVarProperty(new KeyValueWithOperator("licence",URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8") , "="),
-									      new KeyValueWithOperator("status", 0, "="));
-				Vehicle vehicle=new Vehicle();
-				UserManager userMgr=new UserManager();
-				SysUser driver =new SysUser();
-				if(Drivername!=null&&Drivername.length()>0){
-					driver= userMgr.findByVarProperty(new KeyValueWithOperator("name",URLDecoder.decode(new String(Drivername.trim().getBytes("ISO-8859-1")) , "UTF-8") , "=")).get(0);			
-				}
-				if(vehivleList!=null&&vehivleList.size()>0){
-					vehicle=vehivleList.get(0);
-				}else{	
-					throw new Exception("找不到车牌号为"+URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8")+"的车，请重新输入！");		
-					/*vehicle.setLicence(URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8"));
+				if(QTway!=null&&QTway.length()>0&&QTway.equals("所内派车")){
+					//车辆处理
+					if(Licence==null||Licence.trim().length()==0||Drivername==null||Drivername.trim().length()==0){
+						throw new Exception("选择“所内派车”后，车牌号和司机名不能为空");		
+					}
+					VehicleManager VeMgr=new VehicleManager();
+					List<Vehicle> vehivleList=VeMgr.findByVarProperty(new KeyValueWithOperator("licence",URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8") , "="),
+										      new KeyValueWithOperator("status", 0, "="));
 					
-					vehicle.setSysUser(driver);
-					vehicle.setBrand("");
-					vehicle.setFuelFee(0.0);
-					vehicle.setLicenceType("");
-					vehicle.setLimit(0);
-					vehicle.setModel("");
-					vehicle.setStatus(0);					
-					VeMgr.save(vehicle);		*/			
-				}
-				
-				//找现场业务下面的各个器具指派人
-				String staffs="";
-				if(!localeAppItemList.isEmpty()){						
-					for (LocaleApplianceItem user : localeAppItemList) {
-						String name=(user.getSysUser()==null?"":user.getSysUser().getName());
-						if(staffs.indexOf(name+";")<0){
-							staffs = staffs + name +";"; 		
+					System.out.println(URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8"));
+					Vehicle vehicle=new Vehicle();
+					UserManager userMgr=new UserManager();
+					SysUser driver =new SysUser();
+					if(Drivername!=null&&Drivername.length()>0){
+						driver= userMgr.findByVarProperty(new KeyValueWithOperator("name",URLDecoder.decode(new String(Drivername.trim().getBytes("ISO-8859-1")) , "UTF-8") , "=")).get(0);			
+					}
+					if(vehivleList!=null&&vehivleList.size()>0){
+						vehicle=vehivleList.get(0);
+					}else{	
+						throw new Exception("找不到车牌号为"+URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8")+"的车，请重新输入！");		
+						/*vehicle.setLicence(URLDecoder.decode(new String(Licence.trim().getBytes("ISO-8859-1")) , "UTF-8"));
+						
+						vehicle.setSysUser(driver);
+						vehicle.setBrand("");
+						vehicle.setFuelFee(0.0);
+						vehicle.setLicenceType("");
+						vehicle.setLimit(0);
+						vehicle.setModel("");
+						vehicle.setStatus(0);					
+						VeMgr.save(vehicle);		*/			
+					}
+					
+					//找现场业务下面的各个器具指派人
+					String staffs="";
+					if(!localeAppItemList.isEmpty()){						
+						for (LocaleApplianceItem user : localeAppItemList) {
+							String name=(user.getSysUser()==null?"":user.getSysUser().getName());
+							if(staffs.indexOf(name+";")<0){
+								staffs = staffs + name +";"; 		
+							}
 						}
 					}
-				}
-				if(localmission.getSysUserBySiteManagerId()!=null){
-					if(staffs.indexOf(localmission.getSysUserBySiteManagerId().getName()+";")<0){
-						staffs = staffs + localmission.getSysUserBySiteManagerId().getName()+";"; 		
+					if(localmission.getSysUserBySiteManagerId()!=null){
+						if(staffs.indexOf(localmission.getSysUserBySiteManagerId().getName()+";")<0){
+							staffs = staffs + localmission.getSysUserBySiteManagerId().getName()+";"; 		
+						}
+					}
+					
+					drivingvehicle=new DrivingVehicle(); //新建出车记录
+					drivingvehicle.setAssemblingPlace("");
+					drivingvehicle.setBeginDate(beginTs);
+					drivingvehicle.setEndDate(endTs);	
+					drivingvehicle.setStatus(0);
+					drivingvehicle.setSysUserByDriverId(driver); // 驾驶员							
+					drivingvehicle.setPeople(staffs);
+					drivingvehicle.setVehicle(vehicle);// 车辆
+					
+				}else{				
+					if(QTway!=null&&QTway.length()>0){
+						localmission.setVehicleLisences(QTway);
 					}
 				}
 				
-				DrivingVehicle drivingvehicle=new DrivingVehicle(); //新建出车记录
-				drivingvehicle.setAssemblingPlace("");
-				drivingvehicle.setBeginDate(beginTs);
-				drivingvehicle.setEndDate(endTs);	
-				drivingvehicle.setStatus(0);
-				drivingvehicle.setSysUserByDriverId(driver); // 驾驶员							
-				drivingvehicle.setPeople(staffs);
-				drivingvehicle.setVehicle(vehicle);// 车辆
-				
+
 				if (locAppItemMgr.saveByBatchBD(localeAppItemList,localmission,drivingvehicle)) { // 补登成功
 					retObj17.put("IsOK", true);
 				} else {
 					throw new Exception("写入数据库失败！");
 				}
-
+				
+				
 			}catch (Exception e) {
 				try {
 					retObj17.put("IsOK", false);
@@ -2469,6 +2630,179 @@ public class LocaleMissionServlet extends HttpServlet {
 				resp.getWriter().write(retObj17.toString());
 			}
 			break;
+		case 18://查询现场任务条目（用于打印）（空表）
+			JSONObject resJson18 = new JSONObject();
+			try{
+				String localeMissionId = req.getParameter("localeMissionId"); 
+				List<KeyValueWithOperator> quoList = new ArrayList<KeyValueWithOperator>();
+				List<LocaleApplianceItem> locAppItemList;
+				CustomerManager cusMgr=new CustomerManager();
+				CommissionSheetManager comsheetMgr=new CommissionSheetManager();
+				List<CommissionSheet> comsheetList=new ArrayList<CommissionSheet>();
+				int total5;
+				if(localeMissionId == null)
+				{
+					throw new Exception("任务书号无效！");
+				}
+				else
+				{
+					locAppItemList = locAppItemMgr.findByVarProperty(new KeyValueWithOperator("localeMission.id",Integer.parseInt(localeMissionId),"="));
+					total5 = locAppItemMgr.getTotalCount(new KeyValueWithOperator("localeMission.id",Integer.parseInt(localeMissionId),"="));
+				}
+				
+				JSONArray optionsq = new JSONArray();
+				int id=1;
+											
+				JSONObject option = new JSONObject();
+				String applianceInfo="";
+
+				option.put("Id", id++);
+				
+				option.put("ApplianceName", "");
+				
+				option.put("Quantity", "");
+				
+				
+				option.put("Model","");
+				option.put("Accuracy", "");
+				option.put("Range", "");						
+				option.put("AppFactoryCode", "");
+				option.put("AppManageCode", "");
+				option.put("Manufacturer", "");
+						
+				option.put("applianceInfo", "");
+				String CertType="";
+				
+				option.put("CertType", CertType);					
+				option.put("TestCost","");
+				option.put("RepairCost","");
+				option.put("MaterialCost","");
+				option.put("WorkStaff","");
+									
+				optionsq.put(option);
+				
+				
+				
+				for (int i=0;i<21;i++) {   //为了调试，空21行
+					JSONObject option2 = new JSONObject();
+					option2.put("Id", id++);
+					option2.put("ApplianceName", " ");	
+					option2.put("applianceInfo", "");
+					option2.put("Model"," ");
+					option2.put("Accuracy", " ");
+					option2.put("Range", " ");
+					option2.put("Quantity", " ");
+					option2.put("AppFactoryCode","");
+					option2.put("AppManageCode", "");
+					option2.put("Manufacturer", "");
+					option2.put("CertType", " ");
+					option2.put("RepairCost","");
+					option2.put("MaterialCost","");
+					option2.put("TestCost","");
+					option2.put("WorkStaff","");
+										
+					optionsq.put(option2);
+				}
+				
+				if(id<=10){
+					int temp=id;
+					for (int i=0;i<(11-temp%10);i++) {   //首页10行
+						JSONObject option1 = new JSONObject();
+						option1.put("Id", id++);
+						option1.put("ApplianceName", " ");	
+						option1.put("applianceInfo", "");
+						option1.put("Model"," ");
+						option1.put("Accuracy", " ");
+						option1.put("Range", " ");
+						option1.put("Quantity", " ");
+						option1.put("AppFactoryCode","");
+						option1.put("AppManageCode", "");
+						option1.put("Manufacturer", "");
+						option1.put("CertType", " ");									
+						option1.put("TestCost","");
+						option1.put("RepairCost","");
+						option1.put("MaterialCost","");
+						option1.put("WorkStaff","");
+											
+						optionsq.put(option1);
+					}					
+				}
+			
+				else{
+					int temp=id-10;
+					for (int i=0;i<(23-temp%22);i++) {   //每页20行
+						JSONObject option1 = new JSONObject();
+						option1.put("Id", id++);
+						option1.put("ApplianceName", " ");
+						option1.put("applianceInfo", "");
+						option1.put("Model"," ");
+						option1.put("Accuracy", " ");
+						option1.put("Range", " ");
+						option1.put("Quantity", " ");
+						option1.put("AppFactoryCode","");
+						option1.put("AppManageCode", "");
+						option1.put("Manufacturer", "");
+						option1.put("CertType", " ");									
+						option1.put("TestCost","");
+						option1.put("RepairCost","");
+						option1.put("MaterialCost","");
+						option1.put("WorkStaff","");
+											
+						optionsq.put(option1);
+					}
+				}
+				resJson18.put("total", id);
+				resJson18.put("rows", optionsq);
+				
+				LocaleMission loc=locmissMgr.findById(Integer.parseInt(localeMissionId));
+				resJson18.put("CustomerName", loc.getCustomerName());
+				resJson18.put("Code", loc.getCode());
+				resJson18.put("Department", loc.getDepartment());
+				resJson18.put("Address", loc.getAddress_1());
+				resJson18.put("ZipCode", loc.getZipCode());
+				resJson18.put("Contactor", loc.getContactor());
+				resJson18.put("ContactorTel", loc.getTel()==null?"":loc.getTel());
+				resJson18.put("SiteManager", loc.getSysUserBySiteManagerId()==null?"":loc.getSysUserBySiteManagerId().getName());
+				resJson18.put("HeadNameName", loc.getAddress().getHeadName());
+				resJson18.put("HeadNameAddress", loc.getAddress().getAddress());
+				resJson18.put("HeadNameFax", loc.getAddress().getFax()==null?"":loc.getAddress().getFax());
+				resJson18.put("HeadNameTel", loc.getAddress().getTel()==null?"":loc.getAddress().getTel());//查询电话
+				resJson18.put("HeadNameComplainTel", loc.getAddress().getComplainTel()==null?"":loc.getAddress().getComplainTel());//投诉电话
+				resJson18.put("HeadNameZipCode", loc.getAddress().getZipCode()==null?"":loc.getAddress().getZipCode());//
+				
+				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+				if(loc.getExactTime()!=null){
+					resJson18.put("ExactTime", sf.format(loc.getExactTime()));//报价时间\
+				}else{
+					resJson18.put("ExactTime", "");//报价时间\
+				}
+				resJson18.put("PrintType", "1");//打印类型，“”代表正常的表，"1"代表空表
+				resJson18.put("IsOK", true);
+				req.getSession().setAttribute("AppItemsList", resJson18);
+			
+				resp.sendRedirect("/jlyw/TaskManage/LocaleMissionPrint.jsp");
+			}catch(Exception e){
+				try {
+					resJson18.put("total", 0);
+					resJson18.put("rows", new JSONArray());
+
+					try {
+						resJson18.put("IsOK", false);
+						resJson18.put("msg", String.format("打印空表失败！错误信息：%s", (e!=null && e.getMessage()!=null)?e.getMessage():"无"));
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+				} catch (JSONException e1) {}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in LocaleMissionServlet-->case 18", e);
+				}else{
+					log.error("error in LocaleMissionServlet-->case 18", e);
+				}
+				req.getSession().setAttribute("AppItemsList", resJson18);
+				
+				resp.sendRedirect("/jlyw/TaskManage/LocaleMissionPrint.jsp");
+			}
+			break;	
 		}
 		
 	}

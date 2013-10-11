@@ -151,24 +151,6 @@ public class ApplianceSpeciesManager {
 			return null;
 		}
 	}
-	/**
-	* 分页显示数据
-	*@param queryString:查询语句（HQL）
-	* @param currentPage
-	* 当前页码, 从 1 开始
-	* @param pageSize
-	* 每页显示数据量
-	* @param arr 查询语句中?对应的值
-	* @return 分页后的数据列表- List
-	*/
-	public List findPageAllByHQL(String queryString, int currentPage, int pageSize, List<Object> arr){
-		try{
-			return m_dao.findPageAllByHQL(queryString, currentPage, pageSize, arr);
-		}catch(Exception e){
-			e.printStackTrace();
-			return null;
-		}
-	}
 	
 	/**
 	* 分页显示数据

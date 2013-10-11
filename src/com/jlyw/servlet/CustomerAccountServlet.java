@@ -34,6 +34,9 @@ import com.jlyw.util.KeyValueWithOperator;
 public class CustomerAccountServlet extends HttpServlet {
 	private static Log log = LogFactory.getLog(CustomerAccountServlet.class);
 	private static String ClassName = "CustomerAccountServlet";
+	private static Object MutexObjectOfNewDetailList = new Object();		//用于互斥访问新建清单
+	
+	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -246,98 +249,99 @@ public class CustomerAccountServlet extends HttpServlet {
 				
 				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
 				DetailListManager deListMgr=new DetailListManager();
-				
-				//begin-查询本清单最大的清单号
-				String queryCode = String.format("%d", today.getYear()+1900);		
-				String queryString = "select max(model.code) from DetailList as model where model.code like ?";
-				List<Object> retList = deListMgr.findByHQL(queryString, queryCode+"%");
-				Integer codeBeginInt = Integer.parseInt("0000001");	//委托单编号
-				if(retList.size() > 0 && retList.get(0) != null){
-					codeBeginInt = Integer.parseInt(retList.get(0).toString().substring(4)) + 1;
-				}
-				//end-查询本清单最大的清单号
-				String code=queryCode+String.format("%07d", codeBeginInt);
-				DetailList detailList = new DetailList();
-				detailList.setCode(code);
-				detailList.setTotalFee(TotalFee);
-				detailList.setPaidFee(TotalFee);
-				detailList.setCashPaid(CashPaid);
-				detailList.setChequePaid(ChequePaid);
-				detailList.setAccountPaid(AccountPaid);
-				detailList.setSysUser(Handler);
-				detailList.setLastEditTime(today);
-				detailList.setStatus(2);
-				detailList.setInvoiceCode(InvoiceCode);
-				detailList.setVersion(1);
-				
-				List<CommissionSheet> updateList = new ArrayList<CommissionSheet>();
-				List<DetailList> oldDetailListList = new ArrayList<DetailList>();
-				for(int i = 0; i<CommissionSheets.length(); i++){
-					JSONObject cSheetObj = CommissionSheets.getJSONObject(i);
-					CommissionSheet cSheet = cSheetMgr.findById(cSheetObj.getInt("Id"));
-					if(cSheet.getStatus()==FlagUtil.CommissionSheetStatus.Status_YiJieZhang){
-						throw new Exception("委托单" + cSheet.getCode() + "已结账。");
+				synchronized(MutexObjectOfNewDetailList) {
+					//begin-查询本清单最大的清单号
+					String queryCode = String.format("%d", today.getYear()+1900);		
+					String queryString = "select max(model.code) from DetailList as model where model.code like ?";
+					List<Object> retList = deListMgr.findByHQL(queryString, queryCode+"%");
+					Integer codeBeginInt = Integer.parseInt("0000001");	//委托单编号
+					if(retList.size() > 0 && retList.get(0) != null){
+						codeBeginInt = Integer.parseInt(retList.get(0).toString().substring(4)) + 1;
 					}
-					String queryStr = CertificateFeeAssignManager.queryStringAllFeeByCommissionSheetId;
-					List<Object[]> FList=new CertificateFeeAssignManager().findByHQL(queryStr, cSheet.getId());
-					double nowTotalFee;
-					if(FList.isEmpty()){
-						nowTotalFee = 0.0;
-				    }else{
-						nowTotalFee = (Double)FList.get(0)[6]==null?0.0:(Double)FList.get(0)[6];
-					   }
-					if(nowTotalFee!=Double.parseDouble(cSheetObj.getString("TotalFee"))){
-						throw new Exception("委托单" + cSheet.getCode() + "价格发生改变（现价：" + (Double)FList.get(0)[6] + "元），请重新添加该委托单进行结账。");
+					//end-查询本清单最大的清单号
+					String code=queryCode+String.format("%07d", codeBeginInt);
+					DetailList detailList = new DetailList();
+					detailList.setCode(code);
+					detailList.setTotalFee(TotalFee);
+					detailList.setPaidFee(TotalFee);
+					detailList.setCashPaid(CashPaid);
+					detailList.setChequePaid(ChequePaid);
+					detailList.setAccountPaid(AccountPaid);
+					detailList.setSysUser(Handler);
+					detailList.setLastEditTime(today);
+					detailList.setStatus(2);
+					detailList.setInvoiceCode(InvoiceCode);
+					detailList.setVersion(1);
+					
+					List<CommissionSheet> updateList = new ArrayList<CommissionSheet>();
+					List<DetailList> oldDetailListList = new ArrayList<DetailList>();
+					for(int i = 0; i<CommissionSheets.length(); i++){
+						JSONObject cSheetObj = CommissionSheets.getJSONObject(i);
+						CommissionSheet cSheet = cSheetMgr.findById(cSheetObj.getInt("Id"));
+						if(cSheet.getStatus()==FlagUtil.CommissionSheetStatus.Status_YiJieZhang){
+							throw new Exception("委托单" + cSheet.getCode() + "已结账。");
+						}
+						String queryStr = CertificateFeeAssignManager.queryStringAllFeeByCommissionSheetId;
+						List<Object[]> FList=new CertificateFeeAssignManager().findByHQL(queryStr, cSheet.getId());
+						double nowTotalFee;
+						if(FList.isEmpty()){
+							nowTotalFee = 0.0;
+					    }else{
+							nowTotalFee = (Double)FList.get(0)[6]==null?0.0:(Double)FList.get(0)[6];
+						   }
+						if(nowTotalFee!=Double.parseDouble(cSheetObj.getString("TotalFee"))){
+							throw new Exception("委托单" + cSheet.getCode() + "价格发生改变（现价：" + (Double)FList.get(0)[6] + "元），请重新添加该委托单进行结账。");
+						}
+						cSheet.setTestFee(Double.parseDouble(cSheetObj.getString("TestFee")));
+						cSheet.setRepairFee(Double.parseDouble(cSheetObj.getString("RepairFee")));
+						cSheet.setMaterialFee(Double.parseDouble(cSheetObj.getString("MaterialFee")));
+						cSheet.setCarFee(Double.parseDouble(cSheetObj.getString("CarFee")));
+						cSheet.setDebugFee(Double.parseDouble(cSheetObj.getString("DebugFee")));
+						cSheet.setOtherFee(Double.parseDouble(cSheetObj.getString("OtherFee")));
+						cSheet.setTotalFee(Double.parseDouble(cSheetObj.getString("TotalFee")));
+						cSheet.setStatus(FlagUtil.CommissionSheetStatus.Status_YiJieZhang);
+						int restComCount = cSheetMgr.getTotalCount(new KeyValueWithOperator("detailListCode", cSheet.getDetailListCode()==null?"":cSheet.getDetailListCode(), "="));
+						if(restComCount==1){
+							DetailList oldDetailList = deListMgr.findByVarProperty(new KeyValueWithOperator("code", cSheet.getDetailListCode(), "=")).get(0);
+							oldDetailList.setStatus(1);
+							oldDetailListList.add(oldDetailList);
+						}
+						cSheet.setCheckOutStaffId(Handler.getId());
+						cSheet.setCheckOutDate(today);
+						cSheet.setDetailListCode(detailList.getCode());
+						updateList.add(cSheet);
+					}											
+							
+					/*** 修改Customer 的余额信息 ***/							
+					cus.setBalance(cus.getBalance()-AccountPaid);
+					
+					/*** 创建委托单位账户存取明细对象 **/
+					CustomerAccount cusAccount = null;// 委托单位账户存取明细
+					if(AccountPaid!=0){
+						cusAccount = new CustomerAccount();
+						cusAccount.setCustomer(cus);
+						cusAccount.setHandleType(1);
+						cusAccount.setHandleTime(today);
+						if (Handler != null) {
+							//int HandlerId = Handler.getId();
+							String HandlerName = Handler.getName();
+							cusAccount.setHandlerName(HandlerName);
+							cusAccount.setSysUser(Handler);
+						}
+						cusAccount.setAmount(AccountPaid);
 					}
-					cSheet.setTestFee(Double.parseDouble(cSheetObj.getString("TestFee")));
-					cSheet.setRepairFee(Double.parseDouble(cSheetObj.getString("RepairFee")));
-					cSheet.setMaterialFee(Double.parseDouble(cSheetObj.getString("MaterialFee")));
-					cSheet.setCarFee(Double.parseDouble(cSheetObj.getString("CarFee")));
-					cSheet.setDebugFee(Double.parseDouble(cSheetObj.getString("DebugFee")));
-					cSheet.setOtherFee(Double.parseDouble(cSheetObj.getString("OtherFee")));
-					cSheet.setTotalFee(Double.parseDouble(cSheetObj.getString("TotalFee")));
-					cSheet.setStatus(FlagUtil.CommissionSheetStatus.Status_YiJieZhang);
-					int restComCount = cSheetMgr.getTotalCount(new KeyValueWithOperator("detailListCode", cSheet.getDetailListCode()==null?"":cSheet.getDetailListCode(), "="));
-					if(restComCount==1){
-						DetailList oldDetailList = deListMgr.findByVarProperty(new KeyValueWithOperator("code", cSheet.getDetailListCode(), "=")).get(0);
-						oldDetailList.setStatus(1);
-						oldDetailListList.add(oldDetailList);
+					if(cusAccountMgr.saveByBatch(updateList, oldDetailListList, detailList, cus, cusAccount)){
+						retObj2.put("IsOK", true);
+						retObj2.put("msg", "结账成功！");
+						retObj2.put("DetailListId", detailList.getId());
+						retObj2.put("DetailListCode", detailList.getCode());
 					}
-					cSheet.setCheckOutStaffId(Handler.getId());
-					cSheet.setCheckOutDate(today);
-					cSheet.setDetailListCode(detailList.getCode());
-					updateList.add(cSheet);
-				}											
-						
-				/*** 修改Customer 的余额信息 ***/							
-				cus.setBalance(cus.getBalance()-AccountPaid);
-				
-				/*** 创建委托单位账户存取明细对象 **/
-				CustomerAccount cusAccount = null;// 委托单位账户存取明细
-				if(AccountPaid!=0){
-					cusAccount = new CustomerAccount();
-					cusAccount.setCustomer(cus);
-					cusAccount.setHandleType(1);
-					cusAccount.setHandleTime(today);
-					if (Handler != null) {
-						//int HandlerId = Handler.getId();
-						String HandlerName = Handler.getName();
-						cusAccount.setHandlerName(HandlerName);
-						cusAccount.setSysUser(Handler);
+					else{
+						retObj2.put("IsOK", false);
+						retObj2.put("msg", "结账失败！");
+						retObj2.put("DetailListId", "");
+						retObj2.put("DetailListCode", "");
 					}
-					cusAccount.setAmount(AccountPaid);
-				}
-				if(cusAccountMgr.saveByBatch(updateList, oldDetailListList, detailList, cus, cusAccount)){
-					retObj2.put("IsOK", true);
-					retObj2.put("msg", "结账成功！");
-					retObj2.put("DetailListId", detailList.getId());
-					retObj2.put("DetailListCode", detailList.getCode());
-				}
-				else{
-					retObj2.put("IsOK", false);
-					retObj2.put("msg", "结账失败！");
-					retObj2.put("DetailListId", "");
-					retObj2.put("DetailListCode", "");
 				}
 			} catch (Exception e) {
 				try{

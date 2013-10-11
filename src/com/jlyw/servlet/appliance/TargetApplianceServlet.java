@@ -276,6 +276,9 @@ public class TargetApplianceServlet extends HttpServlet {
 				String Model = req.getParameter("Model");	//型号规格
 				String Range = req.getParameter("Range");	//测量范围
 				String Accuracy = req.getParameter("Accuracy");	//准确度等级
+				String TestFee = req.getParameter("TestFee");//检定费
+				String TargetAppName = req.getParameter("TargetAppName");	//受检器具名称
+
 				int page5 = 0; // 当前页面
 				if (req.getParameter("page") != null)
 					page5 = Integer.parseInt(req.getParameter("page").toString());
@@ -307,6 +310,14 @@ public class TargetApplianceServlet extends HttpServlet {
 				if(Accuracy != null && Accuracy.length() > 0){
 					Accuracy = URLDecoder.decode(Accuracy, "UTF-8");
 					condList.add(new KeyValueWithOperator("Accuracy", "%"+Accuracy+"%", "like"));
+				}
+				if(TestFee != null && TestFee.length() > 0){
+					TestFee = URLDecoder.decode(TestFee, "UTF-8");
+					condList.add(new KeyValueWithOperator("Fee", Integer.valueOf(TestFee), "="));
+				}
+				if(TargetAppName != null && TargetAppName.length() > 0){
+					TargetAppName = URLDecoder.decode(TargetAppName, "UTF-8");
+					condList.add(new KeyValueWithOperator("TargetApplianceName", TargetAppName, "="));
 				}
 				condList.add(new KeyValueWithOperator("targetApplianceStatus", 1, "<>"));
 				List<Object> paramList = new ArrayList<Object>();
@@ -684,25 +695,41 @@ public class TargetApplianceServlet extends HttpServlet {
 			break;
 		case 10:// 根据ID删除型号规格、不确定度、测量范围的记录
 			int Type10 = Integer.valueOf(req.getParameter("Type"));// 1：型号规格，2：不确定度，3：测量范围
-			int id1 = Integer.valueOf(req.getParameter("id"));
+			String idStr = req.getParameter("idStr");
+			String[] ids = idStr.split("\\|");
 			JSONObject res10 = new JSONObject();
 			try {
 				switch (Type10) {
 				case 1:
 					ApplianceModelManager appModelMgr = new ApplianceModelManager();
-					boolean res1 = appModelMgr.deleteById(id1);
+					List<ApplianceModel> models = new ArrayList<ApplianceModel>();
+					for(int i = 0; i < ids.length; i++){
+						ApplianceModel model = appModelMgr.findById(Integer.valueOf(ids[i]));
+						models.add(model);
+					}
+					boolean res1 = appModelMgr.deleteByBatch(models);
 					res10.put("IsOK", res1);
 					res10.put("msg", res1 ? "删除成功！" : "删除失败，请重新删除！");
 					break;
 				case 2:
 					ApplianceAccuracyManager appAccuracyMgr = new ApplianceAccuracyManager();
-					boolean res2 = appAccuracyMgr.deleteById(id1);
+					List<ApplianceAccuracy> accuracys = new ArrayList<ApplianceAccuracy>();
+					for(int i = 0; i < ids.length; i++){
+						ApplianceAccuracy accuracy = appAccuracyMgr.findById(Integer.valueOf(ids[i]));
+						accuracys.add(accuracy);
+					}
+					boolean res2 = appAccuracyMgr.deleteByBatch(accuracys);
 					res10.put("IsOK", res2);
 					res10.put("msg", res2 ? "删除成功！" : "删除失败，请重新删除！");
 					break;
 				case 3:
 					ApplianceRangeManager appRangeMgr = new ApplianceRangeManager();
-					boolean res3 = appRangeMgr.deleteById(id1);
+					List<ApplianceRange> ranges = new ArrayList<ApplianceRange>();
+					for(int i = 0; i < ids.length; i++){
+						ApplianceRange range = appRangeMgr.findById(Integer.valueOf(ids[i]));
+						ranges.add(range);
+					}
+					boolean res3 = appRangeMgr.deleteByBatch(ranges);
 					res10.put("IsOK", res3);
 					res10.put("msg", res3 ? "删除成功！" : "删除失败，请重新删除！");
 					break;
@@ -856,7 +883,7 @@ public class TargetApplianceServlet extends HttpServlet {
 				case 1:
 					String queryStr = "select distinct (a.model) from ApplianceModel as a where a.targetAppliance.applianceStandardName.name = ?";
 					ApplianceModelManager appModelMgr = new ApplianceModelManager();
-					List<Object> modelList = appModelMgr.findByHQL(queryStr, standardNameName);
+					List<Object> modelList = appModelMgr.findPageAllByHQL(queryStr, 1,30,standardNameName);
 				
 					for (Object model : modelList) {
 						JSONObject option = new JSONObject();					
@@ -867,7 +894,7 @@ public class TargetApplianceServlet extends HttpServlet {
 				case 2:
 					String queryStr1 = "select distinct (a.accuracy) from ApplianceAccuracy as a where a.targetAppliance.applianceStandardName.name = ?";
 					ApplianceAccuracyManager appAccuracyMgr = new ApplianceAccuracyManager();
-					List<Object> accuracyList = appAccuracyMgr.findByHQL(queryStr1, standardNameName);
+					List<Object> accuracyList = appAccuracyMgr.findPageAllByHQL(queryStr1,1,30, standardNameName);
 					
 					for (Object accuracy : accuracyList) {
 						JSONObject option = new JSONObject();				
@@ -878,7 +905,7 @@ public class TargetApplianceServlet extends HttpServlet {
 				case 3:
 					String queryStr2 = "select distinct (a.range) from ApplianceRange as a where a.targetAppliance.applianceStandardName.name = ?";
 					ApplianceRangeManager appRangeMgr = new ApplianceRangeManager();
-					List<Object> rangeList = appRangeMgr.findByHQL(queryStr2, standardNameName);
+					List<Object> rangeList = appRangeMgr.findPageAllByHQL(queryStr2,1,30, standardNameName);
 				
 					for (Object range : rangeList) {
 						JSONObject option = new JSONObject();
@@ -929,7 +956,9 @@ public class TargetApplianceServlet extends HttpServlet {
 						queryStr = queryStr+ " and t.id in (select a.targetAppliance.id from ApplianceAccuracy as a where a.targetAppliance.id = t.id and a.accuracy = ?)";
 						keys.add(URLDecoder.decode(accuracy, "UTF-8"));
 					}
+					//if(range!=null&&range.trim().length()>0){
 					if(range!=null&&range.trim().length()>0){
+
 						queryStr = queryStr+ " and t.id in (select r.targetAppliance.id from ApplianceRange as r where r.targetAppliance.id = t.id and r.range = ?)";
 						keys.add(URLDecoder.decode(range, "UTF-8"));
 					}

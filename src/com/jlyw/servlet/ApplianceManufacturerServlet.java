@@ -31,7 +31,7 @@ public class ApplianceManufacturerServlet extends HttpServlet {
 		int method = Integer.valueOf(req.getParameter("method"));
 		ApplianceManufacturerManager appManufacturerMgr = new ApplianceManufacturerManager();
 		switch(method){
-		case 1://新增常用名称
+		case 1://新增生产厂商
 			JSONObject retObj = new JSONObject();
 			try {
 				ApplianceManufacturer appManufacturer = initApplianceManufacturer(req, 0);
@@ -53,7 +53,7 @@ public class ApplianceManufacturerServlet extends HttpServlet {
 				resp.getWriter().write(retObj.toString());
 			}
 			break;
-		case 2://根据标准名称查询常用名称
+		case 2://根据标准名称查询生产厂商
 			JSONObject res = new JSONObject();
 			try{
 				String StandardNameId = req.getParameter("StandardNameId");
@@ -102,7 +102,7 @@ public class ApplianceManufacturerServlet extends HttpServlet {
 				resp.getWriter().write(res.toString());
 			}
 			break;
-		case 3://修改常用名称
+		case 3://修改生产厂商
 			JSONObject retObj1 = new JSONObject();
 			try {
 				int id = Integer.valueOf(req.getParameter("Id"));
@@ -125,12 +125,17 @@ public class ApplianceManufacturerServlet extends HttpServlet {
 				resp.getWriter().write(retObj1.toString());
 			}
 			break;
-		case 4://注销常用名称
-			ApplianceManufacturer delManufacturer = appManufacturerMgr.findById(Integer.valueOf(req.getParameter("id")));
-			delManufacturer.setStatus(1);
+		case 4://注销生产厂商
+			String idStr = req.getParameter("idStr");
+			String[] ids = idStr.split("\\|");
 			JSONObject retObj2 = new JSONObject();
 			try {
-				boolean res1 = appManufacturerMgr.update(delManufacturer);
+				List<ApplianceManufacturer> appManufacturers = new ArrayList<ApplianceManufacturer>();
+				for(int i = 0; i < ids.length; i++){
+					ApplianceManufacturer appManufacturer = appManufacturerMgr.findById(Integer.valueOf(ids[i]));
+					appManufacturers.add(appManufacturer);
+				}
+				boolean res1 = appManufacturerMgr.logOutByBatch(appManufacturers);
 				retObj2.put("IsOK", res1);
 				retObj2.put("msg", res1 ? "注销成功！" : "注销失败，请重新注销！");
 			} catch (Exception e) {
@@ -180,15 +185,19 @@ public class ApplianceManufacturerServlet extends HttpServlet {
 		String Brief = req.getParameter("Brief");
 		String Status = req.getParameter("Status");
 		
-		List<ApplianceManufacturer> manufactureList = (new ApplianceManufacturerManager()).findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.valueOf(StandardNameId), "="), new KeyValueWithOperator("manufacturer", Name, "="));
-		if(manufactureList!=null&&manufactureList.size()>0)
-			throw new Exception("该生产厂商已存在！");
-		
+	
 		ApplianceManufacturer Manufacturer ;
 		if(id==0)
 			Manufacturer = new ApplianceManufacturer();
 		else
 			Manufacturer = (new ApplianceManufacturerManager()).findById(id);
+		
+		if(id==0||!Manufacturer.getManufacturer().equals(Name)){
+			List<ApplianceManufacturer> manufactureList = (new ApplianceManufacturerManager()).findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.valueOf(StandardNameId), "="), new KeyValueWithOperator("manufacturer", Name, "="));
+			if(manufactureList!=null&&manufactureList.size()>0)
+				throw new Exception("该生产厂商已存在！");
+		}
+		
 		Manufacturer.setApplianceStandardName((new ApplianceStandardNameManager()).findById(Integer.valueOf(StandardNameId)));
 		Manufacturer.setManufacturer(Name);
 		Manufacturer.setBrief(Brief);

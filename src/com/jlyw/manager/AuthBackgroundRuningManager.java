@@ -55,26 +55,30 @@ public class AuthBackgroundRuningManager {
 	 * @param doneSuccess:是否后台签字成功完成（true：后台签字成功完成；false：后台签字失败）
 	 * @return
 	 */
-	public static boolean removeAnAuthBackgroundRuning(AuthBackgroundRuning info, boolean doneSuccess) throws Exception{
+	public static  boolean removeAnAuthBackgroundRuning(AuthBackgroundRuning info, boolean doneSuccess) throws Exception{
 		if(instance == null){
 			instance = new AuthBackgroundRuningManager();
 		}
 		AuthBackgroundRuningDAO dao = instance.getDAO();
 		Transaction tran = dao.getSession().beginTransaction();
 		try{
-			VerifyAndAuthorize v = info.getVerifyAndAuthorize();
-			dao.delete(info);
-			if(doneSuccess){
-				v.setIsAuthBgRuning(null);
-			}else{
-				v.setAuthorizeResult(null);
-				v.setAuthorizeTime(null);
-				v.setIsAuthBgRuning(null);
-				v.setAuthorizeRemark(null);
-				v.setSysUserByAuthorizeExecutorId(null);
+			if(info!=null){
+				VerifyAndAuthorize v = info.getVerifyAndAuthorize();
+				
+				dao.delete(info);
+				if(doneSuccess){
+					v.setIsAuthBgRuning(null);
+				}else{
+					v.setAuthorizeResult(null);
+					v.setAuthorizeTime(null);
+					v.setIsAuthBgRuning(null);
+					v.setAuthorizeRemark(null);
+					v.setSysUserByAuthorizeExecutorId(null);
+				}
+				dao.update(v);
+				tran.commit();
+				
 			}
-			dao.update(v);
-			tran.commit();
 			return true;
 		}catch(Exception e){
 			tran.rollback();

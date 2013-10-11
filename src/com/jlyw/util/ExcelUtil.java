@@ -28,6 +28,7 @@ import org.apache.poi.hssf.usermodel.HSSFPatriarch;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.bson.types.ObjectId;
 import org.xml.sax.Attributes;
 
 import com.jlyw.hibernate.ApplianceStandardName;
@@ -56,7 +57,11 @@ import com.jlyw.manager.TestLogManager;
 import com.jlyw.manager.TgtAppSpecManager;
 import com.jlyw.manager.TgtAppStdAppManager;
 import com.jlyw.manager.UserManager;
+import com.jlyw.util.mongodbService.DBPoolManager;
+import com.jlyw.util.mongodbService.MongoService;
+import com.jlyw.util.mongodbService.MongoServiceImpl;
 import com.jlyw.util.xmlHandler.ParseXMLAll;
+import com.mongodb.gridfs.GridFSDBFile;
 
 /**
  * 对原始记录Excel进行操作，采用类反射机制实现
@@ -451,7 +456,7 @@ public class ExcelUtil {
 		}
 		//检验有效日期(若填写，则判断不可比检定日期早且不能比正常的有效期晚，若没有填写，则反填)
 		Date validateDate = null, validateDateMax = null;
-		if(oRecord.getTargetAppliance().getTestCycle() != null){	//计算最大的有效日期
+		if(oRecord.getTargetAppliance().getTestCycle() != null && !oRecord.getWorkType().equals("校准") && !oRecord.getWorkType().equals("检测")){	//计算最大的有效日期
 			calendar.setTime(workDate);
 			calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) + oRecord.getTargetAppliance().getTestCycle());
 			calendar.set(Calendar.DATE, calendar.get(Calendar.DATE) - 1);	//有效期=检定日期+检定周期-1天
@@ -1310,7 +1315,24 @@ public class ExcelUtil {
 		}else{
 			oRecord.setTotalFee(null);
 		}
-		
+
+		if(oRecord.getOriginalRecordExcel()!=null){
+			MongoService s = new MongoServiceImpl(DBPoolManager.getInstance().getDB(), SystemCfgUtil.BucketOriginalRecord);
+			ObjectId id = new ObjectId(oRecord.getOriginalRecordExcel().getDoc());
+			GridFSDBFile dbFile = s.findOneById(id);
+			File old = File.createTempFile(UIDUtil.get22BitUID(), ".xls");
+			dbFile.writeTo(old);
+			
+			InputStream isOld = new FileInputStream(old);
+			
+			HSSFWorkbook workbookOld = new HSSFWorkbook(isOld);
+			
+			HSSFSheet sheet = workbook.getSheetAt(0);
+			HSSFSheet sheetOld = workbookOld.getSheetAt(0);
+			
+			ExcelCompareUtil.CompareExcel(sheet, sheetOld, workStaff.getName());
+		}
+				
 		//将文件写入输出流
 		workbook.write(os);
 		os.flush();
@@ -1923,10 +1945,37 @@ public class ExcelUtil {
 				accuracy = (obj==null)?null:obj.toString();
 			}
 		}
+		
+		//获取受检器具
 		TargetApplianceManager tAppMgr = new TargetApplianceManager();
 		List<Object> paramList = new ArrayList<Object>();
 		paramList.add(stdName.getId());
 		String queryString = "from TargetAppliance as model where model.applianceStandardName.id=? ";
+		
+		   //获取受检器具名称
+		String targetAppName = null;
+		attrList = xlsParser.getAttributesByPropertyValue("Quantity", "fieldClass", FieldClassOriginalRecord);	//器具数量
+		if(attrList.size() == 0 ){
+			throw new Exception("在Excel文件中找不到‘器具数量’！");
+		}
+		for(Attributes attr : attrList){
+			handledAttrList.add(attr);	//添加已处理属性列表
+			HSSFSheet sheet = getSheet(workbook, attr);
+			Object obj = getCellValue2(sheet, attr);
+			if(obj != null && targetAppName != null && !targetAppName.equals(obj)){
+//				throw new Exception(String.format("Excel中的有多处准确度等级且值不一致:'%s'(单元格:%s) 与  '%s'不一致！",
+//						obj.toString(),
+//						attr.getValue("cell")==null?"":attr.getValue("cell"),
+//						accuracy));
+			}else{
+				targetAppName = (obj==null)?null:obj.toString();
+			}
+		}
+		if(targetAppName!=null&&targetAppName.length()>0){
+			queryString +=" and model.name=? ";
+			paramList.add(targetAppName);
+		}
+		   //结束获取受检器具名称
 		if(bModelLinked){
 			queryString += " and model.id in (select m.targetAppliance.id from ApplianceModel as m where model.id=m.targetAppliance.id and m.model=?) ";
 			paramList.add(model);
@@ -1955,7 +2004,8 @@ public class ExcelUtil {
 					bRangeLinked?",测量范围:"+(range==null?"":range):"",
 					bAccuracyLinked?",准确度等级:"+(accuracy==null?"":accuracy):""));
 		}
-		TargetAppliance tApp = tAppList.get(0);	//受检器具
+		TargetAppliance tApp = tAppList.get(0);	
+		//结束获取受检器具
 		
 		//获取工作性质
 		String workType = null;
@@ -2860,7 +2910,22 @@ public class ExcelUtil {
 		}else{
 			oRecord.setTotalFee(null);
 		}
-		
+		if(oRecord.getOriginalRecordExcel()!=null){
+			MongoService s = new MongoServiceImpl(DBPoolManager.getInstance().getDB(), SystemCfgUtil.BucketOriginalRecord);
+			ObjectId id = new ObjectId(oRecord.getOriginalRecordExcel().getDoc());
+			GridFSDBFile dbFile = s.findOneById(id);
+			File old = File.createTempFile(UIDUtil.get22BitUID(), ".xls");
+			dbFile.writeTo(old);
+			
+			InputStream isOld = new FileInputStream(old);
+			
+			HSSFWorkbook workbookOld = new HSSFWorkbook(isOld);
+			
+			HSSFSheet sheet = workbook.getSheetAt(0);
+			HSSFSheet sheetOld = workbookOld.getSheetAt(0);
+			
+			ExcelCompareUtil.CompareExcel(sheet, sheetOld, workStaff.getName());
+		}
 		//将文件写入输出流
 		workbook.write(os);
 		os.flush();
@@ -3025,6 +3090,51 @@ public class ExcelUtil {
 						attributes.getValue("desc")==null?"":attributes.getValue("desc"),
 						attributes.getValue("cell")==null?"":attributes.getValue("cell"),
 						e.getMessage() == null?"":String.format("(原因：%s)", e.getMessage())));
+		}
+	}
+	/**
+	 * 从Excel表中获取单元格下面的值（用于读取“器具数量”下面的“受检器具名称”）
+	 * @param sheet
+	 * @param attributes
+	 * @return
+	 * @throws Exception
+	 */
+	private static Object getCellValue2(HSSFSheet sheet, Attributes attributes) throws Exception{
+		try{
+			HSSFRow row = sheet.getRow(Integer.parseInt(attributes.getValue("rowIndex"))+1);	//获取行（+1）
+			HSSFCell cell = row.getCell(Integer.parseInt(attributes.getValue("colIndex")));//获取列
+			
+			int cellType = cell.getCellType();
+			String cellVal = null;		//获取单元格字符串
+	//		cell.setCellType(HSSFCell.CELL_TYPE_STRING);	//设置单元格类型为字符串类型
+	//		String cellVal = cell.getStringCellValue();		//获取单元格字符串
+			
+			if(cellType == HSSFCell.CELL_TYPE_NUMERIC){
+				if(HSSFDateUtil.isCellDateFormatted(cell)){	//日期格式
+					cellVal = String.format("%f", cell.getNumericCellValue());
+				}else{	//普通数字
+					cellVal = String.valueOf(cell.getNumericCellValue());
+				}
+			}else if(cellType == HSSFCell.CELL_TYPE_BOOLEAN){
+				cellVal = cell.getBooleanCellValue()?"true":"false";
+			}else if(cellType == HSSFCell.CELL_TYPE_STRING){
+				cellVal = cell.getStringCellValue();
+			}
+			
+			Object args = null;
+			
+			//判断参数类型
+			Class paramClass = Class.forName(attributes.getValue("typeClass"));	//参数类型
+			if(String.class == paramClass){
+				args = cellVal;
+			}else{
+				args = cellVal;
+			}
+			
+			return args;
+		}catch(Exception e){
+			throw new Exception(String.format("从Excel中读出受检器具姓名失败。%s", 
+					e.getMessage() == null?"":String.format("(原因：%s)", e.getMessage())));
 		}
 	}
 	/**

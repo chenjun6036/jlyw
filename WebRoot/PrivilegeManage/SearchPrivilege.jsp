@@ -162,7 +162,7 @@
 		function query()
 		{
 			$('#privilege').datagrid('options').url='/jlyw/PrivilegeServlet.do?method=2';
-			$('#privilege').datagrid('options').queryParams={'queryname':encodeURI($('#privilegename').combobox('getValue'))};
+			$('#privilege').datagrid('options').queryParams={'queryname':encodeURI($('#privilegename').combobox('getText'))};
 			$('#privilege').datagrid('clearSelections');
 			$('#privilege').datagrid('reload');
 		}

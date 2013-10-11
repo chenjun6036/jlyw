@@ -1,7 +1,9 @@
 package com.jlyw.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Scanner;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,7 +16,6 @@ import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.ComThread;
 import com.jacob.com.Dispatch;
 import com.jacob.com.Variant;
-import com.jlyw.util.WordUtil.JacobWordWriter;
 /**
  * 执行前，请启动openoffice服务
  * 进入$OO_HOME\program下
@@ -75,14 +76,72 @@ public class Office2PdfUtil {
 			if(outputFile.exists())
 				outputFile.delete();
 			docWriter.saveAsPdf(outputFile.getCanonicalPath());	//另存为Pdf
-			
-			docWriter.closeWord(false);
-			docWriter.releaseResourse();
-			docWriter = null;
+				
 		}catch(Exception e){
 			throw e;
 		}finally{
-			try{
+			try{	
+				docWriter.closeWord(false);		
+				docWriter.releaseResourse();
+				docWriter = null;
+//				Process process;
+//
+//	           int pid = 0;
+//
+//	           try {
+//
+//	              process = Runtime.getRuntime().exec("tasklist");
+//
+//	              Scanner in = new Scanner(process.getInputStream());
+//
+//	              while (in.hasNextLine()) {
+//
+//	                  String p = in.nextLine();
+//
+//	                  // 打印所有进程
+//
+//	                  System.out.println(p);
+//
+//	                  if (p.contains("EXCEL.EXE")) {
+//
+//	                     StringBuffer buf = new StringBuffer();
+//
+//	                     for (int i = 0; i < p.length(); i++) {
+//
+//	                         char ch = p.charAt(i);
+//
+//	                         if (ch != ' ') {
+//
+//	                            buf.append(ch);
+//
+//	                         }
+//
+//	                     }
+//
+//	                     // 打印pid，根据pid关闭进程
+//
+//	                     System.out.println(buf.toString().split("Console")[0]
+//
+//	                            .substring("EXCEL.EXE".length()));
+//
+//	                     pid = Integer
+//
+//	                            .parseInt(buf.toString().split("Console")[0]
+//
+//	                                   .substring("EXCEL.EXE".length()));
+//
+//	                     Runtime.getRuntime().exec("tskill" + " " + pid);
+//
+//	                  }
+//
+//	              }
+//
+//	           } catch (IOException e) {
+//
+//	              e.printStackTrace();
+//
+//	           }
+				
 				//关闭com的线程
 				ComThread.Release();
 			}catch(Exception ex){

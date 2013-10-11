@@ -176,7 +176,7 @@ private CustomerFeedbackDAO m_dao=new CustomerFeedbackDAO();
 			CustomerFeedback tmp=(CustomerFeedback)obj;
 				result.add((tmp).getId().toString());
 				result.add((tmp).getCustomer()==null?"/":tmp.getCustomer().getName());
-				Integer ca=tmp.getComplainAbout();
+				/*Integer ca=tmp.getComplainAbout();
 				if(ca!=null)
 				{
 				int c=ca;
@@ -204,7 +204,7 @@ private CustomerFeedbackDAO m_dao=new CustomerFeedbackDAO();
 				}
 				else {
 					result.add("");
-				}
+				}*/
 				 
 				result.add(tmp.getCustomerContactorName()==null?"/":tmp.getCustomerContactorName());
 				result.add(tmp.getFeedback()==null?"":tmp.getFeedback());
@@ -231,7 +231,7 @@ private CustomerFeedbackDAO m_dao=new CustomerFeedbackDAO();
 				}
 				else result.add("");
 				
-				Integer hl=tmp.getHandleLevel();
+				/*Integer hl=tmp.getHandleLevel();
 				if(hl!=null)
 				{
 					int h=hl;
@@ -251,7 +251,7 @@ private CustomerFeedbackDAO m_dao=new CustomerFeedbackDAO();
 					}
 				}else {
 					result.add("");
-				}
+				}*/
 				result.add(tmp.getPlanStartTime()==null?"":tmp.getPlanStartTime().toString());
 				result.add(tmp.getPlanEndTime()==null?"":tmp.getPlanEndTime().toString());
 				result.add(tmp.getSysUserByHandleSysUserId()==null?"":tmp.getSysUserByHandleSysUserId().getName());
@@ -301,12 +301,12 @@ private CustomerFeedbackDAO m_dao=new CustomerFeedbackDAO();
 				List<String> result=new ArrayList<String>();
 				result.add("编号");
 				result.add("投诉单位");
-				result.add("投诉对象");
+				//result.add("投诉对象");
 				result.add("投诉人");
 				result.add("投诉内容");
 				result.add("投诉时间");
 				result.add("状态");
-				result.add("处理级别");
+				//result.add("处理级别");
 				result.add("计划开始时间");
 				result.add("计划结束时间");
 				result.add("处理负责人");

@@ -86,6 +86,7 @@
 		});
 	
 		function queryTestlog(){
+			$('#testlog').datagrid('unselectAll');
 			$('#testlog').datagrid('options').url='/jlyw/TestLogServlet.do?method=2';
 			$('#testlog').datagrid('options').queryParams={'queryValidDateFrom':encodeURI($('#queryValidDateFrom').datebox('getValue')),'queryValidDateEnd':encodeURI($('#queryValidDateEnd').datebox('getValue')),'queryTestDateFrom':encodeURI($('#queryTestDateFrom').datebox('getValue')),'queryTestDateEnd':encodeURI($('#queryTestDateEnd').datebox('getValue')),'queryTester':encodeURI($('#queryTester').val()),'queryCertificateId':encodeURI($('#queryCertificateId').val()),'queryStatus':encodeURI($('#queryTestLogStatus').combobox('getValue'))};
 			$('#testlog').datagrid('reload');
@@ -157,7 +158,7 @@
 				</tr>
                 <tr>
                     <td align="right">检定单位：</td>
-				  	<td align="left"><input id="queryTester" name="queryTester" style="width:152px;" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=12"></input></td>
+				  	<td align="left"><input id="queryTester" name="queryTester" style="width:152px;" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=12"></input></td>
 					<td align="right">证书编号：</td>
 				  	<td align="left"><input id="queryCertificateId" name="queryCertificateId"  class="easyui-validatebox" type="text"/></td>
                      <td align="right">状态：</td>

@@ -1,9 +1,9 @@
-<%@ page contentType="text/html; charset=gb2312" language="java" import="java.sql.*" errorPage="" %>
+<%@ page contentType="text/html; charset=gbk" language="java" import="java.sql.*" errorPage="" %>
 <%@ page import="com.jlyw.hibernate.*,java.util.*,org.json.me.*" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<meta http-equiv="Content-Type" content="text/html; charset=gbk" />
 <title>打印所选现场检测业务单</title>
 <script type="text/javascript" src="../WebPrint/LodopFuncs.js"></script>	
 <object id="LODOP_OB" classid="clsid:2105C259-1E0C-4534-8141-A753534CB4CA" width=0 height=0> 
@@ -22,6 +22,8 @@
 <% 
 			JSONObject ret=(JSONObject)request.getSession().getAttribute("AppItemsList");	
 			String Code=ret.getString("Code");
+			
+			String PrintType=ret.getString("PrintType");
 		
 		    int	length = ret.getJSONArray("rows").length();
 //			String msg="";
@@ -49,7 +51,7 @@
 			  <TD width="20%"><DIV align="center"><font size="2">委托单位</font></DIV></TD>
 			  <TD width="40%"><DIV align="center"><font size="2"><%=ret.getString("CustomerName") %></font></DIV></TD>
 			  <TD width="20%"><DIV align="center"><font size="2">联系部门</font></DIV></TD>
-			  <TD width="20%"><DIV align="center"><font size="2"><%=ret.getString("Department") %></font></DIV></TD>
+			  <TD width="20%"><DIV align="center"><font size="2">     </font></DIV></TD>
 			</TR>
 			<TR height="20px">
 				<TD><DIV align="center"><font size="2">地&nbsp;&nbsp;&nbsp;&nbsp;址</font></DIV></TD>
@@ -126,7 +128,7 @@
 							<td colspan="3"><font size="3">约定事项：</font></td>
 						</tr>
 						<tr height="20px">
-							<td colspan="3"><font size="2">				&nbsp;&nbsp;1、检测单位负责对上述计量器具提供检修服务，并在现场检测后5个工作日内完成证书/报告；当不需要调修服务时，委托单位应在备注中说明；</font></td>
+							<td colspan="3"><font size="2">				&nbsp;&nbsp;1、检测单位负责对上述计量器具提供检修服务，并在现场检测后5个工作日内完成证书/报告；当需要调修服务时，委托单位应在备注中说明；</font></td>
 						</tr>
 						<tr height="20px">
 							<td colspan="3"><font size="2">&nbsp;&nbsp;2、检定依据相应器具的国家计量检定规程；校准、检测、测试依据校准规范或产品标准等；委托单位也可在备注栏注明依据的技术文件；若现场检测条件不符合依据文件，应委托单位要求继续工作的，应在原始记录和证书/报告中记录实际环境条件；</font></td>
@@ -135,7 +137,10 @@
 							<td colspan="3"><font size="2">&nbsp;&nbsp;3、委托单位应足额支付检修费用；</font></td>
 						</tr>
 						<tr height="20px">
-							<td colspan="3"><font size="2">&nbsp;&nbsp;4、其他事项：<br/><br/><br/><br/></font></td>
+							<td colspan="3"><font size="2">&nbsp;&nbsp;4、取样地址：□ 常州市武进区鸣新中路16号 □ 常州市劳动西路323号 □ _____________   </font></td>
+						</tr>
+						<tr height="20px">
+							<td colspan="3"><font size="2">&nbsp;&nbsp;5、其他事项：<br/><br/><br/></font></td>
 						</tr>
 						<tr height="20px">
 							<td align="left"><font size="3">检测单位代表签字：</font></td>
@@ -190,7 +195,7 @@
 					for(int i=10;i<ret.getJSONArray("rows").length();i++){
 				%>
 				<TR height="40px">
-					<TD width="40%" align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("ApplianceName") %></font></TD>
+					<TD width="40%" align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("applianceInfo") %></font></TD>
 					<TD width="10%" align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("Quantity") %></font></TD>
 					<TD width="10%" align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("CertType") %></font></TD>
 					<TD width="10%" align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("TestCost") %></font></TD>
@@ -219,26 +224,23 @@
 			</TBODY>
 	</table>
 </div>
- <%
  
-   request.getSession().removeAttribute("AppItemsList");	
- %>	
 	<div id ="div2" style="background-color:#FFFFFF;height:60px">
 		<table style="width:100%">
 			<TR valign="top">
-				<TD align="left"><font size="2">检测单位：常州市计量测试技术研究所</font></TD>
+				<TD align="left"><font size="2">检测单位：<%=ret.getString("HeadNameName") %></font></TD>
 				<TD align="left"><font size="2">开户行：常州市工行广化支行</font></TD>
 				<TD align="left"><font size="2">账号：1105020909000068197</font></TD>
 			</TR>
 			<TR valign="top">
-				<TD align="left"><font size="2">地&nbsp;&nbsp;&nbsp;&nbsp;址：常州市劳动西路323号</font></TD>
-				<TD align="left"><font size="2">查询电话：0519-8664649</font></TD>
-				<TD align="left"><font size="2">业务联系电话：0519-86662583</font></TD>
+				<TD align="left"><font size="2">地&nbsp;&nbsp;&nbsp;&nbsp;址：<%=ret.getString("HeadNameAddress") %></font></TD>
+				<TD align="left"><font size="2">查询电话：<%=ret.getString("HeadNameTel") %></font></TD>
+				<TD align="left"><font size="2">业务联系电话：0519-81002519</font></TD>
 			</TR>
 			<TR valign="top">
-				<TD align="left"><font size="2">邮&nbsp;&nbsp;&nbsp;&nbsp;编：213001</font></TD>
-				<TD align="left"><font size="2">投诉电话：0519-86995616</font></TD>
-				<TD align="left"><font size="2">传真电话：0519-86692565</font></TD>
+				<TD align="left"><font size="2">邮&nbsp;&nbsp;&nbsp;&nbsp;编：<%=ret.getString("HeadNameZipCode") %></font></TD>
+				<TD align="left"><font size="2">投诉电话：<%=ret.getString("HeadNameComplainTel") %></font></TD>
+				<TD align="left"><font size="2">传真电话：<%=ret.getString("HeadNameFax") %></font></TD>
 			</TR>
 		</table>
 		<!--<div style="padding-left:10px"><font size="2">检测单位：常州市计量测试技术研究所&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开户行：常州市工行广化支行&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;账号：1105020909000068197</font>
@@ -248,11 +250,14 @@
 		<div style="padding-left:10px"><font size="2">邮&nbsp;&nbsp;&nbsp;&nbsp;编：213001&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;投诉电话：0519-86995616&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传真电话：0519-86692565</font>
 		</div>-->
 	</div>
-	
+<%
+ 
+   request.getSession().removeAttribute("AppItemsList");	
+ %>		
 	<script language="javascript" type="text/javascript">
 		var LODOP; //声明为全局变量
 		var code='<%=Code%>';
-
+		var printType='<%= PrintType %>';
 		var length='<%=length%>';
 		LODOP=getLodop(document.getElementById('LODOP_OB'),document.getElementById('LODOP_EM'));
 		
@@ -260,11 +265,11 @@
 			LODOP.PRINT_INIT("打印控件功能演示_Lodop功能_分页打印综合表格");
 			LODOP.SET_PRINT_PAGESIZE(1,0,0,"A4");
 		
-			LODOP.ADD_PRINT_TABLE(100,"1%","98%",900,document.getElementById("div1").innerHTML);
+			LODOP.ADD_PRINT_TABLE(90,"1%","98%",900,document.getElementById("div1").innerHTML);
 			//LODOP.SET_PRINT_STYLEA(0,"Vorient",3);	
 			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 				
-			LODOP.ADD_PRINT_HTM("91%","2%","98%",80,document.getElementById("div2").innerHTML);			
+			LODOP.ADD_PRINT_HTM("92%","2%","98%",80,document.getElementById("div2").innerHTML);			
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",0);
 			//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
 			
@@ -275,31 +280,40 @@
 				LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 				
 			}
-					
-			LODOP.ADD_PRINT_TEXT(1060,700,135,20,"第#页/共&页");
-			LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
-			LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
-
+				
+			if(printType.length==0){
+				LODOP.ADD_PRINT_TEXT(1080,705,135,20,"第#页/共&页");
+				LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
+				LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
+			}else{
+				LODOP.ADD_PRINT_TEXT(1080,705,135,20,"第  页/共  页");
+				LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+				LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
+			}
 			
-			LODOP.ADD_PRINT_BARCODE(45,600,120,30,"EAN128A",code);
+			LODOP.ADD_PRINT_BARCODE(45,620,140,30,"EAN128A",code);
 			LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
 			LODOP.SET_PRINT_STYLEA(0,"ShowBarText",0);
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
 			//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
 		
-			LODOP.ADD_PRINT_TEXT(75,600,133,30,"No:"+ code);
+			LODOP.ADD_PRINT_TEXT(75,620,133,30,"No:"+ code);
 			LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
 			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
 			//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
 			
-			LODOP.ADD_PRINT_TEXT(55,250,400,30,"现 场 检 测 委 托 书");
+			LODOP.ADD_PRINT_TEXT(35,250,400,30,"现 场 检 测 委 托 书");
 			LODOP.SET_PRINT_STYLEA(0,"FontSize",20);
 			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
 			//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			
+			LODOP.ADD_PRINT_IMAGE(15,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
 					
 		
 		};

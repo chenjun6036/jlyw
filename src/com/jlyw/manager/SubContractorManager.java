@@ -106,6 +106,20 @@ private SubContractorDAO m_dao = new SubContractorDAO();
 	}
 	
 	/**
+	 * 分页函数
+	 * @param currentPage 当前页码
+	 * @param pageSize 每页的记录数
+	 * @param arr 条件键值对
+	 * @return 分页后的SubContractor列表
+	 */
+	public List<SubContractor> findPagedAllByHQL(String queryString, int currentPage, int pageSize, Object ...arr) {
+		try {
+			return m_dao.findPageAllByHQL(queryString, currentPage, pageSize, arr);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	/**
 	 * 得到所有SubContractor记录数
 	 * @param arr 条件键值对
 	 * @return SubContractor记录数

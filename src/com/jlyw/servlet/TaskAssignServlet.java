@@ -2,6 +2,7 @@ package com.jlyw.servlet;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -19,15 +20,23 @@ import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
 import com.jlyw.hibernate.AppStdNameProTeam;
+import com.jlyw.hibernate.ApplianceSpecies;
+import com.jlyw.hibernate.ApplianceStandardName;
 import com.jlyw.hibernate.CommissionSheet;
+import com.jlyw.hibernate.LocaleMission;
 import com.jlyw.hibernate.SysUser;
 import com.jlyw.hibernate.TaskAssign;
+import com.jlyw.manager.ApplianceSpeciesManager;
+import com.jlyw.manager.ApplianceStandardNameManager;
 import com.jlyw.manager.CommissionSheetManager;
 import com.jlyw.manager.InformationManager;
 import com.jlyw.manager.QualificationManager;
 import com.jlyw.manager.TaskAssignManager;
 import com.jlyw.manager.UserManager;
+import com.jlyw.manager.statistic.ExportManager;
+import com.jlyw.manager.vehicle.LocaleMissionManager;
 import com.jlyw.util.DateTimeFormatUtil;
+import com.jlyw.util.ExportUtil;
 import com.jlyw.util.FlagUtil;
 import com.jlyw.util.KeyValueWithOperator;
 import com.jlyw.util.SystemCfgUtil;
@@ -328,6 +337,8 @@ public class TaskAssignServlet extends HttpServlet {
 					rows = Integer.parseInt(req.getParameter("rows").toString());
 				String CommissionNumber = req.getParameter("CommissionNumber");	//委托单号
 				String CustomerName = req.getParameter("CustomerName");	//委托单位
+				String BeginDate = req.getParameter("BeginDate");	//
+				String EndDate = req.getParameter("EndDate");	//
 				
 				List<KeyValueWithOperator> condList = new ArrayList<KeyValueWithOperator>();	//查询条件
 				if(CommissionNumber != null && CommissionNumber.trim().length() > 0){
@@ -337,6 +348,15 @@ public class TaskAssignServlet extends HttpServlet {
 				if(CustomerName != null && CustomerName.trim().length() > 0){
 					CustomerName = URLDecoder.decode(CustomerName.trim(), "UTF-8"); //解决jquery传递中文乱码问题
 					condList.add(new KeyValueWithOperator("commissionSheet.customerName", "%"+CustomerName+"%", "like"));
+				}
+				if(BeginDate != null && BeginDate.length() > 0){
+					Timestamp beginTs = Timestamp.valueOf(String.format("%s 00:00:00", BeginDate.trim()));
+					condList.add(new KeyValueWithOperator("commissionSheet.commissionDate", beginTs, ">="));
+				}
+				if(EndDate != null && EndDate.length() > 0){
+					Timestamp endTs = Timestamp.valueOf(String.format(
+							"%s 23:59:00", EndDate.trim()));
+					condList.add(new KeyValueWithOperator("commissionSheet.commissionDate", endTs, "<="));
 				}
 				condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));	//委托单尚未注销的
 				condList.add(new KeyValueWithOperator("sysUserByAlloteeId.id", ((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId(), "="));  //检验人
@@ -378,6 +398,14 @@ public class TaskAssignServlet extends HttpServlet {
 						jsonObj.put("EffectQuantity", t.getCommissionSheet().getQuantity() - ((Long)wQuantityList.get(0)).intValue());	//有效器具数量
 					}else{
 						jsonObj.put("EffectQuantity", t.getCommissionSheet().getQuantity());
+					}
+					String verifyQueryStr = "select count(model) from VerifyAndAuthorize as model where model.commissionSheet.id = ? and (model.verifyResult = false or model.authorizeResult = false) and model.certificate.originalRecord.status <> 1 and model.version = " +
+							"(select max(model2.version) from VerifyAndAuthorize as model2 where model2.code = model.code group by model2.code)";//
+					List<Long> verifyQueryList = tAssignMgr.findByHQL(verifyQueryStr, t.getCommissionSheet().getId());//查询该委托单是否有证书核验或者签字不通过
+					if(verifyQueryList !=null && verifyQueryList.size() > 0 && verifyQueryList.get(0) != null){
+						jsonObj.put("VerifyResult", verifyQueryList.get(0)==0?false:true);
+					}else{
+						jsonObj.put("VerifyResult", false);
 					}
 					jsonObj.put("CustomerName", t.getCommissionSheet().getCustomerName());	//委托单位名称
 					jsonObj.put("CustomerContactor", t.getCommissionSheet().getCustomerContactor());	//委托单位联系人
@@ -717,6 +745,208 @@ public class TaskAssignServlet extends HttpServlet {
 			}
 			break;
 */
+		case 11://查询所有已超期任务
+			JSONObject retJSON11 = new JSONObject();
+			try{
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
+				Date today = new Date(System.currentTimeMillis());
+				
+				int page = 1;
+				if (req.getParameter("page") != null)
+					page = Integer.parseInt(req.getParameter("page").toString());
+				int rows = 10;
+				if (req.getParameter("rows") != null)
+					rows = Integer.parseInt(req.getParameter("rows").toString());
+				
+				List<KeyValueWithOperator> keys = new ArrayList<KeyValueWithOperator>();
+				String StartDate = req.getParameter("StartDate");
+				String EndDate = req.getParameter("EndDate");
+				
+				if(StartDate!=null&&!StartDate.equals("")){
+					keys.add(new KeyValueWithOperator("promiseDate", Date.valueOf(StartDate), ">="));
+				}
+				if(EndDate!=null&&!EndDate.equals("")){
+					keys.add(new KeyValueWithOperator("promiseDate", Date.valueOf(EndDate), "<="));
+				}
+				
+				keys.add(new KeyValueWithOperator("promiseDate", today, "<"));
+				keys.add(new KeyValueWithOperator("status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));
+				List<CommissionSheet> retList = cSheetMgr.findPagedAllBySort(page, rows, "promiseDate", true, keys);
+				int total = cSheetMgr.getTotalCount(keys);
+				
+				JSONArray options = new JSONArray();
+				if(retList!=null&&retList.size()>0){
+					for(CommissionSheet cSheet : retList){
+						JSONObject option = new JSONObject();
+						option.put("Allotte", cSheet.getAllotee());
+						option.put("Days", DateTimeFormatUtil.daysOfTwo(today, cSheet.getPromiseDate()));
+						option.put("Code", cSheet.getCode());
+						option.put("Customer", cSheet.getCustomerName());
+						option.put("CommissionDate", cSheet.getCommissionDate());
+						option.put("PromiseDate", cSheet.getPromiseDate());
+						option.put("ApplianceName", cSheet.getApplianceName()==null?"":cSheet.getApplianceName());
+						if(cSheet.getSpeciesType()){	//器具授权（分类）名称
+							option.put("SpeciesType", 1);	//器具分类类型
+							ApplianceSpecies spe = (new ApplianceSpeciesManager()).findById(cSheet.getApplianceSpeciesId());
+							if(spe != null){
+								option.put("ApplianceSpeciesName", spe.getName());
+							}else{
+								continue;
+							}
+						}else{	//器具标准名称
+							option.put("SpeciesType", 0);
+							ApplianceStandardName stName = (new ApplianceStandardNameManager()).findById(cSheet.getApplianceSpeciesId());
+							if(stName != null){
+								option.put("ApplianceSpeciesName", stName.getName());
+							}else{
+								continue;
+							}
+						}
+						option.put("Quantity", cSheet.getQuantity());
+						String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
+						List<Long> wQuantityList = cSheetMgr.findByHQL(hqlQueryString_WithdrawQuantity, cSheet.getId(), true);	//退样器具数量
+						if(wQuantityList != null && wQuantityList.size() > 0 && wQuantityList.get(0) != null){
+							option.put("WithdrawQuantity", ((Long)wQuantityList.get(0)).intValue());	//有效器具数量
+						}else{
+							option.put("WithdrawQuantity", 0);
+						}
+						option.put("Status", FlagUtil.CommissionSheetStatus.getStatusString(cSheet.getStatus()));
+						LocaleMissionManager localeMgr = new LocaleMissionManager();
+						if(cSheet.getLocaleCommissionCode()!=null&&!cSheet.getLocaleCommissionCode().equals("")){
+							List<LocaleMission> missions = localeMgr.findByVarProperty(new KeyValueWithOperator("code", cSheet.getLocaleCommissionCode(), "="));
+							if(missions!=null&&missions.size()>0){
+								option.put("LocaleSiteManager", missions.get(0).getSysUserBySiteManagerId().getName());
+							}
+							else{
+								option.put("LocaleSiteManager", "");
+							}
+						}else{
+							option.put("LocaleSiteManager", "");
+						}
+						option.put("OtherRequirements", cSheet.getOtherRequirements());
+						option.put("Remark", cSheet.getRemark());
+						
+						options.put(option);
+					}
+				}
+				retJSON11.put("total", total);
+				retJSON11.put("rows", options);
+			}catch(Exception e){
+				try {
+					retJSON11.put("total", 0);
+					retJSON11.put("rows", new JSONArray());
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in TaskAssignServlet-->case 11", e);
+				}else{
+					log.error("error in TaskAssignServlet-->case 11", e);
+				}
+			}finally{
+				resp.setContentType("text/json;charset=utf-8");
+				resp.getWriter().write(retJSON11.toString());
+			}
+			break;
+		case 12://导出超期信息
+			String paramsStr12 = req.getParameter("paramsStr");
+			JSONObject retJSON12 = new JSONObject();
+			try{
+				JSONObject params = new JSONObject(paramsStr12);
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
+				Date today = new Date(System.currentTimeMillis());
+				
+				
+				List<KeyValueWithOperator> keys = new ArrayList<KeyValueWithOperator>();
+				String StartDate = params.has("StartDate")?params.getString("StartDate"):"";
+				String EndDate = params.has("EndDate")?params.getString("EndDate"):"";
+				
+				if(StartDate!=null&&!StartDate.equals("")){
+					keys.add(new KeyValueWithOperator("promiseDate", Date.valueOf(StartDate), ">="));
+				}
+				if(EndDate!=null&&!EndDate.equals("")){
+					keys.add(new KeyValueWithOperator("promiseDate", Date.valueOf(EndDate), "<="));
+				}
+				
+				keys.add(new KeyValueWithOperator("promiseDate", today, "<"));
+				keys.add(new KeyValueWithOperator("status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));
+				List<CommissionSheet> retList = cSheetMgr.findByPropertyBySort("promiseDate", true, keys);
+				
+				List<JSONObject> options = new ArrayList<JSONObject>();
+				if(retList!=null&&retList.size()>0){
+					for(CommissionSheet cSheet : retList){
+						JSONObject option = new JSONObject();
+						option.put("Allotte", cSheet.getAllotee());
+						option.put("Days", DateTimeFormatUtil.daysOfTwo(today, cSheet.getPromiseDate()));
+						option.put("Code", cSheet.getCode());
+						option.put("Customer", cSheet.getCustomerName());
+						option.put("CommissionDate", cSheet.getCommissionDate());
+						option.put("PromiseDate", cSheet.getPromiseDate());
+						option.put("ApplianceName", cSheet.getApplianceName()==null?"":cSheet.getApplianceName());
+						if(cSheet.getSpeciesType()){	//器具授权（分类）名称
+							option.put("SpeciesType", 1);	//器具分类类型
+							ApplianceSpecies spe = (new ApplianceSpeciesManager()).findById(cSheet.getApplianceSpeciesId());
+							if(spe != null){
+								option.put("ApplianceSpeciesName", spe.getName());
+							}else{
+								continue;
+							}
+						}else{	//器具标准名称
+							option.put("SpeciesType", 0);
+							ApplianceStandardName stName = (new ApplianceStandardNameManager()).findById(cSheet.getApplianceSpeciesId());
+							if(stName != null){
+								option.put("ApplianceSpeciesName", stName.getName());
+							}else{
+								continue;
+							}
+						}
+						option.put("Quantity", cSheet.getQuantity());
+						String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
+						List<Long> wQuantityList = cSheetMgr.findByHQL(hqlQueryString_WithdrawQuantity, cSheet.getId(), true);	//退样器具数量
+						if(wQuantityList != null && wQuantityList.size() > 0 && wQuantityList.get(0) != null){
+							option.put("WithdrawQuantity", ((Long)wQuantityList.get(0)).intValue());	//有效器具数量
+						}else{
+							option.put("WithdrawQuantity", 0);
+						}
+						option.put("Status", FlagUtil.CommissionSheetStatus.getStatusString(cSheet.getStatus()));
+						LocaleMissionManager localeMgr = new LocaleMissionManager();
+						if(cSheet.getLocaleCommissionCode()!=null&&!cSheet.getLocaleCommissionCode().equals("")){
+							List<LocaleMission> missions = localeMgr.findByVarProperty(new KeyValueWithOperator("code", cSheet.getLocaleCommissionCode(), "="));
+							if(missions!=null&&missions.size()>0){
+								option.put("LocaleSiteManager", missions.get(0).getSysUserBySiteManagerId().getName());
+							}
+							else{
+								option.put("LocaleSiteManager", "");
+							}
+						}else{
+							option.put("LocaleSiteManager", "");
+						}
+						option.put("OtherRequirements", cSheet.getOtherRequirements());
+						option.put("Remark", cSheet.getRemark());
+						
+						options.add(option);
+					}
+				}
+				String filePath = ExportUtil.ExportToExcelByResultSet(options, null, "formatExcel", "formatTitle", TaskAssignManager.class);
+				retJSON12.put("IsOK", filePath.equals("")?false:true);
+				retJSON12.put("Path", filePath);
+			}catch(Exception e){
+				try {
+					retJSON12.put("IsOK", false);
+					retJSON12.put("Path", "");
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in TaskAssignServlet-->case 12", e);
+				}else{
+					log.error("error in TaskAssignServlet-->case 12", e);
+				}
+			}finally{
+				resp.setContentType("text/html;charset=utf-8");
+				resp.getWriter().write(retJSON12.toString());
+			}
+			break;
 		}
 	}
 

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
-<title>业务查询</title>
+<title>按年份汇总</title>
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -52,7 +52,7 @@
                 nowrap: false,
                 striped: true,
 //				collapsible:true,
-				url:'',
+				url:'/jlyw/CrmServlet.do?method=36',
 				//sortName: 'id',
 			  //sortOrder: 'desc',
 				remoteSort: false,
@@ -109,7 +109,7 @@
 					}
 				}],
 				rowStyler:function(rowIndex, rowData){
-					if(rowData.Status == 10||rowData.Status == "10"){	//已注销
+					/* if(rowData.Status == 10||rowData.Status == "10"){	//已注销
 						return 'color:#FF0000';
 					}else if(rowData.Status == 0||rowData.Status == "0"){	//已收件
 						return 'color:#0000FF';	
@@ -123,7 +123,7 @@
 						return 'color:#008000';
 					}else{
 						return 'color:#000000';
-					}
+					} */
 				}
 			});
 		});
@@ -132,9 +132,9 @@
 			$('#table6').datagrid('options').queryParams={'CustomerId':$('#Customer').combobox('getValue')};
 			$('#table6').datagrid('reload');
 		}
-		function reset(){
-			$('#query').form('clear');
-			document.getElementById("Status").value="";
+		function reset1(){
+			$('#query1').form('clear');
+			//document.getElementById("Status").value="";
 		}
 		
 		</script>
@@ -165,7 +165,7 @@
 <div style="+position:relative;">
      <div id="p" class="easyui-panel" style="width:850px;height:120px;padding:10px;"
 				title="查询条件" collapsible="false"  closable="false">
-                <form id="query">
+                <form id="query1">
 			<table width="800px" id="table1">
 				<tr height="30px">
 					<td width="20%" align="right">委托单位：</td>
@@ -188,14 +188,14 @@
                 </tr>  -->
                 <tr height="40px">
 				    <td colspan="2" align="center"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="query()">查询</a></td>
-                    <td colspan="2" align="center"><a class="easyui-linkbutton" iconCls="icon-redo" href="javascript:void(0)" onClick="reset()">重置</a></td>
+                    <td colspan="2" align="center"><a class="easyui-linkbutton" iconCls="icon-redo" href="javascript:void(0)" onClick="reset1()">重置</a></td>
 				</tr>
 				
 		</table>
         </form>
 		</div>
         <br />
-      <div style="width:850px;height:350px;">
+      <div style="width:850px;height:500px;">
 	     <table id="table6" iconCls="icon-tip" width="800px" height="500px" ></table>
 	  </div>
 	  <!--<div id="p2" class="easyui-panel" style="width:900px;height:120px;padding:10px;"

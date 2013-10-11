@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
-<title>业务查询</title>
+<title>器具分类查询</title>
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -51,7 +51,7 @@
                 nowrap: false,
                 striped: true,
 //				collapsible:true,
-				url:'',
+				url:'/jlyw/CrmServlet.do?method=35',
 				//sortName: 'id',
 			  //sortOrder: 'desc',
 				remoteSort: false,
@@ -100,14 +100,14 @@
 								}
 							});
 					}
-				},'-',{
+				},'-'/* ,{
 					text:'打印',
 					iconCls:'icon-print',
 					handler:function(){
 						$('#PrintStr').val(JSON.stringify($('#table6').datagrid('options').queryParams));
 						$('#formLook').submit();
 					}
-				}],
+				} */],
 				rowStyler:function(rowIndex, rowData){
 					if(rowData.Status == 10||rowData.Status == "10"){	//已注销
 						return 'color:#FF0000';
@@ -136,7 +136,7 @@
 		}
 		function reset(){
 			$('#query').form('clear');
-			document.getElementById("Status").value="";
+			//document.getElementById("Status").value="";
 		}
 		
 		</script>

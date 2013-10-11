@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +29,7 @@ import com.jlyw.hibernate.Region;
 import com.jlyw.hibernate.RegionInsideContactor;
 import com.jlyw.hibernate.SysUser;
 import com.jlyw.manager.CustomerContactorManager;
+import com.jlyw.manager.CustomerManager;
 import com.jlyw.manager.crm.RegionContactorManager;
 import com.jlyw.util.DateTimeFormatUtil;
 import com.jlyw.util.KeyValueWithOperator;
@@ -35,6 +38,7 @@ import com.sun.swing.internal.plaf.basic.resources.basic;
 
 public class CustomerContactorServlet extends HttpServlet {
 	private static final Log log = LogFactory.getLog(CustomerContactorServlet.class);
+	private CustomerManager customerManager = new CustomerManager();
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -89,14 +93,15 @@ public class CustomerContactorServlet extends HttpServlet {
 				int total = 0;
 				
 				if(CustomerId!=null&&!CustomerId.equals("")){
-					result = cusConMgr.findPagedAll(page, rows, new KeyValueWithOperator("customer.id", Integer.valueOf(CustomerId), "="),new KeyValueWithOperator("status",0,"="));
-					total = cusConMgr.getTotalCount(new KeyValueWithOperator("customer.id", Integer.valueOf(CustomerId), "="));
+					result = cusConMgr.findPagedAll(page, rows,new KeyValueWithOperator("status", Integer.valueOf("0"), "="), new KeyValueWithOperator("customerId", Integer.valueOf(CustomerId), "="));
+					total = cusConMgr.getTotalCount(new KeyValueWithOperator("customerId", Integer.valueOf(CustomerId), "="));
 				}
 				else{
 					result = cusConMgr.findPagedAll(page, rows);
 					total = cusConMgr.getTotalCount();
 				}
 				JSONArray options = new JSONArray();
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 				if(result!=null&&result.size()>0){
 					for(CustomerContactor cusCon : result){
 						JSONObject option = new JSONObject();
@@ -105,10 +110,10 @@ public class CustomerContactorServlet extends HttpServlet {
 						option.put("Cellphone1", cusCon.getCellphone1());
 						option.put("Cellphone2", cusCon.getCellphone2());
 						option.put("Email", cusCon.getEmail());
-						option.put("LastUse", cusCon.getLastUse());
+						option.put("LastUse", cusCon.getLastUse()==null?"":cusCon.getLastUse().toLocaleString());
 						///////////////////////////////////////////////
 						option.put("CurJob", cusCon.getCurJob());
-						option.put("Birthday", cusCon.getBirthday());
+						option.put("Birthday", cusCon.getBirthday()==null?"":formatter.format(cusCon.getBirthday()));
 						option.put("Remark", cusCon.getRemark());
 						///////////////////////////////////////////////
 						options.put(option);
@@ -116,7 +121,6 @@ public class CustomerContactorServlet extends HttpServlet {
 				}
 				retObj2.put("total", total);
 				retObj2.put("rows", options);
-				
 			}catch(Exception e){
 				try {
 					retObj2.put("total", 0);
@@ -220,6 +224,7 @@ public class CustomerContactorServlet extends HttpServlet {
 				for(CustomerContactor a:lr)
 				{
 					JSONObject t=new JSONObject();
+					Customer c = customerManager.findById(a.getCustomerId());
 					t.put("Name", a.getName()==null?"":a.getName());
 					t.put("Birthday", a.getBirthday()==null?"":a.getBirthday());
 					t.put("Cellphone1", a.getCellphone1()==null?"":a.getCellphone1());
@@ -227,15 +232,15 @@ public class CustomerContactorServlet extends HttpServlet {
 					t.put("Count", a.getCount()==null?"":a.getCount());
 					t.put("CurDep",a.getCurDep()==null?"":a.getCurDep());
 					t.put("CurJob", a.getCurJob()==null?"":a.getCurJob());
-					t.put("CustomerId", a.getCustomer()==null?"":a.getCustomer().getId());
-					t.put("CustomerName2", a.getCustomer()==null?"":a.getCustomer().getName());
+					t.put("CustomerId", a.getCustomerId());
+					t.put("CustomerName2", c==null?"":c.getName());
 					t.put("Email", a.getEmail()==null?"":a.getEmail());
 					t.put("FormerDep", a.getFormerDep()==null?"":a.getFormerDep());
 					t.put("FormerJob", a.getFormerJob()==null?"":a.getFormerJob());
 					t.put("Id", a.getId());
-					t.put("LastUse", a.getLastUse()==null?"":a.getLastUse());
+					t.put("LastUse", a.getLastUse()==null?"":a.getLastUse().toString().substring(0, 19)/*String.format("%s",a.getLastUse() )*/);
 					t.put("Remark", a.getRemark()==null?"":a.getRemark());
-					t.put("Status", a.getStatus()==null?"0":a.getStatus());
+					t.put("Status", a.getStatus()==null?"-1":a.getStatus());
 					tmp.put(t);
 				}
 				retObj4.put("total", total);
@@ -267,9 +272,8 @@ public class CustomerContactorServlet extends HttpServlet {
 				cc.setCellphone1(Cellphone1);
 				cc.setCellphone2(Cellphone2);
 				cc.setCount(1);
-				Customer c=new Customer();
-				c.setId(Integer.valueOf(CustomerId));
-				cc.setCustomer(c);
+				cc.setCustomerId(Integer.valueOf(CustomerId));
+		
 				cc.setCurJob(CurJob);
 				cc.setEmail(Email);
 				cc.setRemark(Remark);
@@ -347,7 +351,7 @@ public class CustomerContactorServlet extends HttpServlet {
 					tmp.put("Name", a.getSysUser().getName());
 					tmp.put("JobNum", a.getSysUser().getJobNum());
 					tmp.put("Status", a.getStatus());
-					tmp.put("LastEditTime", a.getLastEditTime());
+					tmp.put("LastEditTime", a.getLastEditTime()==null?"":a.getLastEditTime().toLocaleString());
 					ja.put(tmp);
 				}
 				retObj6.put("total", total);
@@ -367,6 +371,8 @@ public class CustomerContactorServlet extends HttpServlet {
 				String RegionId=req.getParameter("RegionId1");
 				String ContactorId=req.getParameter("InsideContactor1");
 				RegionInsideContactor r=new RegionInsideContactor();
+				
+				
 				Region re=new Region();
 				re.setId(Integer.parseInt(RegionId));
 				r.setRegion(re);
@@ -376,9 +382,21 @@ public class CustomerContactorServlet extends HttpServlet {
 				r.setStatus(2);
 				r.setLastEditTime(new Timestamp(System.currentTimeMillis()));
 				RegionContactorManager rcm=new RegionContactorManager();
-				boolean res=rcm.save(r);
-				retObj7.put("IsOk", res);
-				retObj7.put("msg", res==true?"添加成功":"添加失败，请重试！");
+				
+				List<RegionInsideContactor> ck=rcm.findByVarProperty(new KeyValueWithOperator("sysUser.id",Integer.parseInt(ContactorId),"="),
+						new KeyValueWithOperator("region.id",Integer.parseInt(RegionId),"="));
+				if(ck.size()==0)
+				{
+					boolean res=rcm.save(r);
+					retObj7.put("IsOk", res);
+					retObj7.put("msg", res==true?"添加成功":"添加失败，请重试！");
+				}
+				else
+				{
+					retObj7.put("IsOk", false);
+					retObj7.put("msg", "已存在该记录！");
+				}
+				
 	
 			} catch (Exception e) {
 				// TODO: handle exception
@@ -505,12 +523,14 @@ public class CustomerContactorServlet extends HttpServlet {
 		String FormerDep=req.getParameter("FormerDep");
 		String Birthday=req.getParameter("Birthday");
 		String Remark=req.getParameter("Remark");
+		String Status=req.getParameter("Status");
 		///////////////////////////////
 		
 		cusCon.setName(Name);
 		cusCon.setCellphone1(Cellphone1);
 		cusCon.setCellphone2(Cellphone2);
 		cusCon.setEmail(Email);
+		
 		
 		//////////////////////
 		if(Birthday!=null&&!Birthday.equals(""))
@@ -524,17 +544,16 @@ public class CustomerContactorServlet extends HttpServlet {
 		cusCon.setCurJob(CurJob);
 	
 		/////////////////////
-		
-		Customer cus=new Customer();
-		cus.setId(Integer.valueOf(CustomerId));
-		cusCon.setCustomer(cus);
+		cusCon.setCustomerId(Integer.valueOf(CustomerId));
 		cusCon.setLastUse(new Timestamp(System.currentTimeMillis()));
 		cusCon.setCount(1);
+		if(Status!=null&&!Status.equals(""))cusCon.setStatus(Integer.parseInt(Status));
 		if(id==0)cusCon.setStatus(0);
 		cusCon.setRemark(Remark);
 		cusCon.setFormerDep(FormerDep);
 		cusCon.setFormerJob(FormerJob);
 		cusCon.setCurDep(CurDep);
+		
 		return cusCon;
 	}
 	

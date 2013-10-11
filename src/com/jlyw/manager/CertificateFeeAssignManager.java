@@ -380,17 +380,17 @@ public class CertificateFeeAssignManager {
 		try{
 			//更新原始记录费用的HQL
 			String updateString = "update OriginalRecord as o set " +
-					" testFee=(select SUM(a.testFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id)," +
-					" repairFee=(select SUM(a.repairFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
-					" materialFee=(select SUM(a.materialFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
-					" carFee=(select SUM(a.carFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
-					" debugFee=(select SUM(a.debugFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
-					" otherFee=(select SUM(a.otherFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
-					" totalFee=(select SUM(a.totalFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id) " +
+					" testFee=(select SUM(a.testFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id)," +
+					" repairFee=(select SUM(a.repairFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+					" materialFee=(select SUM(a.materialFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+					" carFee=(select SUM(a.carFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+					" debugFee=(select SUM(a.debugFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+					" otherFee=(select SUM(a.otherFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+					" totalFee=(select SUM(a.totalFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id) " +
 					" where o.id=? ";
 			for(CertificateFeeAssign fAssign : feeAssignList){
 				m_dao.update(fAssign);
-				
+
 				if(fAssign.getOriginalRecord() != null){
 					m_dao.updateByHQL(updateString, fAssign.getOriginalRecord().getId());
 				}

@@ -525,13 +525,13 @@ public class ApplianceServlet extends HttpServlet {
 				int type=Integer.parseInt(Type);
 				switch(type){
 					case 1:	//MOdel
-						List = mainMgr.findByHQL("select DISTINCT v.model from ViewTargetApplianceModelAccuracyRange as v where v.targetApplianceStatus=0 and v.standardNameId = ? and v.model like ?", Integer.parseInt(standardNameId),"%"+queryName+"%");		
+						List = mainMgr.findPageAllByHQL("select DISTINCT v.model from ViewTargetApplianceModelAccuracyRange as v where v.targetApplianceStatus=0 and v.standardNameId = ? and v.model like ?",1,30, Integer.parseInt(standardNameId),"%"+queryName+"%");		
 						break;
 					case 2:	//Range
-						List = mainMgr.findByHQL("select DISTINCT v.range from ViewTargetApplianceModelAccuracyRange as v where v.targetApplianceStatus=0 and v.standardNameId = ? and v.range like ?", Integer.parseInt(standardNameId),"%"+queryName+"%");	
+						List = mainMgr.findPageAllByHQL("select DISTINCT v.range from ViewTargetApplianceModelAccuracyRange as v where v.targetApplianceStatus=0 and v.standardNameId = ? and v.range like ?", 1,30,Integer.parseInt(standardNameId),"%"+queryName+"%");	
 						break;
 					case 3:	//Accuracy
-						List = mainMgr.findByHQL("select DISTINCT v.accuracy from ViewTargetApplianceModelAccuracyRange as v where v.targetApplianceStatus=0 and v.standardNameId = ? and v.accuracy like ?", Integer.parseInt(standardNameId),"%"+queryName+"%");			
+						List = mainMgr.findPageAllByHQL("select DISTINCT v.accuracy from ViewTargetApplianceModelAccuracyRange as v where v.targetApplianceStatus=0 and v.standardNameId = ? and v.accuracy like ?",1,30, Integer.parseInt(standardNameId),"%"+queryName+"%");			
 						break;
 				}
 				

@@ -2,7 +2,23 @@
      var LODOP; //声明为全局变量   
 	function Preview1(record) {		
 		CreateFullBill(record);
-	  	LODOP.PREVIEW();		
+/*		defaultprinter(0);	
+		LODOP.PREVIEW();*/
+		if(!defaultprinter(0)){
+			LODOP.PREVIEW();
+			return false;	
+		}	
+		LODOP.PRINT(); 
+	};
+	function Preview2(record) {		
+		CreateFullBill(record);
+		//defaultprinter(0);	
+		LODOP.PREVIEW();
+		/*if(!defaultprinter(0)){
+			LODOP.PREVIEW();
+			return false;	
+		}	
+		LODOP.PRINT(); */
 	};
 	function Design1(record) {		
 		CreateFullBill(record);
@@ -17,6 +33,14 @@
 		CreateFullSFS(record,WYID);
 		defaultprinter(1);
 		LODOP.PREVIEW();
+		/*if(!defaultprinter(1)){
+			LODOP.PREVIEW();
+			return false;	
+		}	
+		if (LODOP.PRINT()) {
+		 //  alert("已发出实际打印命令！"); 
+		}else 
+		   alert("放弃打印！"); */
 	};
 	function RealPrintSFS(record,WYID) {		
 		CreateFullSFS(record,WYID);
@@ -31,7 +55,7 @@
 	function CreateFullBill(record) {
 		LODOP=getLodop(document.getElementById('LODOP_OB'),document.getElementById('LODOP_EM'));  
 
-LODOP.PRINT_INITA(10,10,850,1200,"打印控件功能演示_Lodop功能_发票全样");
+LODOP.PRINT_INITA(10,10,850,1200,"收发室打印");
 LODOP.SET_PRINT_STYLE("FontColor","#0000FF");
 LODOP.ADD_PRINT_SHAPE(1,379,2,522,1,0,1,"#000000");
 LODOP.ADD_PRINT_TEXT(18,150,360,30,record.HeadName);
@@ -44,11 +68,7 @@ LODOP.SET_PRINT_STYLEA(0,"FontSize",15);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_TEXT(46,20,54,25,"密码:");
-LODOP.SET_PRINT_STYLEA(0,"FontSize",12);
-LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
-LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
-LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+
 LODOP.ADD_PRINT_TEXT(159,12,73,20,"器具编号：");
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
@@ -83,9 +103,20 @@ LODOP.ADD_PRINT_TEXT(49,545,148,26,record.Code);
 LODOP.SET_PRINT_STYLEA(0,"FontSize",15);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_TEXT(46,71,54,25,record.Pwd);
+LODOP.ADD_PRINT_TEXT(22,95,54,25,record.Pwd);
+LODOP.SET_PRINT_STYLEA(0,"Angle",270);
 LODOP.SET_PRINT_STYLEA(0,"FontSize",13);
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(76,20,100,20,"现场委托书号：");
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(76,100,225,20,record.LocaleCommissionCode);
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(76,330,100,20,"现场负责人：");
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(76,409,225,20,record.LocaleCommissionStaff);
+
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.ADD_PRINT_TEXT(76,512,75,20,"委托日期：");
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
@@ -221,11 +252,7 @@ LODOP.SET_PRINT_STYLEA(0,"FontSize",15);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_TEXT(466,20,54,25,"密码:");
-LODOP.SET_PRINT_STYLEA(0,"FontSize",12);
-LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
-LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
-LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+
 LODOP.ADD_PRINT_TEXT(579,12,73,20,"器具编号：");
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
@@ -261,9 +288,20 @@ LODOP.ADD_PRINT_TEXT(469,545,148,26,record.Code);
 LODOP.SET_PRINT_STYLEA(0,"FontSize",15);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_TEXT(466,71,54,25,record.Pwd);
+LODOP.ADD_PRINT_TEXT(444,96,54,25,record.Pwd);
+LODOP.SET_PRINT_STYLEA(0,"Angle",270);
 LODOP.SET_PRINT_STYLEA(0,"FontSize",13);
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(496,20,100,20,"现场委托书号：");
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(496,100,225,20,record.LocaleCommissionCode);
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(496,329,100,20,"现场负责人：");
+LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+LODOP.ADD_PRINT_TEXT(496,409,225,20,record.LocaleCommissionStaff);
+
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.ADD_PRINT_TEXT(496,509,75,20,"委托日期：");
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
@@ -437,11 +475,13 @@ LODOP.ADD_PRINT_TEXT(561,693,26,177,"二、流转联");
 LODOP.SET_PRINT_STYLEA(0,"FontSize",10);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_IMAGE(13,20,90,23,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
+LODOP.ADD_PRINT_IMAGE(13,20,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
 LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
-LODOP.ADD_PRINT_IMAGE(431,20,90,23,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
+LODOP.ADD_PRINT_IMAGE(431,20,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
 LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
-LODOP.ADD_PRINT_IMAGE(844,35,90,23,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
+LODOP.ADD_PRINT_IMAGE(825,35,50,55,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_3.bmp'/>");
+LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
+LODOP.ADD_PRINT_IMAGE(935,36,50,55,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_3.bmp' />");
 LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
 LODOP.ADD_PRINT_BARCODE(831,170,170,35,"EAN128A",record.Code);
 LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
@@ -472,8 +512,6 @@ LODOP.ADD_PRINT_TEXT(838,694,26,88,"检测室留存");
 LODOP.SET_PRINT_STYLEA(0,"FontSize",10);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_IMAGE(954,36,90,23,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");
-LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
 LODOP.ADD_PRINT_BARCODE(941,170,170,35,"EAN128A",record.Code);
 LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
 LODOP.SET_PRINT_STYLEA(0,"ShowBarText",0);
@@ -503,11 +541,11 @@ LODOP.ADD_PRINT_TEXT(948,695,26,88,"收发室留存");
 LODOP.SET_PRINT_STYLEA(0,"FontSize",10);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-LODOP.ADD_PRINT_TEXT(368,532,168,20,"Http://www.czjl.net");
+LODOP.ADD_PRINT_TEXT(368,532,168,20,"http://www.czjl.net");
 LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Italic",1);
-LODOP.ADD_PRINT_TEXT(786,532,168,20,"Http://www.czjl.net\n");
+LODOP.ADD_PRINT_TEXT(786,532,168,20,"http://www.czjl.net\n");
 LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
 LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 LODOP.SET_PRINT_STYLEA(0,"Italic",1);
@@ -517,7 +555,7 @@ LODOP.SET_PRINT_STYLEA(0,"Italic",1);
 function CreateFullSFS(record,WYID) {
 	LODOP=getLodop(document.getElementById('LODOP_OB'),document.getElementById('LODOP_EM'));  
 
-	LODOP.PRINT_INITA(11,11,302,110,"打印控件功能演示_Lodop功能_自定义纸张SFS");
+	LODOP.PRINT_INITA(11,11,302,110,"收发室打印SFS");
 	LODOP.SET_PRINT_PAGESIZE(1,800,285,"LodopCustomPage");
 	LODOP.ADD_PRINT_BARCODE(18,14,150,42,"128A",WYID);
 	LODOP.ADD_PRINT_IMAGE(-7,7,65,14,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");

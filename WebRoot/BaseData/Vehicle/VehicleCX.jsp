@@ -159,6 +159,7 @@
 			
 		function query()
 		{
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/VehicleServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'queryname':encodeURI($('#queryname').val())};
 			$('#table2').datagrid('reload');

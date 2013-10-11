@@ -81,13 +81,14 @@ public class StandardApplianceServlet extends HttpServlet{
 			try {
 				String queryName = req.getParameter("queryname");
 				String queryModel = req.getParameter("queryModel");
-				String queryRealseiaNumber = req.getParameter("queryRealseiaNumber");
+				String queryReleaseNumber = req.getParameter("queryReleaseNumber");
 				String queryKeeper = req.getParameter("queryKeeper");
 				String queryLocaleCode = req.getParameter("queryLocaleCode");
 				String queryPermanentCode = req.getParameter("queryPermanentCode");
 				String queryInspectMonth = req.getParameter("queryInspectMonth");
 				String queryDept = req.getParameter("queryDept");
 				String queryStatus = req.getParameter("queryStatus");
+				String OverValid = req.getParameter("OverValid");
 				String Warn = req.getParameter("Warn");
 				int page = 1;
 				if (req.getParameter("page") != null)
@@ -116,9 +117,9 @@ public class StandardApplianceServlet extends HttpServlet{
 					keys.add("%" + stanappModelStr + "%");
 					keys.add("%" + stanappModelStr + "%");
 				}
-				if(queryRealseiaNumber!=null&&!queryRealseiaNumber.equals(""))
+				if(queryReleaseNumber!=null&&!queryReleaseNumber.equals(""))
 				{
-					String stanappReleaseNumberStr = URLDecoder.decode(queryRealseiaNumber, "UTF-8");
+					String stanappReleaseNumberStr = URLDecoder.decode(queryReleaseNumber, "UTF-8");
 					queryStr = queryStr + " and model.releaseNumber like ? ";
 					keys.add("%" + stanappReleaseNumberStr + "%");
 				}
@@ -159,6 +160,12 @@ public class StandardApplianceServlet extends HttpServlet{
 					String stanappStatusStr = URLDecoder.decode(queryStatus, "UTF-8");
 					queryStr = queryStr + " and model.status = ?";
 					keys.add(LetterUtil.isNumeric(stanappStatusStr)?Integer.valueOf(stanappStatusStr):0);
+				}
+				if(OverValid != null&&!OverValid.equals(""))
+				{
+					queryStr = queryStr + " and model.validDate <= ? and model.status = ?";
+					keys.add(new Date(System.currentTimeMillis()));
+					keys.add(Integer.valueOf(0));
 				}
 				if(Warn != null&&!Warn.equals(""))
 				{
@@ -514,6 +521,7 @@ public class StandardApplianceServlet extends HttpServlet{
 					String queryInspectMonth = params.has("queryInspectMonth")?params.getString("queryInspectMonth"):"";
 					String queryDept = params.has("queryDept")?params.getString("queryDept"):"";
 					String queryStatus = params.has("queryStatus")?params.getString("queryStatus"):"";
+					String OverValid = params.has("OverValid")?params.getString("OverValid"):"";
 					String Warn = params.has("Warn")?params.getString("Warn"):"";
 					
 					if(queryName!=null&&!queryName.equals(""))
@@ -574,6 +582,12 @@ public class StandardApplianceServlet extends HttpServlet{
 						keys.add("%" + stanDeptStr + "%");
 						keys.add("%" + stanDeptStr + "%");
 						queryStr = queryStr + " and model.sysUser.projectTeamId in (select model1.id from ProjectTeam as model1 where (model1.department.name like ? or model1.department.brief like ?))";
+					}
+					if(OverValid != null&&!OverValid.equals(""))
+					{
+						queryStr = queryStr + " and model.validDate <= ? and model.status = ?";
+						keys.add(new Date(System.currentTimeMillis()));
+						keys.add(Integer.valueOf(0));
 					}
 					if(Warn != null&&!Warn.equals(""))
 					{
@@ -677,6 +691,8 @@ public class StandardApplianceServlet extends HttpServlet{
 							str.append(temp.getUncertain());
 							str.append("-");
 							str.append(temp.getLocaleCode());
+							str.append("-");
+							str.append(temp.getReleaseNumber()==null?"":temp.getReleaseNumber());
 							jsonObj.put("name_num",str.toString());
 							str=null;
 							jsonObj.put("localecode",temp.getLocaleCode());

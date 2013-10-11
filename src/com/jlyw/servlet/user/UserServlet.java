@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -22,20 +23,17 @@ import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
-import com.jlyw.hibernate.CertificateFeeAssign;
-import com.jlyw.hibernate.CommissionSheet;
+import com.jlyw.hibernate.Discount;
 import com.jlyw.hibernate.ProjectTeam;
-import com.jlyw.hibernate.RolePrivilege;
 import com.jlyw.hibernate.SysUser;
 import com.jlyw.hibernate.UserRole;
 import com.jlyw.manager.AddressManager;
-import com.jlyw.manager.CommissionSheetManager;
-import com.jlyw.manager.OriginalRecordManager;
+import com.jlyw.manager.DiscountComSheetManager;
+import com.jlyw.manager.OverdueManager;
 import com.jlyw.manager.RolePrivilegeManager;
 import com.jlyw.manager.UserManager;
 import com.jlyw.manager.UserRoleManager;
-import com.jlyw.manager.statistic.ExportManager;
-import com.jlyw.util.DateTimeFormatUtil;
+import com.jlyw.manager.WithdrawManager;
 import com.jlyw.util.ExportUtil;
 import com.jlyw.util.KeyValueWithOperator;
 import com.jlyw.util.LetterUtil;
@@ -140,7 +138,7 @@ public class UserServlet extends HttpServlet {
 				if(queryType != null&&!queryType.equals(""))
 				{
 					String userTypeStr = URLDecoder.decode(queryType, "UTF-8");
-					list.add(LetterUtil.isNumeric(userTypeStr)?Integer.valueOf(userTypeStr):0);
+					list.add(userTypeStr);
 					queryStr = queryStr + "and model.type = ? ";
 				}
 				if(queryTel != null&&!queryTel.equals(""))
@@ -377,14 +375,70 @@ public class UserServlet extends HttpServlet {
 							pMap.put(result1.get(0).getId(), pRetMap);
 						}
 					}
+					
+					Map<Integer, UrlInfo> pRetMap = pMap.get(result1.get(0).getId());
+					Iterator iterator = pRetMap.keySet().iterator();
+					boolean IsOverdueNumber=true,isWithDraw=true,isDiscount=true;   //延期、退样、折扣
+					while(iterator.hasNext()) {
+						UrlInfo temp = pRetMap.get(iterator.next());						
+						if(IsOverdueNumber&&temp.getUri().equals("TaskManage/OverdueTask.jsp")){
+							IsOverdueNumber = false;
+							continue;
+						}
+						if(isWithDraw&&temp.getUri().equals("TaskManage/WithdrawApply.jsp")){
+							isWithDraw = false;
+							continue;
+						}
+						if(isDiscount&&temp.getUri().equals("FeeManage/DiscountTask.jsp")){
+							isDiscount = false;
+							continue;
+						}
+					}
+					HttpSession session = request.getSession(true);
+					if(IsOverdueNumber){
+						List<KeyValueWithOperator> condList = new ArrayList<KeyValueWithOperator>();	//查询条件
+						condList.add(new KeyValueWithOperator("commissionSheet.status", 3, "<"));	//委托单尚未完工或尚未注销的
+	//					condList.add(new KeyValueWithOperator("sysUserByExecutorId.id", ((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId(), "="));  //办理人
+						condList.add(new KeyValueWithOperator("executeTime", null, "is null"));	//审批任务尚未完成的
+						OverdueManager overdueMgr = new OverdueManager();
+						int total = overdueMgr.getTotalCount(condList);						
+						session.setAttribute("OverdueNumber", total);
+					}else{						
+						session.setAttribute("OverdueNumber", 0);
+					}
+					if(isWithDraw){
+						List<KeyValueWithOperator> condList = new ArrayList<KeyValueWithOperator>();	//查询条件
+						condList.add(new KeyValueWithOperator("commissionSheet.status", 3, "<"));	//委托单尚未完工或尚未注销的
+//						condList.add(new KeyValueWithOperator("sysUserByExecutorId.id", ((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId(), "="));  //办理人
+						condList.add(new KeyValueWithOperator("executeTime", null, "is null"));	//审批任务尚未完成的
+						WithdrawManager withdrawMgr = new WithdrawManager();
+						int total = withdrawMgr.getTotalCount(condList);				
+						session.setAttribute("WithdrawNumber", total);
+					}else{						
+						session.setAttribute("WithdrawNumber", 0);
+					}
+					if(isDiscount){
+						String QueryHQL = " from Discount as d where  d.id not in (select dc.discount.id from DiscountComSheet as dc where dc.commissionSheet.status=10) ";						
+						QueryHQL = QueryHQL+"and d.executeTime is null ";
+						DiscountComSheetManager discountcomSheetMgr=new DiscountComSheetManager();
+						List<Object> keys = new ArrayList<Object>();
+						int total = discountcomSheetMgr.getTotalCountByHQL("select count(*) "+QueryHQL, keys);	
+						session.setAttribute("DiscountNumber", total);
+					}else{						
+						session.setAttribute("DiscountNumber", 0);
+					}
+					session.setAttribute("isOverdue", IsOverdueNumber?"1":"0");
+					session.setAttribute("isWithDraw", isWithDraw?"1":"0");
+					session.setAttribute("isDiscount", isDiscount?"1":"0");
 					if(UserLog.getInstance().UserLogin(result1.get(0).getId(), request.getRemoteAddr(),request)){	//登录成功
-						HttpSession session = request.getSession(true);
 						session.setAttribute(SystemCfgUtil.SessionAttrNameLoginUser, result1.get(0));
 						retJSON.put("IsOK", true);
 						return ;
 					}else{	//已登录
 						throw new Exception("用户已登录，一个账号不允许同时在两个地方登录！");
 					}
+					
+
 				}
 				throw new Exception("用户名或者密码不正确！");
 			}catch(Exception e){
@@ -429,15 +483,15 @@ public class UserServlet extends HttpServlet {
 				response.getWriter().write(retJSON5.toString());
 			}
 			break;
-		case 6:	//前端控件中输入用户名AutoComplete查询符合条件的用户列表（默认前三十个）
+		case 6:	//前端控件中输入用户名AutoComplete查询符合条件的用户列表（默认前三十个）,业务过程中使用，不包括已注销人员
 			String userNameStr = request.getParameter("QueryName");	//查询的用户姓名
 			JSONArray jsonArray = new JSONArray();
 			try {
 				if(userNameStr != null && userNameStr.trim().length() > 0){
 					String cusName =  new String(userNameStr.trim().getBytes("ISO-8859-1"), "GBK");	//解决URL传递中文乱码问题
-					cusName = LetterUtil.String2Alpha(cusName);	//返回字母简码
-					String queryStr = "from SysUser model where brief like ? or jobNum like ?";
-					List<SysUser> retList = userMgr.findPageAllByHQL(queryStr, 1, 30, "%" + cusName + "%", "%" + cusName + "%");
+					//cusName = LetterUtil.String2Alpha(cusName);	//返回字母简码
+					String queryStr = "from SysUser model where (model.brief like ? or model.name like ? or model.jobNum like ?) and model.status = 0";
+					List<SysUser> retList = userMgr.findPageAllByHQL(queryStr, 1, 30, "%" + cusName + "%", "%" + cusName + "%", "%" + cusName + "%");
 					if(retList != null){
 						for(SysUser user : retList){
 							JSONObject jsonObj = new JSONObject();
@@ -756,6 +810,121 @@ public class UserServlet extends HttpServlet {
 				response.getWriter().write(retObj14.toString());
 			}
 			break;
+		case 15: // 分页查询(GrantRole)中使用
+			JSONObject res15 = new JSONObject();
+			try {
+				String queryname = request.getParameter("queryname");
+				
+				String queryStr = "from SysUser as model,ProjectTeam as pro where 1=1 and model.projectTeamId = pro.id and model.status = 0 ";
+				List<Object> list = new ArrayList<Object>();
+				if(queryname != null&&!queryname.equals(""))
+				{
+					String userNameStr15 = URLDecoder.decode(queryname, "UTF-8");
+					
+					list.add("%" + userNameStr15 + "%");
+					list.add("%" + userNameStr15 + "%");
+					queryStr = queryStr + "and (model.brief like ? or model.name like ?) ";
+				}
+				
+				int page = 1;
+				if (request.getParameter("page") != null)
+					page = Integer.parseInt(request.getParameter("page").toString());
+				int rows = 10;
+				if (request.getParameter("rows") != null)
+					rows = Integer.parseInt(request.getParameter("rows").toString());
+				List<Object[]> result;
+				int total15;
+				List<JSONObject> resultP;
+				StringBuilder priString;
+				result = userMgr.findPageAllByHQL("select model,pro " + queryStr + " order by pro.proTeamCode asc,model.jobNum asc", page, rows, list);
+				total15 = userMgr.getTotalCountByHQL("select count(model) "+queryStr, list);
+				JSONArray options = new JSONArray();
+					for (Object[] obj : result) {
+						SysUser user15 = (SysUser)obj[0];
+						ProjectTeam pro = (ProjectTeam)obj[1];
+						JSONObject option = new JSONObject();
+						option.put("Id", user15.getId());
+						option.put("Name", user15.getName());
+						option.put("Brief", user15.getBrief());
+						option.put("userName", user15.getUserName());
+						option.put("JobNum", user15.getJobNum());		
+						option.put("IDNum", user15.getIdnum());						
+						option.put("JobTitle", user15.getJobTitle());
+						option.put("AdministrationPost", user15.getAdministrationPost());
+						
+						option.put("ProjectTeamId", user15.getProjectTeamId());
+						option.put("ProjectTeamName", pro.getName());
+						option.put("DepartmentId", pro.getDepartment().getId());
+						option.put("Status", user15.getStatus());
+						
+						resultP = new ArrayList<JSONObject>();
+						priString = new StringBuilder();
+						resultP = new RolePrivilegeManager().ExportAlonePrivilegesByUserId(user15.getId());//导出个人的权限
+						for(int j = 0;j<resultP.size();j++)
+						{							
+							JSONObject objpri = (JSONObject)resultP.get(j);
+							String RoleName = objpri.getString("RoleName");
+							if(!priString.toString().contains(RoleName+";")){
+								priString.append(objpri.getString("RoleName")).append(";");
+							}
+							
+						}
+						option.put("UserRoles",priString.toString());
+						
+						options.put(option);
+					}
+					res15.put("total", total15);
+					res15.put("rows", options);
+				} catch (Exception e) {
+					try {
+						res15.put("total", 0);
+						res15.put("rows", new JSONArray());
+					} catch (JSONException ex) {
+						ex.printStackTrace();
+					}
+					if(e.getClass() == java.lang.Exception.class){ //自定义的消息
+						log.debug("exception in UserServlet-->case 15", e);
+					}else{
+						log.error("error in UserServlet-->case 15", e);
+					} 
+
+				}finally{
+					response.setContentType("text/json");
+					response.setCharacterEncoding("UTF-8");
+					response.getWriter().write(res15.toString());
+					//System.out.println(res.toString());
+				}
+			break;
+		case 16:	//前端控件中输入用户名AutoComplete查询符合条件的用户列表（默认前三十个）,查询统计中使用，包括已注销人员
+			String userNameStr16 = request.getParameter("QueryName");	//查询的用户姓名
+			JSONArray jsonArray16 = new JSONArray();
+			try {
+				if(userNameStr16 != null && userNameStr16.trim().length() > 0){
+					String cusName =  new String(userNameStr16.trim().getBytes("ISO-8859-1"), "GBK");	//解决URL传递中文乱码问题
+					//cusName = LetterUtil.String2Alpha(cusName);	//返回字母简码
+					String queryStr = "from SysUser model where model.brief like ? or model.name like ? or model.jobNum like ?";
+					List<SysUser> retList = userMgr.findPageAllByHQL(queryStr, 1, 30, "%" + cusName + "%", "%" + cusName + "%", "%" + cusName + "%");
+					if(retList != null){
+						for(SysUser temp : retList){
+							JSONObject jsonObj = new JSONObject();
+							jsonObj.put("jobNum", temp.getJobNum());
+							jsonObj.put("name", temp.getName());
+							jsonObj.put("id", temp.getId());
+							jsonArray16.put(jsonObj);	
+						}
+					}
+				}
+			} catch (Exception e) {
+				if(e.getClass() == java.lang.Exception.class){ //自定义的消息
+					log.debug("exception in UserServlet-->case 16", e);
+				}else{
+					log.error("error in UserServlet-->case 16", e);
+				} 
+			}finally{
+				response.setContentType("text/json;charset=gbk");
+				response.getWriter().write(jsonArray16.toString());
+			}
+			break;
 		}
 		
 		
@@ -810,12 +979,11 @@ public class UserServlet extends HttpServlet {
 		String DegreeFrom = req.getParameter("DegreeFrom");
 		String Specialty = req.getParameter("Specialty");
 		String AdministrationPost = req.getParameter("AdministrationPost");
-		if(req.getParameter("PartyDate")!=null&&!req.getParameter("PartyDate").toString().equals(""))
+		String PartyPost = req.getParameter("PartyPost");
+		if(req.getParameter("PartyDate")!=null&&!req.getParameter("PartyDate").trim().toString().equals(""))
 		{
-			String PartyPost = req.getParameter("PartyPost");
 			Date PartyDate = Date.valueOf(req.getParameter("PartyDate"));
 			user.setPartyDate(PartyDate);
-			user.setPartyPost(PartyPost);
 		}
 		String HomeAdd = req.getParameter("HomeAdd");
 		String WorkAdd = req.getParameter("WorkAdd");
@@ -855,6 +1023,7 @@ public class UserServlet extends HttpServlet {
 		user.setDegree(Degree);
 		user.setDegreeDate(DegreeDate);
 		user.setDegreeFrom(DegreeFrom);
+		user.setPartyPost(PartyPost);
 		user.setSpecialty(Specialty);
 		user.setAdministrationPost(AdministrationPost);
 		user.setHomeAdd(HomeAdd);

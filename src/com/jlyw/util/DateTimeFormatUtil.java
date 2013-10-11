@@ -22,10 +22,10 @@ public class DateTimeFormatUtil {
         }
         Calendar aCalendar = Calendar.getInstance();
         aCalendar.setTime(fDate);
-        int day1 = aCalendar.get(Calendar.DAY_OF_YEAR);
+        long time1 = aCalendar.getTimeInMillis();
         aCalendar.setTime(oDate);
-        int day2 = aCalendar.get(Calendar.DAY_OF_YEAR);
-        return Math.abs(day2 - day1);
+        long time2= aCalendar.getTimeInMillis();
+        return Math.abs((int)((time2-time1)/(1000*60*60*24)));
     }
 	/**
 	 * 获取两个时间相差的天数的绝对值(>0)

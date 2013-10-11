@@ -765,7 +765,7 @@ function TempSaveCertificate(fileName, oRecordId, version) {
 *					提交证书
 *
 /****************************************************/
-function SubmitCertificate(fileName, oRecordId, version) {
+function SubmitCertificate(fileName, oRecordId, version,verifierName) {
 	try{
 		var webObj=document.getElementById("WebOffice1");
 		var returnValue;
@@ -784,6 +784,7 @@ function SubmitCertificate(fileName, oRecordId, version) {
 		webObj.HttpAddPostString("OriginalRecordId", oRecordId);
 		webObj.HttpAddPostString("Version", version);
 		webObj.HttpAddPostCurrFile("DocContent","");		// 上传文件
+		webObj.HttpAddPostString("VerifierName", verifierName);
 		
 		returnValue = webObj.HttpPost("../FileUploadServlet.do?method=6");	// 判断上传是否成功
 		

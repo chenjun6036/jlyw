@@ -7,20 +7,16 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Struct;
 import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -30,15 +26,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.poi.ss.formula.functions.IfFunc;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.hibernate.Transaction;
-import org.hibernate.hql.ast.SqlASTFactory;
 import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
-
-import sun.java2d.loops.ProcessPath.EndSubPathHandler;
 
 import com.jlyw.hibernate.ApplianceSpecies;
 import com.jlyw.hibernate.ApplianceStandardName;
@@ -83,9 +74,6 @@ import com.jlyw.servlet.CustomerServlet;
 import com.jlyw.util.DateTimeFormatUtil;
 import com.jlyw.util.KeyValueWithOperator;
 import com.jlyw.util.LetterUtil;
-import com.jspsmart.upload.Request;
-import com.sun.org.apache.bcel.internal.generic.NEW;
-import com.sun.star.lib.uno.environments.remote.remote_environment;
 
 
 public class CrmServlet extends HttpServlet {
@@ -229,7 +217,8 @@ public class CrmServlet extends HttpServlet {
 					String startTime=request.getParameter("StartDate");
 					String endTime=request.getParameter("EndDate");
 					String status=request.getParameter("Status");
-					String complainAbout=request.getParameter("ComplainAbout");
+					String flag=request.getParameter("flag");//1表示需要判断当前用户
+					//String complainAbout=request.getParameter("ComplainAbout");
 					CustomerManager cusm=new CustomerManager();
 					List<Customer> lresult;
 					List <Object> keys=new ArrayList<Object>();
@@ -239,8 +228,10 @@ public class CrmServlet extends HttpServlet {
 					int rows = 10;
 					if (request.getParameter("rows") != null)
 						rows = Integer.parseInt(request.getParameter("rows").toString());
-					String queryStr="from CustomerFeedback as model where 1=1 ";//处理过程1：只需要看到未开始的1...
-					
+					int currentUser=((SysUser)(request.getSession().getAttribute("LOGIN_USER"))).getId();
+					String queryStr="from CustomerFeedback as model where 1=1";
+					if(flag!=null&&flag.equals("1"))
+						queryStr += " and sysUserByHandleSysUserId.id= "+currentUser;
 					if(status!=null&&!status.equals(""))
 					{
 						String cnstr=URLDecoder.decode(status,"UTF-8");
@@ -253,12 +244,9 @@ public class CrmServlet extends HttpServlet {
 					if(customerName!=null&&!customerName.equals(""))
 					{
 						String cnstr=URLDecoder.decode(customerName,"UTF-8");
-						lresult=cusm.findByVarProperty(new KeyValueWithOperator("name",cnstr,"="));
-						if(lresult!=null&&lresult.size()==1)
-						{
-							queryStr+=" and (model.customer.id = ?)";
-							keys.add(Integer.valueOf(lresult.get(0).getId()));
-						}
+						queryStr+=" and (model.customer.id = ?)";
+						keys.add(Integer.valueOf(cnstr));
+						
 					}
 					if(startTime!=null&&!startTime.equals(""))
 					{
@@ -272,58 +260,54 @@ public class CrmServlet extends HttpServlet {
 						queryStr+=" and (convert(varchar(10),model.createTime,120)<= ?)";//
 						keys.add(str);
 					}
-					if(complainAbout!=null&&!complainAbout.equals(""))
-					{
-						String str=URLDecoder.decode(complainAbout,"UTF-8");
-						queryStr+=" and (complainAbout = ?)";//
-						keys.add(Integer.valueOf(str));
-					}
 					
-						FeedbackManager fbm1=new FeedbackManager();
-						//queryStr="from CustomerFeedback as model where model.customer.id = ?";
+					FeedbackManager fbm1=new FeedbackManager();
+					//queryStr="from CustomerFeedback as model where model.customer.id = ?";
+					String queryTotal = "select count(*) " + queryStr;
+					int total = fbm1.getTotalCountByHQL(queryTotal, keys);
+					//+" order by model.createTime asc"
+					List<CustomerFeedback> cl=fbm1.findPageAllByHQL(queryStr+" order by model.createTime asc", page, rows, keys);
+					JSONArray rets=new JSONArray();
+					for(CustomerFeedback a:cl)
+					{
+						JSONObject ret=new JSONObject();
+						ret.put("ActulEndTime", a.getActulEndTime()==null?"":DateFormat.getDateInstance().format(a.getActulEndTime()));
+						ret.put("ActulStartTime", a.getActulStartTime()==null?"":DateFormat.getDateInstance().format(a.getActulStartTime()));
+						ret.put("Analysis", a.getAnalysis()==null?"":a.getAnalysis());
 						
-						//+" order by model.createTime asc"
-						List<CustomerFeedback> cl=fbm1.findPageAllByHQL(queryStr+" order by model.createTime asc", page, rows, keys);
-						JSONArray rets=new JSONArray();
-						for(CustomerFeedback a:cl)
+						ret.put("ComplainAbout", a.getComplainAbout());
+						ret.put("CreateTime", (new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(a.getCreateTime()));
+						ret.put("CustomerName",a.getCustomer().getName());
+						ret.put("CustomerContactorName", a.getCustomerContactorName());
+						ret.put("CustomerRequiredTime", a.getCustomerRequiredTime()==null?"":DateFormat.getDateInstance().format(a.getCustomerRequiredTime()));
+						ret.put("Feedback",a.getFeedback());
+						ret.put("HandleLevel", a.getHandleLevel());
+						ret.put("Id",a.getId());
+						ret.put("Mark", a.getMark()==null?"":a.getMark());
+						ret.put( "Method", a.getMethod());
+						
+						ret.put("PlanEndTime", a.getPlanEndTime()==null?"":DateFormat.getDateInstance().format(a.getPlanEndTime()));
+						ret.put("PlanStartTime", a.getPlanStartTime()==null?"":DateFormat.getDateInstance().format(a.getPlanStartTime()));
+						
+						ret.put("Remark", a.getRemark()==null?"":a.getRemark());
+						ret.put("ReturnVisitInfo", a.getReturnVisitInfo()==null?"":a.getReturnVisitInfo());
+						ret.put("ReturnVisitType", a.getReturnVisitType()==null?"":a.getReturnVisitType());
+						ret.put("Status", a.getStatus());
+						ret.put("CreateSysUserName", a.getSysUserByCreateSysUserId().getName());
+						SysUser sys=a.getSysUserByHandleSysUserId();
+						if(sys!=null)
 						{
-							JSONObject ret=new JSONObject();
-							ret.put("ActulEndTime", a.getActulEndTime()==null?"":DateFormat.getDateInstance().format(a.getActulEndTime()));
-							ret.put("ActulStartTime", a.getActulStartTime()==null?"":DateFormat.getDateInstance().format(a.getActulStartTime()));
-							ret.put("Analysis", a.getAnalysis()==null?"":a.getAnalysis());
-							
-							ret.put("ComplainAbout", a.getComplainAbout());
-							ret.put("CreateTime", (new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")).format(a.getCreateTime()));
-							ret.put("CustomerName",a.getCustomer().getName());
-							ret.put("CustomerContactorName", a.getCustomerContactorName());
-							ret.put("CustomerRequiredTime", a.getCustomerRequiredTime()==null?"":DateFormat.getDateInstance().format(a.getCustomerRequiredTime()));
-							ret.put("Feedback",a.getFeedback());
-							ret.put("HandleLevel", a.getHandleLevel());
-							ret.put("Id",a.getId());
-							ret.put("Mark", a.getMark()==null?"":a.getMark());
-							ret.put( "Method", a.getMethod());
-							
-							ret.put("PlanEndTime", a.getPlanEndTime()==null?"":DateFormat.getDateInstance().format(a.getPlanEndTime()));
-							ret.put("PlanStartTime", a.getPlanStartTime()==null?"":DateFormat.getDateInstance().format(a.getPlanStartTime()));
-							
-							ret.put("Remark", a.getRemark()==null?"":a.getRemark());
-							ret.put("ReturnVisitInfo", a.getReturnVisitInfo()==null?"":a.getReturnVisitInfo());
-							ret.put("ReturnVisitType", a.getReturnVisitType()==null?"":a.getReturnVisitType());
-							ret.put("Status", a.getStatus());
-							ret.put("CreateSysUserName", a.getSysUserByCreateSysUserId().getName());
-							SysUser sys=a.getSysUserByHandleSysUserId();
-							if(sys!=null)
-							{
-								ret.put("HandleMan",sys.getName());
-								ret.put("JobNum",sys.getJobNum());
-							}else{
-								ret.put("HandleMan","");
-								ret.put("JobNum","");
-							}
-							
-							rets.put(ret);
+							ret.put("HandleMan",sys.getName());
+							ret.put("JobNum",sys.getJobNum());
+						}else{
+							ret.put("HandleMan","");
+							ret.put("JobNum","");
 						}
-						res.put("rows", rets);
+						
+						rets.put(ret);
+					}
+					res.put("rows", rets);
+					res.put("total", total);
 			} catch (Exception e) 
 			{
 				// TODO: handle exception
@@ -548,21 +532,20 @@ public class CrmServlet extends HttpServlet {
 				response.getWriter().write(jsa.toString());
 			}
 			break;
-		case 6://关怀信息
+		case 6://添加关怀信息
 			JSONObject ret=new JSONObject();
 			try 
 			{
 				int customerId=Integer.parseInt(request.getParameter("CustomerId"));
 				String customerName=request.getParameter("CustomerName");
 //				int prior=Integer.parseInt(request.getParameter("Priority"));
-				float fee = Float.parseFloat(request.getParameter("Fee"));
+				Double fee = (double) Float.parseFloat(request.getParameter("Fee"));
 				Timestamp createTime=new Timestamp(System.currentTimeMillis());
 				int createUserId=((SysUser)(request.getSession().getAttribute("LOGIN_USER"))).getId();
 //				int status=Integer.parseInt(request.getParameter("Status"));
 				Timestamp time=new Timestamp(DateTimeFormatUtil.DateFormat.parse(request.getParameter("Time")).getTime());
 				int way=Integer.parseInt(request.getParameter("Way"));
 				String careContactor=request.getParameter("CareContactor");
-				
 				String careDutyManId=request.getParameter("CareDutyManId");
 				String representative=request.getParameter("RepresentativeId");
 				String remark=request.getParameter("Remark");
@@ -585,16 +568,18 @@ public class CrmServlet extends HttpServlet {
 				cc.setCareContactor(careContactor);
 				if(careDutyManId!=null&&!careDutyManId.equals(""))
 				{
+					SysUser ss=new SysUser();
 					int careDutyId=Integer.parseInt(careDutyManId);
-					s.setId(careDutyId);
-					cc.setSysUserByCareDutySysUserId(s);
+					ss.setId(careDutyId);
+					cc.setSysUserByCareDutySysUserId(ss);
 				}
 				/**/
 				if(representative!=null&&!representative.equals(""))
 				{
+					SysUser sss=new SysUser();
 					int representativeId=Integer.parseInt(representative);
-					s.setId(representativeId);
-					cc.setSysUserByRepresentativeId(s);
+					sss.setId(representativeId);
+					cc.setSysUserByRepresentativeId(sss);
 				}
 				if(remark!=null&&!remark.equals(""))
 				{
@@ -707,12 +692,12 @@ public class CrmServlet extends HttpServlet {
 				List<Object> keys = new ArrayList<Object>();
 				if(cusid!=null&&!cusid.equals(""))
 				{
-					queryString+=" and a.id = ?";
-					keys.add(Integer.valueOf(cusid));
+					queryString+=" and (a.name like ? )";
+					keys.add("%"+URLDecoder.decode(cusid,"UTF-8")+"%");
 				}
 				InsideContactorManager icm=new InsideContactorManager();
 				List<Object[]> lo=icm.findPageAllByHQL(queryString, page, rows, keys);
-				int to=icm.getTotalCountByHQL1(queryString, keys);
+				int to=icm.getTotalCountByHQL("select count(*) from (" +queryString+")", keys);//////////////////////特别注意！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 				
 					for(Object[] a:lo)
 					{
@@ -884,24 +869,33 @@ public class CrmServlet extends HttpServlet {
 				String brief=request.getParameter("Brief");
 				String nameEn=request.getParameter("NameEn");
 				String facilitatingAgency=request.getParameter("FacilitatingAgency");
-				int regionId=Integer.parseInt(request.getParameter("RegionId"));
-				int from=Integer.parseInt(request.getParameter("From"));
+				
+				String regionId=request.getParameter("RegionId");
+				
+				String from=request.getParameter("From");
+				
 				String address=request.getParameter("Address");
-				int intension=Integer.parseInt(request.getParameter("CooperationIntension"));
-				int industry=Integer.parseInt(request.getParameter("IndustryId"));
+				String intension=request.getParameter("CooperationIntension");
+				
+				String industry=request.getParameter("IndustryId");
+				
 				//int status=Integer.parseInt(request.getParameter("Status"));
 				
 				PotentialCustomerManager pcm=new PotentialCustomerManager();
 				PotentialCustomer pc=new PotentialCustomer();
 				pc.setAddress(address);
 				pc.setBrief(brief);
-				pc.setCooperationIntension(intension);
-				pc.setIndustry(industry);
+				if(intension!=null&&!intension.equals(""))
+					pc.setCooperationIntension(Integer.parseInt(intension));
+				if(industry!=null&&!industry.equals(""))
+					pc.setIndustry(Integer.parseInt(industry));
 				pc.setName(name);
 				pc.setNameEn(nameEn);
-				pc.setPotentialCustomerFrom(from);
+				if(from!=null&&!from.equals(""))
+				pc.setPotentialCustomerFrom(Integer.parseInt(from));
 				Region re=new Region();
-				re.setId(regionId);
+				if(regionId!=null&&!regionId.equals(""))
+				re.setId(Integer.parseInt(regionId));
 				pc.setRegion(re);
 				//pc.setStatus(status);
 				if(facilitatingAgency!=null&&!facilitatingAgency.equals(""));
@@ -981,6 +975,7 @@ public class CrmServlet extends HttpServlet {
 			}
 			break;
 		case 14://查询潜在客户
+			JSONObject ret14=new JSONObject();
 			JSONArray jss=new JSONArray();
 			try {
 				String CustomerName=request.getParameter("CustomerName");
@@ -994,10 +989,13 @@ public class CrmServlet extends HttpServlet {
 						rows = Integer.parseInt(request.getParameter("rows").toString());
 					List<Object> keys=new ArrayList<Object>();
 					String queryString=" from PotentialCustomer as a where a.name like ?";
-					keys.add("%"+URLDecoder.decode(CustomerName,"UTF-8")+"%");
+					if(CustomerName!=null&&!CustomerName.equals(""))
+						keys.add("%"+URLDecoder.decode(CustomerName,"UTF-8")+"%");
+					else keys.add("%%");
+					
 				PotentialCustomerManager pcm=new PotentialCustomerManager();
 				List<PotentialCustomer> res1=pcm.findPageAllByHQL(queryString, page, rows, keys);
-				
+				int tt=pcm.getTotalCountByHQL("select count(*)"+queryString, keys);
 				
 				for(PotentialCustomer p:res1)
 				{
@@ -1013,11 +1011,15 @@ public class CrmServlet extends HttpServlet {
 					js.put("From", p.getPotentialCustomerFrom());
 					js.put("Intension", p.getCooperationIntension());
 					BaseTypeManager btm=new BaseTypeManager();
-					js.put("Industry", btm.findById(p.getIndustry()).getName());
-					js.put("IndustryId", p.getIndustry());
+					
+					js.put("Industry", p.getIndustry()==null?"/":btm.findById(p.getIndustry()).getName());
+					js.put("IndustryId", p.getIndustry()==null?"":p.getIndustry());
 					js.put("Id", p.getId());
 					jss.put(js);
 				}
+				ret14.put("total", tt);
+				ret14.put("rows", jss);
+				
 				}
 			} catch (Exception e) {
 				// TODO: handle exception
@@ -1029,7 +1031,7 @@ public class CrmServlet extends HttpServlet {
 			}
 			finally{
 				response.setContentType("text/json;charset=gbk");
-				response.getWriter().write(jss.toString());
+				response.getWriter().write(ret14.toString());
 
 			}break;
 		case 15://自动加载所有的潜在客户到表格中
@@ -1096,15 +1098,19 @@ public class CrmServlet extends HttpServlet {
 				String facilitatingAgency=request.getParameter("FacilitatingAgency");
 				PotentialCustomerManager pcm=new PotentialCustomerManager();
 				PotentialCustomer pc=pcm.FindById(id);
-				String Name=pc.getName();
+				String Name=pc.getName();///
 				String Brief=pc.getBrief();
 				String NameEn=pc.getNameEn();
-				int RegionId=pc.getRegion().getId();
-				int From=pc.getPotentialCustomerFrom();
-				String Address=pc.getAddress();
-				int Intension=pc.getCooperationIntension();
-				int Industry=pc.getIndustry();
+				int RegionId=pc.getRegion().getId();///
+				int From=-1,Industry=-1;
+				if(pc.getPotentialCustomerFrom()!=null)
+					From=pc.getPotentialCustomerFrom();
+				String Address=pc.getAddress();///
+				int Intension=pc.getCooperationIntension();///
+				if(pc.getIndustry()!=null)
+				Industry=pc.getIndustry();
 				//int Status=pc.getStatus();
+				
 				if(name!=Name)pc.setName(name);
 				if(nameEn!=NameEn)pc.setNameEn(nameEn);
 				if(brief!=Brief)pc.setBrief(brief);
@@ -1363,7 +1369,8 @@ public class CrmServlet extends HttpServlet {
 				response.setContentType("text/html;charset=gbk");
 				response.getWriter().write(jsonObject.toString());
 			}break;
-		case 21:
+		case 21://查询内部联系人产值分配
+			JSONObject ret21=new JSONObject();
 			JSONArray jsonarry=new JSONArray();
 			try {
 				String customerId=request.getParameter("CustomerId");
@@ -1398,6 +1405,7 @@ public class CrmServlet extends HttpServlet {
 				}
 				InsideContactorFeeAssignManager icfam=new InsideContactorFeeAssignManager();
 				List<InsideContactorFeeAssign> lr=icfam.findPageAllByHQL(questr, page, rows, keys);
+				int tt=icfam.getTotalCountByHQL("select count(*) "+questr, keys);
 				if(lr!=null&&lr.size()>0)
 					for(InsideContactorFeeAssign a: lr)
 					{
@@ -1413,9 +1421,11 @@ public class CrmServlet extends HttpServlet {
 						tmp.put("LastEditor",a.getSysUserByLastEditorId().getName() );
 						tmp.put("Remark",a.getRemark() );
 						tmp.put("Id",a.getId() );
-						tmp.put("LastEditTime",a.getLastEditTime() );
+						tmp.put("LastEditTime",a.getLastEditTime().toLocaleString() );
 						jsonarry.put(tmp);
 					}
+				ret21.put("total", tt);
+				ret21.put("rows", jsonarry);
 				
 				
 			} catch (Exception e) {
@@ -1429,7 +1439,7 @@ public class CrmServlet extends HttpServlet {
 			finally
 			{
 				response.setContentType("text/json;charset=gbk");
-				response.getWriter().write(jsonarry.toString());
+				response.getWriter().write(ret21.toString());
 			}break;
 		case 22://修改
 			JSONObject j0=new JSONObject();
@@ -1529,7 +1539,7 @@ public class CrmServlet extends HttpServlet {
 				for(int i = 0;i< ClassificationStr.length; i++)
 					Classification = Classification + (Classification.equals("")?"":",") + ClassificationStr[i];
 				//System.out.println(Classification);
-				String Status = request.getParameter("Status");
+				String Status = "0";//正常; request.getParameter("Status");
 				String AccountBank = request.getParameter("AccountBank");
 				String Account = request.getParameter("Account");
 				String CreditAmount = request.getParameter("CreditAmount");
@@ -1627,11 +1637,12 @@ public class CrmServlet extends HttpServlet {
 			
 				InsideContactor ic=new InsideContactor();
 				SysUser s=new SysUser();
-				s.setId(Integer.parseInt(InsideContactorId));
+				if(InsideContactorId!=null&&!InsideContactorId.equals(""))
+					s.setId(Integer.parseInt(InsideContactorId));
 				
 				ic.setSysUser(s);
 				ic.setCustomer(customer);
-				ic.setRole(Integer.parseInt(Role));
+				if(Role!=null&&!Role.equals(""))ic.setRole(Integer.parseInt(Role));
 				//InsideContactorManager icm=new InsideContactorManager();
 				boolean resu = cusmag.save(customer, customercontactor,ic);
 				retObj.put("IsOK", resu);
@@ -1704,7 +1715,10 @@ public class CrmServlet extends HttpServlet {
 				if(queryInsideContactor!=null&&!queryInsideContactor.equals(""))
 				{
 					String cusInsideContactorStr = URLDecoder.decode(queryInsideContactor, "UTF-8");
-					queryStr = queryStr + " and (model.sysUserByInsideContactorId.name like ? or model.sysUserByInsideContactorId.brief like ?)";
+					//一期以前可以用，但后面去掉了InsideContactorId这个字段就能用这个语句
+					//queryStr = queryStr + " and (model.sysUserByInsideContactorId.name like ? or model.sysUserByInsideContactorId.brief like ?)";
+					queryStr = queryStr + " and model.id in (select a.customer.id from InsideContactor as a where a.sysUser.name like ? or a.sysUser.brief like ?)";
+
 					keys.add("%" + cusInsideContactorStr + "%");
 					keys.add("%" + cusInsideContactorStr + "%");
 				}
@@ -1723,13 +1737,13 @@ public class CrmServlet extends HttpServlet {
 				if(queryContactor!=null&&!queryContactor.equals(""))
 				{
 					String cusContactorStr = URLDecoder.decode(queryContactor, "UTF-8");
-					queryStr = queryStr + " and model.id in (select model1.customerId from CustomerContactor as model1 where model1.name like ?)";
+					queryStr = queryStr + " and model.id in (select model1.customer.id from CustomerContactor as model1 where model1.name like ? and model1.status=0)";
 					keys.add("%" + cusContactorStr + "%");
 				}
 				if(queryContactorTel!=null&&!queryContactorTel.equals(""))
 				{
 					String cusContactorTelStr = URLDecoder.decode(queryContactorTel, "UTF-8");
-					queryStr = queryStr + " and model.id in (select model1.customerId from CustomerContactor as model1 where (model1.cellphone1 like ? or model1.cellphone2 like ?))";
+					queryStr = queryStr + " and model.id in (select model1.customerId from CustomerContactor as model1 where (model1.cellphone1 like ? or model1.cellphone2 like ?) and model1.status=0)";
 					keys.add("%" + cusContactorTelStr + "%");
 					keys.add("%" + cusContactorTelStr + "%");
 				}
@@ -1737,7 +1751,7 @@ public class CrmServlet extends HttpServlet {
 				List<Customer> result;
 				int total;
 				CustomerManager cusmag=new CustomerManager();
-				result = cusmag.findPageAllByHQL(queryStr + " order by model.status asc, model.id asc", page, rows, keys);
+				result = cusmag.findPageAllByHQL(queryStr /*+ " order by model.status asc, model.id asc"*/, page, rows, keys);
 				total = cusmag.getTotalCountByHQL("select count(*) "+queryStr, keys);
 				JSONArray options = new JSONArray();
 				
@@ -1748,7 +1762,15 @@ public class CrmServlet extends HttpServlet {
 					option.put("NameEn", cus.getNameEn());
 					option.put("Brief", cus.getBrief());
 					option.put("RegionId", cus.getRegion().getId());
-					option.put("CustomerType", cus.getCustomerType());
+					
+					BaseTypeManager b=new BaseTypeManager();
+					Integer a=cus.getCustomerType();
+					BaseType bt=new BaseType();
+					if(a!=null)
+					    bt=b.findById(a);
+					
+					option.put("CustomerTypeName",bt==null?"":bt.getName() );
+					option.put("CustomerType",a==null?"":a.toString());
 					option.put("Code", cus.getCode());
 					option.put("Address", cus.getAddress());
 					option.put("AddressEn", cus.getAddressEn());
@@ -1767,13 +1789,23 @@ public class CrmServlet extends HttpServlet {
 					option.put("CancelDate", cus.getCancelDate()==null?"未注销":cus.getCancelDate());
 					option.put("CancelReason", cus.getCancelDate()==null?"":cus.getReason().getReason());
 					option.put("Remark", cus.getRemark());
-					option.put("ModifyDate", cus.getModifyDate());
+					option.put("ModifyDate", cus.getModifyDate()==null?"":cus.getModifyDate().toLocaleString());
 					option.put("Modificator", cus.getSysUserByModificatorId().getName());
 					
-					CustomerContactorManager ccm=new CustomerContactorManager();
-					List<CustomerContactor> lcon=ccm.findByVarProperty(new KeyValueWithOperator("customer.id",cus.getId(),"="));
-					if(lcon.size()!=0&&lcon.get(0)!=null)
-					option.put("InsideContactor",lcon.get(0).getName()+"等");
+					InsideContactorManager ccm=new InsideContactorManager();
+					List<InsideContactor> lcon=ccm.findByVarProperty(new KeyValueWithOperator("customer.id",cus.getId(),"="));
+					String insidecontmp = "";
+					if(lcon.size()!=0)
+					{
+						for(int i=0;i<lcon.size();++i)
+						{
+							if(lcon.get(i)!=null)
+								insidecontmp+=(lcon.get(i).getSysUser()==null?"":lcon.get(i).getSysUser().getName()+";");
+							//option.put("InsideContactor",lcon.get(i).getSysUser()==null?"":lcon.get(i).getSysUser().getName());
+							else option.put("InsideContactor", "");
+						}
+						option.put("InsideContactor", insidecontmp);
+					}
 					else option.put("InsideContactor", "");
 					//option.put("InsideContactor", cus.getSysUserByInsideContactorId()==null?"":cus.getSysUserByInsideContactorId().getName());
 					
@@ -1788,20 +1820,21 @@ public class CrmServlet extends HttpServlet {
 					//option.put("Output",cus.getOutput());
 					option.put("ServiceFeeLimitation",cus.getServiceFeeLimitation()==null?"":cus.getServiceFeeLimitation());
 					Integer t=cus.getIndustry();
-					BaseType bt=null;
+					BaseType bts=null;
 					if(t!=null)
 					{
-					 bt=(new BaseTypeManager()).findById(t);
+					 bts=(new BaseTypeManager()).findById(t);
 					}
-					option.put("Industry",bt==null?"":bt.getName());
-					
+					option.put("IndustryName",bts==null?"/":bts.getName());
+					option.put("Industry",t==null?"":t.toString());
 					option.put("Loyalty", cus.getLoyalty()==null?"":cus.getLoyalty());
 					option.put("Satisfaction", cus.getSatisfaction()==null?"":cus.getSatisfaction());
 					///////////////////////////////////////////////////////////////////////////
 					CustomerContactorManager cusconmag1 = new CustomerContactorManager();
 					CustomerContactor cuscon ;
 					List<CustomerContactor> resultList = cusconmag1.findByPropertyBySort("lastUse", false,
-							new KeyValueWithOperator("customer.id", cus.getId(), "="));
+							new KeyValueWithOperator("customer.id", cus.getId(), "="),
+							new KeyValueWithOperator("status", 0, "="));
 					if(resultList != null&& resultList.size()>0)
 					{
 						cuscon = resultList.get(0);
@@ -1855,7 +1888,7 @@ public class CrmServlet extends HttpServlet {
 				String CertificateDemands = request.getParameter("CertificateDemands");
 				String SpecialDemands = request.getParameter("SpecialDemands");
 				SysUser user = (SysUser)request.getSession().getAttribute("LOGIN_USER");
-				String InsideContactor = request.getParameter("InsideContactor");
+				//String InsideContactor = request.getParameter("InsideContactor");
 
 				String PaiVia=request.getParameter("PayVia");
 				String PaiType=request.getParameter("PayType");
@@ -1935,7 +1968,7 @@ public class CrmServlet extends HttpServlet {
 				String ContactorTel2 = request.getParameter("ContactorTel2");
 				CustomerManager cusmag1=new CustomerManager();
 				boolean res1 = cusmag1.update(customer, Contactor, ContactorTel1, ContactorTel2);
-				retObj1.put("IsOK", res1);
+				retObj1.put("IsOk", res1);
 				retObj1.put("msg", res1?"修改成功！":"修改失败，请重新修改！");
 			}catch(Exception e){
 				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
@@ -2003,6 +2036,7 @@ public class CrmServlet extends HttpServlet {
 			}
 			break;
 		case 28://查询关怀信息
+			JSONObject ret28=new JSONObject();
 			JSONArray retArray=new JSONArray();
 			try 
 			{
@@ -2041,11 +2075,11 @@ public class CrmServlet extends HttpServlet {
 					query+=" and (sysUserByCareDutySysUserId.name like ? )";
 					key.add(URLDecoder.decode(careDutySysUser,"UTF-8"));
 				}
-				if(code!=null&&!code.equals(""))
+				/*if(code!=null&&!code.equals(""))
 				{
 					query+=" and (customer.code like ? )";
 					key.add("%"+URLDecoder.decode(code,"UTF-8")+"%");
-				}
+				}*/
 				if(way!=null&&!way.equals(""))
 				{
 					query+=" and (way= ? )";
@@ -2063,6 +2097,7 @@ public class CrmServlet extends HttpServlet {
 				}
 				CustomerCarenessManager ccm=new CustomerCarenessManager();
 				List<CustomerCareness> lq=ccm.findPageAllByHQL(query, page, rows, key);
+				int tot=ccm.getTotalCountByHQL(query, key);
 				if(lq!=null&&lq.size()>0)
 				{
 					for(CustomerCareness a:lq)
@@ -2070,9 +2105,9 @@ public class CrmServlet extends HttpServlet {
 						JSONObject ja=new JSONObject();
 						ja.put("CustomerName",a.getCustomer().getName());
 						ja.put("Priority",a.getPriority());
-						ja.put("CreateTime",a.getCreateTime());
+						ja.put("CreateTime",a.getCreateTime()==null?"-":a.getCreateTime().toLocaleString());
 						ja.put("CreateSysUser",a.getSysUserByCreateSysUserId().getName());
-						ja.put("Time",a.getTime());
+						ja.put("Time",a.getTime()==null?"-":a.getTime().toString().substring(0, 10));
 						ja.put("Way",a.getWay());
 						ja.put("CareDutySysUser",a.getSysUserByCareDutySysUserId().getName());
 						ja.put("CareContactor",a.getCareContactor());
@@ -2082,6 +2117,8 @@ public class CrmServlet extends HttpServlet {
 						ja.put("Fee",a.getFee());
 						retArray.put(ja);
 					}
+					ret28.put("total", tot);
+					ret28.put("rows", retArray);
 				}
 				
 			} catch (Exception e) {
@@ -2408,7 +2445,10 @@ public class CrmServlet extends HttpServlet {
 					qgroupby+=" group by c.id, c.name";
 					qhaving+=" having sum(a.totalFee)> ? ";
 					String q1=" select c.id as ID"+qfrom+qwhere+qgroupby+qhaving;
-					keys.add(Double.valueOf(LeastOutput));
+					if(LeastOutput!=null&&!LeastOutput.equals(""))
+						keys.add(Double.valueOf(LeastOutput));
+					else 
+						keys.add(Double.valueOf("0"));
 					q=qselect+qfrom+qwhere+qgroupby+qhaving;
 					List<Object[]> lo=cSheetMgr.findPageAllByHQL(q, page, rows, keys);
 					List<Object[]> total=cSheetMgr.findPageAllByHQL("select count(tmp.id) from Customer as tmp where tmp.id in ("+q1+") ", page, rows, keys);
@@ -2420,6 +2460,7 @@ public class CrmServlet extends HttpServlet {
 							totals=Integer.parseInt(sr);
 						
 					}
+					SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 					if(lo!=null&&lo.size()>0)
 					{
 						for(Object[] a:lo)
@@ -2428,8 +2469,8 @@ public class CrmServlet extends HttpServlet {
 						tmp.put("Id",a[0].toString());
 						tmp.put("CustomerName",a[1].toString());
 						tmp.put("TotalFee",a[2].toString());
-						tmp.put("CommissionDateStart",a[3].toString());
-						tmp.put("CommissionDateEnd",a[4].toString());
+						tmp.put("CommissionDateStart",dateFormat.format(a[3]));
+						tmp.put("CommissionDateEnd",dateFormat.format(a[4]));
 						tmp.put("Count",a[5].toString());
 						tmp.put("Avg",a[6].toString());
 						tmp.put("TestFee",a[7].toString());
@@ -2442,7 +2483,7 @@ public class CrmServlet extends HttpServlet {
 						}
 					}
 					ret5.put("total",totals);
-					ret5.put("rows", retObj5);
+					ret5.put("rows", retObj5);	
 					
 					
 				}
@@ -2843,8 +2884,8 @@ public class CrmServlet extends HttpServlet {
 				PreparedStatement ps=conn.prepareStatement(qString+qand);
 				if(cusID!=null&&!cusID.equals(""))
 				{
-					//ps.setInt(1, Integer.valueOf(cusID));
-					ps.setString(1, cusID);
+					ps.setInt(1, Integer.valueOf(cusID));
+					//ps.setString(1, cusID);
 				}
 				JSONArray jsas=new JSONArray();
 				/*----查询 */            
@@ -2919,7 +2960,7 @@ public class CrmServlet extends HttpServlet {
 				Connection conn=sql.getMyConn();
 				if(custIdString!=null&&!custIdString.equals(""))qString+=" and a.CustomerId= ? ";
 				PreparedStatement ps=conn.prepareStatement(qString+qString1);
-				if(custIdString!=null&&!custIdString.equals(""))ps.setString(1, custIdString);
+				if(custIdString!=null&&!custIdString.equals(""))ps.setInt(1, Integer.valueOf(custIdString));
 				JSONArray jsas=new JSONArray();            
 				ResultSet rs=ps.executeQuery();
 				int  tatal=0;
@@ -2978,8 +3019,22 @@ public class CrmServlet extends HttpServlet {
 				String qString="select a.Id,a.Name,SUM(b.TotalFee) as TOTAL,AVG(b.TotalFee) as AVGS,COUNT(b.TotalFee) as cc" +
 						" ,SUM(b.TotalFee)/? as percentage,a.CustomerValueLevel " +
 						"from Customer as a left outer join CommissionSheet as b on a.Id=b.CustomerId " ;
-				String qString2="group by a.Id,a.Name,a.CustomerValueLevel order by percentage desc, TOTAL desc, cc desc";
-				String qString1="select sum(a.TotalFee) from CommissionSheet as a";
+				
+				String qString0="select *from (select a.Id,a.Name,SUM(b.TotalFee) as TOTAL,AVG(b.TotalFee) as AVGS," +
+						"COUNT(b.TotalFee) as cc,SUM(b.TotalFee)/? as percentage,a.CustomerValueLevel,a.CustomerLevel from Customer as a " +
+						"left outer join CommissionSheet as b on a.Id=b.CustomerId group by a.Id,a.Name,a.CustomerValueLevel,a.CustomerLevel) as temp1 " +
+						"left outer join " +
+						"(select a.CustomerId,sum(b.TotalFee) as Total,AVG(b.TotalFee) as Average,COUNT(b.Id) as JianShu " +
+						"from CommissionSheet as a left outer join OriginalRecord as b on a.Id=b.CommissionSheetId " +
+						"where a.Status=4 and b.Status=0 group by a.CustomerId) as temp2 " +
+						"on temp1.Id=temp2.CustomerId";
+						
+				String qString2=" order by temp1.percentage desc,temp1.TOTAL desc, temp1.cc desc";
+				//String qString2="group by a.Id,a.Name,a.CustomerValueLevel order by percentage desc, TOTAL desc, cc desc";
+				
+				String qString1="select sum(a.TotalFee) from CommissionSheet as a";//这是总产值，包括未结账的
+				
+				
 				Sql sql=new Sql();
 				Connection conn=sql.getMyConn();
 				double Tot=1;
@@ -2990,9 +3045,9 @@ public class CrmServlet extends HttpServlet {
 					Tot=rs1.getDouble(1);
 					
 				}
-				if(cusid!=null&&!cusid.equals(""))qString+=" where a.Id= ? ";
+				if(cusid!=null&&!cusid.equals(""))qString0+=" where temp1.Id= ? ";
 					
-				PreparedStatement ps=conn.prepareStatement(qString+qString2);
+				PreparedStatement ps=conn.prepareStatement(qString0+qString2);
 				if(cusid!=null&&!cusid.equals(""))ps.setString(2, cusid);
 				JSONArray jsas=new JSONArray();        
 				ps.setDouble(1, Tot);
@@ -3000,23 +3055,28 @@ public class CrmServlet extends HttpServlet {
 				int  tatal=0;
 				int i=0,k=0;
 				while (rs.next())
-				{
-					if(k++<(page-1)*rows)continue;
-					++tatal;
+				{++tatal;
+					if(k<(page-1)*rows){++k;continue;}
+					
 					++i;
 					if(i<=rows)
 					{
 					JSONObject tmp=new JSONObject();
-					//tmp.put("Times",a[0].toString() );
+					
 					tmp.put("Id",rs.getInt(1));
 					tmp.put("Name",rs.getString(2));
 					tmp.put("Total",rs.getDouble(3) );
 					Double db=new Double(rs.getDouble(4));
-					tmp.put("Avg",String.format("%.2f", db));
+					tmp.put("Avg",String.format("%.2f", db));//平均每次费用；
 					tmp.put("Counter",rs.getInt(5));
 					db=new Double(rs.getDouble(6)*100);
 					tmp.put("Percentage",String.format("%.4f", db)+"%" );
-					tmp.put("Level",rs.getInt(7));
+					tmp.put("ValueLevel",rs.getInt(7));
+					tmp.put("Level",rs.getInt(8));
+					db=new Double(rs.getDouble(11));
+					tmp.put("Avg1",String.format("%.2f", db));
+					tmp.put("Times",rs.getInt(12));
+					
 					jsas.put(tmp);
 					}
 				}
@@ -3117,7 +3177,7 @@ public class CrmServlet extends HttpServlet {
 				response.setContentType("text/json;charset=utf-8");
 				response.getWriter().write(tmpj.toString());
 			}break;
-		case 40://等级设置
+		case 40://设置客户分类
 			JSONObject retj40=new JSONObject();
 			try {
 				String idString=request.getParameter("Id");
@@ -3126,7 +3186,7 @@ public class CrmServlet extends HttpServlet {
 				Customer customer=c.findById(Integer.valueOf(idString));
 				if(customer!=null)
 				{
-					customer.setCustomerValueLevel(Integer.valueOf(levelString));
+					customer.setCustomerLevel(Integer.valueOf(levelString));
 					if(c.save(customer))
 					{
 						retj40.put("IsOk", true);
@@ -3154,7 +3214,7 @@ public class CrmServlet extends HttpServlet {
 				response.setContentType("text/html;charset=utf-8");
 				response.getWriter().write(retj40.toString());
 			}break;
-		case 41://升级潜在客户
+		case 41://升级潜在客户@表示必填属性
 			JSONObject retObj41=new JSONObject();
 			try 
 			{
@@ -3240,8 +3300,8 @@ public class CrmServlet extends HttpServlet {
 					if(PaiType.equals("2"))//2表示周期结账
 						customer.setAccountCycle(Integer.parseInt(AccountCycle));
 				}else {
-					customer.setPayType(4);//4表示其它类型,也是因为不能为空
-					customer.setAccountCycle(13);//13表示不是同期结账，本来应为空的，但由于数据库设计该字段不能为空
+					customer.setPayType(4);//4表示其它类型,因为不能为空
+					customer.setAccountCycle(13);//13表示不是周期结账，本来应为空的，但由于数据库设计该字段不能为空
 				}
 				
 				if(CustomerValueLevel!=null&&!CustomerValueLevel.equals(""))customer.setCustomerValueLevel(Integer.parseInt(CustomerValueLevel));
@@ -3275,16 +3335,17 @@ public class CrmServlet extends HttpServlet {
 			
 				InsideContactor ic=new InsideContactor();
 				SysUser s=new SysUser();
-				s.setId(Integer.parseInt(InsideContactorId));
-				
+				if(InsideContactorId!=null&&!InsideContactorId.equals(""))
+					s.setId(Integer.parseInt(InsideContactorId));
 				ic.setSysUser(s);
 				ic.setCustomer(customer);
-				ic.setRole(Integer.parseInt(Role));
+				if(Role!=null&&!Role.equals(""))
+					ic.setRole(Integer.parseInt(Role));
 				boolean resu = cusmag.save(customer, customercontactor,ic);
 				boolean resu2=  pcm.deleteById(Integer.parseInt(Del_id));
 				
-				retObj41.put("IsOK", resu&&resu2);
-				retObj41.put("msg", resu?"升级成功！":"升级失败，请重试！");
+				retObj41.put("IsOk", resu&&resu2);
+				retObj41.put("msg", resu&&resu2?"升级成功！":"升级失败，请重试！");
 			
 				
 			} catch (Exception e) {
@@ -3345,12 +3406,14 @@ public class CrmServlet extends HttpServlet {
 				//String returnInfo=request.getParameter("ReturnVisitInfo");
 				String Analysis=request.getParameter("Analysis");
 				String feedbackId=request.getParameter("FeedbackId");
+				String isHf=request.getParameter("isHf");
 				//FeedbackManager fbm=new FeedbackManager();
 				CustomerFeedback cus=fbm.FindById(Integer.parseInt(feedbackId));
 				if(cus!=null)
 				{
 					cus.setAnalysis(Analysis);
-					cus.setStatus(4);//已结束
+					cus.setStatus(isHf==null?4:5);//若需要回访这状态变为“未回访”5，否则状态之间改为“已结束”4
+						
 					if(fbm.update(cus))
 					{
 						retObj43.put("IsOk", true);
@@ -3388,7 +3451,7 @@ public class CrmServlet extends HttpServlet {
 				if(cus!=null)
 				{
 					cus.setReturnVisitInfo(returnInfo);
-					cus.setStatus(5);//已回访
+					cus.setStatus(4);//已回访
 					if(fbm.update(cus))
 					{
 						retObj44.put("IsOk", true);
@@ -3419,7 +3482,7 @@ public class CrmServlet extends HttpServlet {
 				response.getWriter().write(retObj44.toString());
 			}
 			break;
-		case 45:
+		case 45://应用修改后的参数重新计算价值等级..
 			JSONObject retObj45=new JSONObject();
 			try {
 				
@@ -3436,7 +3499,7 @@ public class CrmServlet extends HttpServlet {
 				Double avg2=0.0;
 				
 				double qj[]={0.05,0.05,0.05,0.05,0.05,0.05,0.7};//默认值
-				qj[0]=mpMyParameters.getLevelPercentage1();
+				qj[0]=mpMyParameters.getLevelPercentage1();//区间1
 				qj[1]=qj[0]+mpMyParameters.getLevelPercentage2();
 				qj[2]=qj[1]+mpMyParameters.getLevelPercentage3();
 				qj[3]=qj[2]+mpMyParameters.getLevelPercentage4();
@@ -3454,15 +3517,15 @@ public class CrmServlet extends HttpServlet {
 						"where a.Status=4";//查询总产值和全所平均每次产值
 				String str2="select sum(b.TotalFee) as Total,AVG(b.TotalFee) as Average,COUNT(b.Id) as JianShu " +
 						"from CommissionSheet as a left outer join OriginalRecord as b on a.Id=b.CommissionSheetId " +
-						"where a.Status=4 and b.Status=0";//查询总产值和全所平均每件产值
+						"where a.Status=4 and b.Status=0";//查询总产值和全所平均每件产值;已结账
 				String str3="select c.Id,c.Name,sum(a.TotalFee) as TOTAL,AVG(a.TotalFee) as AVERAGE " +
-						"from Customer as c left outer join CommissionSheet as a on c.Id=a.CustomerId " +
-						"group by c.Id,c.Name";//客户总产值和平均每次产值
+						"from Customer as c left outer join CommissionSheet as a on c.Id=a.CustomerId and a.status=4" +
+						"group by c.Id,c.Name";//客户总产值和平均每次产值;已结账
 				String str4="select c.Id,Total,Average from customer as c left outer join " +
 						"(select a.CustomerId,sum(b.TotalFee) as Total,AVG(b.TotalFee) as Average,COUNT(b.Id) as JianShu " +
 						"from CommissionSheet as a left outer join OriginalRecord as b on a.Id=b.CommissionSheetId " +
 						"where a.Status=4 and b.Status=0 " +
-						"group by a.CustomerId)as d on c.Id=d.CustomerId";//客户总产值和平均每件产值
+						"group by a.CustomerId)as d on c.Id=d.CustomerId";//客户总产值和平均每件产值;已结账
 				BaseHibernateDAO d=new BaseHibernateDAO();
 				List<Object> keys=new ArrayList<Object>();
 				
@@ -3473,7 +3536,7 @@ public class CrmServlet extends HttpServlet {
 				int c[]={0,0,0,0,0,0,0};
 				for(int i=0;i<7;++i)
 				{
-					c[i]=(int) (TotalCustomer*qj[i]);
+					c[i]=(int) (TotalCustomer*qj[i]/100);//按照百分数计算每个等级的数量
 				}
 					
 				lObjects=d.findBySQL(str1, keys);
@@ -3532,26 +3595,26 @@ public class CrmServlet extends HttpServlet {
 						CustomerManager cManager=new CustomerManager();
 						Customer customer=new Customer();
 						customer=cManager.findById(w.get(jj).getID());
-							
+						if(i<7&&jj+1>c[i])++i;
 						customer.setCustomerValueLevel(1+i);
 						if(i==0||i==1)//VIP客户
 						{
 							customer.setCustomerLevel(1);//VIP客户
 						}
-						if(i==2||i==3)//重点客户
+						else if(i==2||i==3)//重点客户
 						{
 							customer.setCustomerLevel(2);//重点客户
 						}
-						if(i==4||i==5)//重要客户
+						else if(i==4||i==5)//重要客户
 						{
 							customer.setCustomerLevel(3);//重要客户
 						}
-						if(i==6)//一般客户
+						else //if(i==6)//一般客户
 						{
 							customer.setCustomerLevel(4);//一般客户
 						}
 						m_dao.save(customer);
-						if(i<7&&jj+1>c[i])++i;
+						//if(i<7&&jj+1>c[i])++i;
 					}
 					tran.commit();
 					retObj45.put("IsOk", true);
@@ -3561,7 +3624,7 @@ public class CrmServlet extends HttpServlet {
 					e.printStackTrace();
 					tran.rollback();
 					retObj45.put("IsOk", false);
-					retObj45.put("msg"," 更新失败！");
+					retObj45.put("msg"," 更新失败！\n请检查参数是否满足要求！");
 				} finally {
 					m_dao.closeSession();
 				}//w[i]=theta1*lm[i].Total/tatal1+theta2*lm2[i].Avg/avg2+theta3*lm[i].Avg/avg1
@@ -3575,7 +3638,7 @@ public class CrmServlet extends HttpServlet {
 					e1.printStackTrace();
 				}
 				try {
-					retObj45.put("msg"," 更新失败！");
+					retObj45.put("msg"," 更新失败！\n请检查参数是否满足要求！");
 				} catch (JSONException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -3626,7 +3689,7 @@ public class CrmServlet extends HttpServlet {
 			}
 			break;
 			
-		case 47://修改参数//这里需要校验level1+level2+...+level7等于1等条件
+		case 47://修改参数//这里需要满足level1+level2+...+level7小于等于100等条件；；已在前台校验
 			JSONObject retObj47=new JSONObject();
 			try {
 				MyParameters mParameters=new MyParameters();
@@ -3689,33 +3752,69 @@ public class CrmServlet extends HttpServlet {
 				int day = calendar.get(Calendar.DAY_OF_YEAR);
 				calendar.set(Calendar.DAY_OF_YEAR, day + 10);
 				java.util.Date endDate = calendar.getTime();
-				calendar.set(Calendar.DAY_OF_YEAR, day - 10);
+				calendar.set(Calendar.DAY_OF_YEAR, day - 1);
 				java.util.Date beginDate = calendar.getTime();
-				calendar.set(Calendar.DAY_OF_YEAR, day - 30);
-				java.util.Date monthAgo = calendar.getTime();
-				String queryStr="select out from InsideContactor as inside ,CustomerContactor as out where inside.customer = out.customer and out.status = 0 and  inside.sysUser = ? and out.birthday > ? and out.birthday < ? and out.customer not in (select cc.customer from CustomerCareness as cc where cc.time > ?)";
+				calendar.set(Calendar.DAY_OF_YEAR, day + 30);
+				java.util.Date monthBefore = calendar.getTime();
+//				String queryStr="select out from InsideContactor as inside ,CustomerContactor as out where inside.customer = out.customer and out.status = 0 and  inside.sysUser = ? and out.birthday > ? and out.birthday < ? and out.customer not in (select cc.customer from CustomerCareness as cc where cc.time > ?)";
+				String queryStr="select out from InsideContactor as inside ,CustomerContactor as out where inside.customer.id = out.customerId and out.status = 0 and  inside.sysUser = ? and out.birthday >= ? and out.birthday <= ?";
 				CustomerCarenessManager customerCarenessManager = new CustomerCarenessManager();
-				List<CustomerContactor> customerContactors = customerCarenessManager.findPageAllByHQL(queryStr, page, rows, sysUser,beginDate,endDate,monthAgo);
+				List<CustomerContactor> customerContactors = customerCarenessManager.findPageAllByHQL(queryStr, page, rows, sysUser,beginDate,endDate);
 				List<Warning> warnings = new ArrayList<Warning>();
+				CustomerManager customerManager = new CustomerManager();
 				for (CustomerContactor customerContactor : customerContactors) {
 					Warning warning = new Warning();
 					warning.setCustomerContactor(customerContactor);
-					warning.setType(1);
-					if(customerContactor.getCustomer().getCustomerLevel() == 1)
+					warning.setType(1);				
+					Customer c = customerManager.findById(customerContactor.getCustomerId());
+					if(c.getCustomerLevel() == null)
+						warning.setPriority(3);
+					else if(c.getCustomerLevel() == 1)
 						warning.setPriority(1);
-					else if(customerContactor.getCustomer().getCustomerLevel() == 2 || customerContactor.getCustomer().getCustomerLevel() == 3)
+					else if(c.getCustomerLevel() == 2 || c.getCustomerLevel() == 3)
 						warning.setPriority(2);
 					else 
 						warning.setPriority(3);
 					warnings.add(warning);
 				}
+				
+				BaseHibernateDAO baseHibernateDAO = new BaseHibernateDAO();
+				String queryDeadline = "select out, Orecord.validity from InsideContactor as inside ,CustomerContactor as out, OriginalRecord as Orecord where inside.customer.id = out.customerId and out.status = 0 and  inside.sysUser = ? and inside.customer.id = Orecord.commissionSheet.customerId and Orecord.validity > ? and Orecord.validity < ?";
+				List<Object[]> ws = baseHibernateDAO.findPageAllByHQL(queryDeadline, page, rows, sysUser,beginDate,monthBefore);
+				for (Object[] o: ws) {
+					Warning warning = new Warning();
+					warning.setCustomerContactor((CustomerContactor) o[0]);
+					warning.setType(2);
+					warning.setValidity((java.util.Date) o[1]);
+					Customer c = customerManager.findById(warning.getCustomerContactor().getCustomerId());
+					if(c.getCustomerLevel() == null)
+						warning.setPriority(3);
+					else if(c.getCustomerLevel() == 1)
+						warning.setPriority(1);
+					else if(c.getCustomerLevel() == 2 || c.getCustomerLevel() == 3)
+						warning.setPriority(2);
+					else 
+						warning.setPriority(3);
+					warnings.add(warning);
+				}
+				
+				Collections.sort(warnings,new Comparator<Warning>(){
+					@Override
+					public int compare(Warning o1, Warning o2) {
+						// TODO Auto-generated method stub
+						return o1.getPriority() > o2.getPriority() ? 1 : 0;
+					}
+				});
+				
 				JSONArray options = new JSONArray();
 				for (Warning warning : warnings) {
 					JSONObject object = new JSONObject();
+					Customer c = customerManager.findById(warning.getCustomerContactor().getCustomerId());
 					object.put("name", warning.getCustomerContactor().getName());
-					object.put("birthday", warning.getCustomerContactor().getBirthday()==null?"":DateFormat.getDateInstance().format(warning.getCustomerContactor().getBirthday()));
+					object.put("date", warning.getType()==1?(warning.getCustomerContactor().getBirthday()==null?"":DateFormat.getDateInstance().format(warning.getCustomerContactor().getBirthday())):warning.getValidity());
+//					object.put("date", warning.getCustomerContactor().getBirthday()==null?"":DateFormat.getDateInstance().format(warning.getCustomerContactor().getBirthday()));
 					object.put("type",warning.getType());
-					object.put("customer",warning.getCustomerContactor().getCustomer().getName());
+					object.put("customer",c.getName());
 					object.put("priority",warning.getPriority());
 					options.put(object);
 				}
@@ -3743,22 +3842,24 @@ public class CrmServlet extends HttpServlet {
 				int day = calendar.get(Calendar.DAY_OF_YEAR);
 				calendar.set(Calendar.DAY_OF_YEAR, day + 10);
 				java.util.Date endDate = calendar.getTime();
-				calendar.set(Calendar.DAY_OF_YEAR, day - 10);
+				calendar.set(Calendar.DAY_OF_YEAR, day - 1);
 				java.util.Date beginDate = calendar.getTime();
-				calendar.set(Calendar.DAY_OF_YEAR, day - 30);
-				java.util.Date monthAgo = calendar.getTime();
-				String queryStr="select count(*) from InsideContactor as inside ,CustomerContactor as out where inside.customer = out.customer and out.status = 0 and  inside.sysUser = ? and out.birthday > ? and out.birthday < ? and out.customer not in (select cc.customer from CustomerCareness as cc where cc.time > ?)";
+				calendar.set(Calendar.DAY_OF_YEAR, day + 30);
+				java.util.Date monthBefore = calendar.getTime();
+				String queryStr="select count(*) from InsideContactor as inside ,CustomerContactor as out where inside.customer.id = out.customerId and out.status = 0 and  inside.sysUser = ? and out.birthday >= ? and out.birthday <= ?";
+				String queryDeadline = "select count(*) from InsideContactor as inside ,CustomerContactor as out, OriginalRecord as Orecord where inside.customer = out.customer and out.status = 0 and  inside.sysUser = ? and inside.customer.id = Orecord.commissionSheet.customerId and Orecord.validity > ? and Orecord.validity < ?";
 				CustomerCarenessManager customerCarenessManager = new CustomerCarenessManager();
 //				List<CustomerContactor> customerContactors = customerCarenessManager.findPageAllByHQL(queryStr, page, rows, sysUser,beginDate,endDate,monthAgo);
-				int total = customerCarenessManager.getTotalCountByHQL(queryStr, sysUser,beginDate,endDate,monthAgo);
+				int total = customerCarenessManager.getTotalCountByHQL(queryStr, sysUser,beginDate,endDate);
+				total += customerCarenessManager.getTotalCountByHQL(queryDeadline, sysUser,beginDate,monthBefore);
 				retObj49.put("total", total);
 				retObj49.put("IsOk", true);
 			} catch (Exception e) {
 				// TODO: handle exception
 				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
-					log.debug("exception in CrmServlet-->case 48", e);
+					log.debug("exception in CrmServlet-->case 49", e);
 				}else{
-					log.error("error in CrmServlet-->case 48", e);
+					log.error("error in CrmServlet-->case 49", e);
 				}
 			}
 			finally

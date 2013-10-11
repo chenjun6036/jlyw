@@ -49,7 +49,7 @@ public class ApplianceStandardNameServlet extends HttpServlet {
 				String appStanNameStr = req.getParameter("ApplianceStandardName");
 				if(appStanNameStr != null && appStanNameStr.trim().length() > 0){
 					String appStanName =  new String(appStanNameStr.trim().getBytes("ISO-8859-1"), "GBK");	//解决URL传递中文乱码问题
-					appStanName = LetterUtil.String2Alpha(appStanName);	//转换成拼音简码
+					//appStanName = LetterUtil.String2Alpha(appStanName);	//转换成拼音简码
 					String[] queryName = appStanName.split(" \\s+");	//根据空格符分割
 					if(queryName.length == 0){
 						return;
@@ -61,8 +61,8 @@ public class ApplianceStandardNameServlet extends HttpServlet {
 							appStanName += "%";
 					}
 					appStanName = "%" + appStanName + "%";
-					String queryString = String.format("from ApplianceStandardName as model where model.brief like ? and model.status = 0");
-					List<ApplianceStandardName> retList = appstannameMgr.findPageAllByHQL(queryString, 1, 30, appStanName);
+					String queryString = String.format("from ApplianceStandardName as model where (model.brief like ? or model.name like ?)and model.status = 0");
+					List<ApplianceStandardName> retList = appstannameMgr.findPageAllByHQL(queryString, 1, 30, appStanName, appStanName);
 					if(retList != null){
 						for(ApplianceStandardName temp : retList){
 							JSONObject jsonObj = new JSONObject();

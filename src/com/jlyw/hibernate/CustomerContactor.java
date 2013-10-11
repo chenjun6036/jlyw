@@ -11,7 +11,7 @@ public class CustomerContactor implements java.io.Serializable {
 	// Fields
 
 	private Integer id;
-	private Customer customer;
+	private Integer customerId;
 	private String name;
 	private String cellphone1;
 	private String cellphone2;
@@ -33,9 +33,10 @@ public class CustomerContactor implements java.io.Serializable {
 	}
 
 	/** minimal constructor */
-	public CustomerContactor(Customer customer, String name, String cellphone1,
-			Timestamp lastUse, Integer count) {
-		this.customer = customer;
+	public CustomerContactor(Integer id, Integer customerId, String name,
+			String cellphone1, Timestamp lastUse, Integer count) {
+		this.id = id;
+		this.customerId = customerId;
 		this.name = name;
 		this.cellphone1 = cellphone1;
 		this.lastUse = lastUse;
@@ -43,11 +44,13 @@ public class CustomerContactor implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public CustomerContactor(Customer customer, String name, String cellphone1,
-			String cellphone2, String email, Timestamp lastUse, Integer count,
+	public CustomerContactor(Integer id, Integer customerId, String name,
+			String cellphone1, String cellphone2, String email,
+			Timestamp lastUse, Integer count,
 			String remark, Timestamp birthday, Integer status,
 			String formerDep, String formerJob, String curDep, String curJob) {
-		this.customer = customer;
+		this.id = id;
+		this.customerId = customerId;
 		this.name = name;
 		this.cellphone1 = cellphone1;
 		this.cellphone2 = cellphone2;
@@ -73,12 +76,12 @@ public class CustomerContactor implements java.io.Serializable {
 		this.id = id;
 	}
 
-	public Customer getCustomer() {
-		return this.customer;
+	public Integer getCustomerId() {
+		return this.customerId;
 	}
 
-	public void setCustomer(Customer customer) {
-		this.customer = customer;
+	public void setCustomerId(Integer customerId) {
+		this.customerId = customerId;
 	}
 
 	public String getName() {

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
-<title>业务查询</title>
+<title>同比环比查询</title>
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -98,7 +98,7 @@
 			});
 				
 			$('#table6').datagrid({
-			    width:1000,
+			    width:800,
 				height:500,
 				title:'业务查询结果',
 //				iconCls:'icon-save',
@@ -122,20 +122,20 @@
 					{field:'Avg',title:'平均费用(每个委托单)',width:160,align:'center',sortable:true},
 					
 					{field:'TotalFee',title:'总费用(上年)',width:70,align:'center'},
-					{field:'TestFee',title:'检测费(上年)',width:70,align:'center'},
+					/* {field:'TestFee',title:'检测费(上年)',width:70,align:'center'},
 					{field:'RepairFee',title:'修理费(上年)',width:70,align:'center'},
 					{field:'MaterialFee',title:'材料费(上年)',width:70,align:'center'},
 					{field:'DebugFee',title:'调试费(上年)',width:70,align:'center'},
 					{field:'CarFee',title:'交通费(上年)',width:70,align:'center'},
-					{field:'OtherFee',title:'其他费用(上年)',width:70,align:'center'},
+					{field:'OtherFee',title:'其他费用(上年)',width:70,align:'center'}, */
 					{field:'Times2',title:'委托单个数(当年)',width:80,align:'center'},
 					{field:'TotalFee2',title:'总费用(当年)',width:70,align:'center'},
-					{field:'TestFee2',title:'检测费(当年)',width:70,align:'center'},
+					/* {field:'TestFee2',title:'检测费(当年)',width:70,align:'center'},
 					{field:'RepairFee2',title:'修理费(当年)',width:70,align:'center'},
 					{field:'MaterialFee2',title:'材料费(当年)',width:70,align:'center'},
 					{field:'DebugFee2',title:'调试费(当年)',width:70,align:'center'},
 					{field:'CarFee2',title:'交通费(当年)',width:70,align:'center'},
-					{field:'OtherFee2',title:'其他费用(当年)',width:70,align:'center'},
+					{field:'OtherFee2',title:'其他费用(当年)',width:70,align:'center'}, */
 					{field:'Increase',title:'增长额',width:70,align:'center'},
 					{field:'IncreaseRatio',title:'增长率',width:70,align:'center'}
                 ]],
@@ -143,19 +143,6 @@
 				rownumbers:true,
 				showFooter:true,
 				toolbar:[{
-					text:'查看委托单明细',
-					iconCls:'icon-search',
-					handler:function(){
-						var select  = $('#table6').datagrid('getSelected');
-						if(select==null)
-						{
-							$.messager.alert('提示','请选择一行数据！','warning');
-							return;
-						}
-						$('#SearchForm_Code').val(select.Code);
-						$('#SearchForm').submit();
-					}
-				},'-',{
 						text:'导出',
 						iconCls:'icon-save',
 						handler:function(){
@@ -178,14 +165,14 @@
 								}
 							});
 					}
-				},'-',{
+				},'-'/* ,{
 					text:'打印',
 					iconCls:'icon-print',
 					handler:function(){
 						$('#PrintStr').val(JSON.stringify($('#table6').datagrid('options').queryParams));
 						$('#formLook').submit();
 					}
-				}],
+				} */],
 				rowStyler:function(rowIndex, rowData){
 					if(rowData.Status == 10||rowData.Status == "10"){	//已注销
 						return 'color:#FF0000';
@@ -245,10 +232,10 @@
         </form>
    <br />
 <div style="+position:relative;">
-     <div id="p" class="easyui-panel" style="width:1000px;height:150px;padding:10px;"
+     <div id="p" class="easyui-panel" style="width:850px;height:150px;padding:10px;"
 				title="查询条件" collapsible="false"  closable="false">
                 <form id="query">
-			<table width="950px" id="table1">
+			<table width="800px" id="table1">
 				<!-- <tr height="30px">
 					<td width="20%" align="right">委托单位：</td>
 					<td width="22%" align="left">
@@ -276,8 +263,8 @@
         </form>
 		</div>
         <br />
-      <div style="width:1000px;height:500px;">
-	     <table id="table6" iconCls="icon-tip" width="1000px" height="500px" ></table>
+      <div style="width:850px;height:500px;">
+	     <table id="table6" iconCls="icon-tip" width="800px" height="500px" ></table>
 	  </div>
 	  <!--<div id="p2" class="easyui-panel" style="width:900px;height:120px;padding:10px;"
 				title="操作区" collapsible="false"  closable="false">

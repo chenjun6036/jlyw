@@ -16,9 +16,10 @@ public class LocaleMission implements java.io.Serializable {
 	private Region region;
 	private SysUser sysUserByModificatorId;
 	private Customer customer;
+	private Address address;  //Ì§Í·Ãû³Æ
 	private String customerName;
 	private String brief;
-	private String address;
+	private String address_1;
 	private String zipCode;
 	private String contactor;
 	private String tel;
@@ -45,8 +46,8 @@ public class LocaleMission implements java.io.Serializable {
 	/** minimal constructor */
 	public LocaleMission(SysUser sysUserByCreatorId, Region region,
 			SysUser sysUserByModificatorId, Customer customer,
-			String customerName, String brief, String address, String zipCode,
-			String contactor, String tel, String contactorTel,
+			String customerName, String brief, String address_1,
+			String zipCode, String contactor, String tel, String contactorTel,
 			String department, Timestamp tentativeDate,
 			Timestamp modificatorDate, Integer status, Timestamp createTime,
 			String code) {
@@ -56,7 +57,7 @@ public class LocaleMission implements java.io.Serializable {
 		this.customer = customer;
 		this.customerName = customerName;
 		this.brief = brief;
-		this.address = address;
+		this.address_1 = address_1;
 		this.zipCode = zipCode;
 		this.contactor = contactor;
 		this.tel = tel;
@@ -72,9 +73,9 @@ public class LocaleMission implements java.io.Serializable {
 	/** full constructor */
 	public LocaleMission(SysUser sysUserByCreatorId,
 			SysUser sysUserBySiteManagerId, Region region,
-			SysUser sysUserByModificatorId, Customer customer,
-			String customerName, String brief, String address, String zipCode,
-			String contactor, String tel, String contactorTel,
+			SysUser sysUserByModificatorId, Customer customer, Address address,
+			String customerName, String brief, String address_1,
+			String zipCode, String contactor, String tel, String contactorTel,
 			String department, String staffs, Timestamp tentativeDate,
 			Timestamp exactTime, Timestamp modificatorDate, Integer status,
 			String remark, String feedback, Timestamp checkDate,
@@ -84,9 +85,10 @@ public class LocaleMission implements java.io.Serializable {
 		this.region = region;
 		this.sysUserByModificatorId = sysUserByModificatorId;
 		this.customer = customer;
+		this.address = address;
 		this.customerName = customerName;
 		this.brief = brief;
-		this.address = address;
+		this.address_1 = address_1;
 		this.zipCode = zipCode;
 		this.contactor = contactor;
 		this.tel = tel;
@@ -155,6 +157,14 @@ public class LocaleMission implements java.io.Serializable {
 		this.customer = customer;
 	}
 
+	public Address getAddress() {
+		return this.address;
+	}
+
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+
 	public String getCustomerName() {
 		return this.customerName;
 	}
@@ -171,12 +181,12 @@ public class LocaleMission implements java.io.Serializable {
 		this.brief = brief;
 	}
 
-	public String getAddress() {
-		return this.address;
+	public String getAddress_1() {
+		return this.address_1;
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
+	public void setAddress_1(String address_1) {
+		this.address_1 = address_1;
 	}
 
 	public String getZipCode() {

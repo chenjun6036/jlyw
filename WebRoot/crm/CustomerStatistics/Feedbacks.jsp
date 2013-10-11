@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>反馈信息管理</title>
+<title>查看反馈信息</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -53,7 +53,7 @@
 			
 		$(function(){
 			$('#customerName').combobox({
-				valueField:'name',
+				valueField:'id',
 				textField:'name',
 				onSelect:function(){},
 				onChange:function(newValue, oldValue){
@@ -82,7 +82,7 @@
 		function search2()
 			{
 			$('#table1').datagrid('options').url='/jlyw/CrmServlet.do?method=1';
-			$('#table1').datagrid('options').queryParams={'CustomerName':encodeURI($('#customerName').combobox('getValue')),'StartDate':encodeURI($('#startDate').datebox('getValue')),'EndDate':encodeURI($('#endDate').datebox('getValue')),'ComplainAbout':encodeURI($('#complainAbout').combobox('getValue'))};
+			$('#table1').datagrid('options').queryParams={'CustomerName':encodeURI($('#customerName').combobox('getValue')),'StartDate':encodeURI($('#startDate').datebox('getValue')),'EndDate':encodeURI($('#endDate').datebox('getValue'))/* ,'ComplainAbout':encodeURI($('#complainAbout').combobox('getValue')) */};
 			$('#table1').datagrid('reload');
 			}
 		$(function(){
@@ -105,7 +105,7 @@
 					//{field:'Id',title:'编号',width:50,align:'center'},
 					{field:'CreateTime',title:'投诉时间',width:180,align:'center'},
 					{field:'CustomerName',title:'投诉单位',width:100,align:'center'},
-					{field:'ComplainAbout',title:'投诉对象',width:100,align:'center',
+					/* {field:'ComplainAbout',title:'投诉对象',width:100,align:'center',
 					formatter:function(value,rowData,rowIndex){
 							if(value == 0 || value == '0')
 							{
@@ -130,9 +130,9 @@
 								rowData['ComplainAbout']=4;
 								return "其它";
 							}
-						}},
+						}}, */
 					{field:'CustomerContactorName',title:'投诉人',width:80,align:'center'},
-					{field:'HandleLevel',title:'处理级别',width:80,align:'center',
+					/* {field:'HandleLevel',title:'处理级别',width:80,align:'center',
 					formatter:function(value,rowData,rowIndex){
 							if(value == 0 || value == '0')
 							{
@@ -149,7 +149,7 @@
 								rowData['CustomerType']=2;
 								return "低";
 							}
-						}},
+						}}, */
 						{field:'ActulStartTime',title:'实际开始时间',width:80,align:'center'},
 						{field:'ActulEndTime',title:'实际结束时间',width:80,align:'center'},
 						{field:'Feedback',title:'反馈内容',width:80,align:'center'},
@@ -168,17 +168,19 @@
 						
 					{field:'Status',title:'状态',width:80,align:'center',
 					formatter:function(value,rowData,rowIndex){
-							if(value == 0 || value == '0')
-							{
-								rowData['Status']=0;
-							    return "正常";
-							}
-							else
+							if(value == 1)
 							{
 								rowData['Status']=1;
-								return '<span style="color:red">注销</span>';
+								return "未开始";
 							}
-							
+							else if(value == 2)
+								return "进行中";
+							else if(value == 3)
+								return "已处理";
+							else if(value == 4)
+								return "已结束";
+							else if(value == 5)
+								return "待回访";							
 						}}
 					//{field:'HandleLevel',title:'',width:100,align:'center'}
 				]],
@@ -259,7 +261,7 @@
 			
 			<td></td>
 		</tr>
-		<tr>
+		<!-- <tr>
 			<td align="right">投诉对象：</td>
 			<td><select id="complainAbout" name="ComplainAbout" class="easyui-combobox">
 			<option value="0">部门</option>
@@ -269,7 +271,7 @@
 			<option value="4">其它</option>
 			</select></td>
 			<td></td>
-		</tr>
+		</tr> -->
 		<tr>
 			<td align="right" style="width:20%">投诉时间:从</td>
 			<td align="left" style="width:30%">

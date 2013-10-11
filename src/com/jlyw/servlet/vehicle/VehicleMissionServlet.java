@@ -2,7 +2,6 @@ package com.jlyw.servlet.vehicle;
 
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,18 +20,13 @@ import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
-import com.jlyw.hibernate.BaseHibernateDAO;
 import com.jlyw.hibernate.DrivingVehicle;
 import com.jlyw.hibernate.LocaleApplianceItem;
 import com.jlyw.hibernate.LocaleMission;
-import com.jlyw.hibernate.Role;
 import com.jlyw.hibernate.SysUser;
-import com.jlyw.hibernate.UserRole;
 import com.jlyw.hibernate.VehicleFee;
 import com.jlyw.hibernate.VehicleMission;
-import com.jlyw.manager.CustomerManager;
 import com.jlyw.manager.DrivingVehicleManager;
-import com.jlyw.manager.UserRoleManager;
 import com.jlyw.manager.VehicleFeeManager;
 import com.jlyw.manager.vehicle.LocaleApplianceItemManager;
 import com.jlyw.manager.vehicle.LocaleMissionManager;
@@ -61,6 +55,8 @@ public class VehicleMissionServlet extends HttpServlet {
 				String Department=req.getParameter("Department");
 				String EndTime = req.getParameter("EndTime");
 				String MissionStatus = req.getParameter("MissionStatus");
+				String CustomerName = req.getParameter("CustomerName");
+				String LocaleCode = req.getParameter("LocaleCode");
 				if(StartTime==null){
 					StartTime="";
 				}
@@ -76,9 +72,17 @@ public class VehicleMissionServlet extends HttpServlet {
 				if(MissionStatus==null){
 					MissionStatus="1";
 				}
+				if(CustomerName==null){
+					CustomerName="";
+				}
+				if(LocaleCode==null){
+					LocaleCode="";
+				}
 				
 				Licence=URLDecoder.decode(Licence.trim(),"UTF-8");
 				Department=URLDecoder.decode(Department.trim(),"UTF-8");
+				CustomerName=URLDecoder.decode(CustomerName.trim(),"UTF-8");
+				LocaleCode=URLDecoder.decode(LocaleCode.trim(),"UTF-8");
 				int status=Integer.parseInt(MissionStatus);
 				
 				SysUser sysuser=(SysUser)req.getSession().getAttribute("LOGIN_USER");
@@ -112,36 +116,36 @@ public class VehicleMissionServlet extends HttpServlet {
 				List<VehicleMission> retList = null;
 				if(EndTime != null && EndTime.trim().length() > 0){//结束时间不为空
 					if(status==0){//查询登陆员工出车信息
-						 queryStr = "from VehicleMission as model where (model.drivingVehicle.sysUserByDriverId.id = ? or (model.drivingVehicle.people like ? or model.drivingVehicle.people like ? or model.drivingVehicle.people = ?)) and (model.drivingVehicle.beginDate >= ? and model.drivingVehicle.endDate <= ? and  (model.localeMission.status=1 or  model.localeMission.status = 2 )) and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ?";				
+						 queryStr = "from VehicleMission as model where (model.drivingVehicle.sysUserByDriverId.id = ? or (model.drivingVehicle.people like ? or model.drivingVehicle.people like ? or model.drivingVehicle.people = ?)) and (model.drivingVehicle.beginDate >= ? and model.drivingVehicle.endDate <= ? and  (model.localeMission.status=1 or  model.localeMission.status = 2 )) and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ? and model.localeMission.customerName like ? and model.localeMission.code like ?";				
 						 String coutSqlStr = "select count(*) "+queryStr;	
 						 //Timestamp End = new Timestamp(DateTimeFormatUtil.DateFormat.parse(EndTime.trim()).getTime());
 						 Timestamp End = Timestamp.valueOf(String.format(
 									"%s 23:59:00", EndTime.trim()));
-						 doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr,sysuser.getId(), "%" + username + ";%", "%;" + username + "%", username,  Start, End,"%" + Department + "%","%;" + Licence + "%");
-						 retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,sysuser.getId(), "%" + username + ";%", "%;" + username + "%" , username, Start, End,"%" + Department + "%","%" + Licence + "%");
+						 doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr,sysuser.getId(), "%" + username + ";%", "%;" + username + "%", username,  Start, End,"%" + Department + "%","%;" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
+						 retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,sysuser.getId(), "%" + username + ";%", "%;" + username + "%" , username, Start, End,"%" + Department + "%","%" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
 					}else{//查询全部出车信息
-						queryStr = "from VehicleMission as model where model.drivingVehicle.beginDate >= ? and model.drivingVehicle.endDate <= ? and  (model.localeMission.status=1 or  model.localeMission.status = 2 )  and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ?";				
+						queryStr = "from VehicleMission as model where model.drivingVehicle.beginDate >= ? and model.drivingVehicle.endDate <= ? and  (model.localeMission.status=1 or  model.localeMission.status = 2 )  and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ? and model.localeMission.customerName like ? and model.localeMission.code like ?";				
 						 String coutSqlStr = "select count(*) "+queryStr;	
 						 Timestamp End = Timestamp.valueOf(String.format(
 									"%s 23:59:00", EndTime.trim()));
 						
-						 doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr,Start, End,"%" + Department + "%","%" + Licence + "%");
-						 retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,Start, End,"%" + Department + "%","%" + Licence + "%");
+						 doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr,Start, End,"%" + Department + "%","%" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
+						 retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,Start, End,"%" + Department + "%","%" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
 					}
 				}else{//结束时间为空
 					if(status==0){//查询登陆员工出车信息
 						
-						queryStr = "from VehicleMission as model where (model.drivingVehicle.sysUserByDriverId.id = ? or (model.drivingVehicle.people like ? or model.drivingVehicle.people like ? or model.drivingVehicle.people = ?)) and (model.drivingVehicle.beginDate >= ? and  (model.localeMission.status=1 or  model.localeMission.status = 2 ) ) and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ?";
+						queryStr = "from VehicleMission as model where (model.drivingVehicle.sysUserByDriverId.id = ? or (model.drivingVehicle.people like ? or model.drivingVehicle.people like ? or model.drivingVehicle.people = ?)) and (model.drivingVehicle.beginDate >= ? and  (model.localeMission.status=1 or  model.localeMission.status = 2 ) ) and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ? and model.localeMission.customerName like ? and model.localeMission.code like ?";
 						String coutSqlStr = "select count(*) "+queryStr;	
-						doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr, sysuser.getId(), "%" + username + ";%", "%;" + username + "%", username, Start,"%" + Department + "%","%" + Licence + "%");
-						retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,sysuser.getId(), "%" + username + ";%", "%;" + username + "%", username, Start,"%" + Department + "%","%" + Licence + "%");
+						doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr, sysuser.getId(), "%" + username + ";%", "%;" + username + "%", username, Start,"%" + Department + "%","%" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
+						retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,sysuser.getId(), "%" + username + ";%", "%;" + username + "%", username, Start,"%" + Department + "%","%" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
 						
 					}else{//查询全部出车信息
 						
-						queryStr = "from VehicleMission as model where model.drivingVehicle.beginDate >= ? and (model.localeMission.status=1 or  model.localeMission.status = 2 ) and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ?";
+						queryStr = "from VehicleMission as model where model.drivingVehicle.beginDate >= ? and (model.localeMission.status=1 or  model.localeMission.status = 2 ) and model.localeMission.department like ? and model.drivingVehicle.vehicle.licence like ? and model.localeMission.customerName like ? and model.localeMission.code like ?";
 						String coutSqlStr = "select count(*) "+queryStr;	
 						doneTotal = locmissmag.getTotalCountByHQL(coutSqlStr,Start,"%" + Department + "%","%" + Licence + "%");
-						retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,Start,"%" + Department + "%","%" + Licence + "%");
+						retList = locmissmag.findPageAllByHQL(queryStr+" order by model.localeMission.createTime desc", page, rows,Start,"%" + Department + "%","%" + Licence + "%", "%" + CustomerName + "%", "%" + LocaleCode + "%");
 					}
 					
 				}
@@ -166,7 +170,7 @@ public class VehicleMissionServlet extends HttpServlet {
 						option.put("CreatorName", vm.getLocaleMission().getSysUserByCreatorId().getName());
 						option.put("CreateDate",DateTimeFormatUtil.DateTimeFormat.format(vm.getLocaleMission().getCreateTime()));
 						option.put("Customer", vm.getLocaleMission().getCustomerName());
-						option.put("Address", vm.getLocaleMission().getAddress());
+						option.put("Address", vm.getLocaleMission().getAddress_1());
 						option.put("Contactor", vm.getLocaleMission().getContactor());
 						option.put("Tel", vm.getLocaleMission().getTel());
 						option.put("ContactorTel", vm.getLocaleMission().getContactorTel());
@@ -243,7 +247,10 @@ public class VehicleMissionServlet extends HttpServlet {
 				LocaleMission localemission=locmissmag.findById(id).getLocaleMission();
 				String licence=locmissmag.findById(id).getDrivingVehicle().getVehicle().getLicence();
 				DrivingVehicle driVe=locmissmag.findById(id).getDrivingVehicle();
-										
+				
+				if(localemission.getStatus()==2)
+					throw new Exception(String.format("现场任务%s已完成，不可删除车辆分配记录。", localemission.getCode()));
+				
 				if(!locmissmag.deleteById(id))
 					throw new Exception("删除车辆任务失败！");
 				
@@ -887,7 +894,7 @@ public class VehicleMissionServlet extends HttpServlet {
 						option.put("Brief", loc.getBrief());
 						option.put("RegionId", loc.getRegion().getId());
 						option.put("Region", loc.getRegion().getName());
-						option.put("Address", loc.getAddress());
+						option.put("Address", loc.getAddress_1());
 						option.put("Remark", loc.getRemark()==null?"":loc.getRemark());
 						option.put("Tel", loc.getTel());
 						option.put("ZipCode", loc.getZipCode());

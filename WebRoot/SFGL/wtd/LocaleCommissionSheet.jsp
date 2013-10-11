@@ -69,6 +69,7 @@ $(function(){
 	<DIV class="JlywCenterLayoutDIV">  
 		<form id="CommissionSheetForm" method="post" >
 			<input type="hidden" name="Appliances" id="Appliances" value="" />
+			<input type="hidden" name="ComSheetType" id="ComSheetType" value="2" /><!-- 现场向委托单导入的标识符，新建委托单界面应为空 -->
 		 <div class="easyui-panel" style="width:1005px; margin:0px; padding:0px" title="新建现场委托单">
 			<br />
 			
@@ -137,7 +138,7 @@ $(function(){
 					
 			    </td>
                 <td align="center" colspan="2">
-					<!--<a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-print" name="print">打印标签</a>-->
+					<a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-print" onclick="doPrintCommissionSheet()" >打印所选委托单</a>
 			  </td>
 			</tr>
 	  </table>

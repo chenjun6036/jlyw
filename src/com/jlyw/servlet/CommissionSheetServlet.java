@@ -24,10 +24,12 @@ import com.jlyw.hibernate.ApplianceManufacturer;
 import com.jlyw.hibernate.AppliancePopularName;
 import com.jlyw.hibernate.ApplianceSpecies;
 import com.jlyw.hibernate.ApplianceStandardName;
+import com.jlyw.hibernate.CertificateFeeAssign;
 import com.jlyw.hibernate.CommissionSheet;
 import com.jlyw.hibernate.Customer;
 import com.jlyw.hibernate.CustomerContactor;
 import com.jlyw.hibernate.LocaleApplianceItem;
+import com.jlyw.hibernate.OriginalRecord;
 import com.jlyw.hibernate.Reason;
 import com.jlyw.hibernate.SubContract;
 import com.jlyw.hibernate.SubContractor;
@@ -103,6 +105,9 @@ public class CommissionSheetServlet extends HttpServlet{
 					String PickupAddress = req.getParameter("PickupAddress");		//取件地址
 					
 					String Appliances = req.getParameter("Appliances").trim();	//检验的器具
+					
+					String ComSheetType = req.getParameter("ComSheetType").trim();	//现场向委托单导入的标识符，新建委托单界面应为空 
+					
 					JSONArray appliancesArray = new JSONArray(Appliances);	//检查的器具
 					String LocaleCommissionCode = null;	//现场委托单号
 					Timestamp LocaleCommissionDate = null;	//现场检测时间
@@ -150,7 +155,7 @@ public class CommissionSheetServlet extends HttpServlet{
 							throw new Exception(String.format("报价单号:%s 无效！", QuotationId));
 						}
 					}
-					if(CommissionType.equals("2")){	//现场检测
+					if(CommissionType.equals("2")&&ComSheetType!=null&&ComSheetType.length()>0){	//现场检测
 						LocaleCommissionCode = req.getParameter("LocaleCommissionCode");	//现场委托单号
 						String LocaleCommissionDateStr = req.getParameter("LocaleCommissionDate");	//现场检测时间
 						String LocaleStaffName = req.getParameter("LocaleStaffId");	//现场负责人姓名
@@ -269,7 +274,7 @@ public class CommissionSheetServlet extends HttpServlet{
 							comSheet.setAttachment(UIDUtil.get22BitUID());	//附件集名称
 							
 							/**********************   现场业务信息   ************************/
-							if(CommissionType.equals("2")){
+							if(CommissionType.equals("2")&&ComSheetType!=null&&ComSheetType.length()>0){
 								if(!jsonObj.has("LocaleApplianceId") || jsonObj.get("LocaleApplianceId").toString().length() == 0){	//现场检测条目Id
 									throw new Exception("现场检测信息不完整：现场检测条目ID为空！");
 								}
@@ -400,14 +405,14 @@ public class CommissionSheetServlet extends HttpServlet{
 							comList.add(comSheet);
 						}
 						//如果为现场检测，判断本次检测的器具数目是否与现场委托书的器具数目相等
-						if(CommissionType.equals("2")){
-							int totalLocAppItem = locAppItemMgr.getTotalCount(new KeyValueWithOperator("localeMission.code", LocaleCommissionCode, "="));
+						if(CommissionType.equals("2")&&ComSheetType!=null&&ComSheetType.length()>0){
+							int totalLocAppItem = locAppItemMgr.getTotalCount(new KeyValueWithOperator("localeMission.code", LocaleCommissionCode, "="),new KeyValueWithOperator("localeMission.status", 3, "<>"));
 							if(totalLocAppItem != comList.size()){
 								throw new Exception("现场委托书号："+LocaleCommissionCode+" 下的器具条目数量与本次提交的器具条目数量不一致！");
 							}
 						}
 						
-						if(cSheetMgr.saveByBatch(comList,subConList,alloteeList,(SysUser)req.getSession().getAttribute("LOGIN_USER"),(SysUser)req.getSession().getAttribute("LOGIN_USER"),today)){
+						if(cSheetMgr.saveByBatch(comList,subConList,alloteeList,(SysUser)req.getSession().getAttribute("LOGIN_USER"),(SysUser)req.getSession().getAttribute("LOGIN_USER"),today,ComSheetType)){
 							try{
 								/************  更新或新增委托单位联系人   *************/
 								if(ContactPerson.length() > 0){
@@ -427,12 +432,7 @@ public class CommissionSheetServlet extends HttpServlet{
 											cusConMgr.update(c);
 										}else{
 											CustomerContactor c = new CustomerContactor();
-											///////////////////////////////////////
-											Customer a=new Customer();
-											a.setId(CustomerId);
-											c.setCustomer(a);
-											//////////////////////////////////////
-											//c.setCustomerId(CustomerId);
+											c.setCustomerId(CustomerId);
 											c.setName(ContactPerson);
 											c.setCellphone1(ContactorTel);
 											c.setLastUse(today);
@@ -460,6 +460,19 @@ public class CommissionSheetServlet extends HttpServlet{
 								JSONObject printRecord = new JSONObject();
 								printRecord.put("Code", comSheet.getCode());	//委托单号
 								printRecord.put("Pwd", comSheet.getPwd());	//委托单密码
+								if (comSheet.getLocaleCommissionCode()!=null) {									//现场委托书号
+									printRecord.put("LocaleCommissionCode", comSheet.getLocaleCommissionCode());	
+								}
+								else
+									printRecord.put("LocaleCommissionCode", "");
+								
+								if(comSheet.getLocaleStaffId()!=null){											//现场负责人
+									SysUser Staff = (new UserManager()).findById(comSheet.getLocaleStaffId());
+									printRecord.put("LocaleCommissionStaff", Staff.getName());
+								}
+								else
+									printRecord.put("LocaleCommissionStaff", "");
+								
 								printRecord.put("CommissionDate", sdf.format(comSheet.getCommissionDate()));	//委托日期
 								printRecord.put("CustomerName", comSheet.getCustomerName());	//委托单位名称
 								printRecord.put("CustomerTel", comSheet.getCustomerTel());	//委托单位电话
@@ -469,6 +482,15 @@ public class CommissionSheetServlet extends HttpServlet{
 								printRecord.put("BillingTo", comSheet.getBillingTo());	//开票单位名称
 								
 								printRecord.put("ApplianceName", comSheet.getApplianceName());	//器具名称
+//								StringBuffer ApplianceInfo = new StringBuffer("");
+//								if(comSheet.getApplianceModel()!=null){
+//									ApplianceInfo.append(comSheet.getApplianceModel());
+//								}
+//								if(comSheet.getRange()!=null&&ApplianceInfo.toString().length()>0){
+//									ApplianceInfo.append("/").append(comSheet.getRange());
+//								}else if(comSheet.getRange()!=null&&ApplianceInfo.toString().length()==0){
+//									ApplianceInfo.append(comSheet.getRange());
+//								}
 								printRecord.put("ApplianceInfo",String.format("%s/%s/%s/%s", comSheet.getApplianceModel(),comSheet.getRange(),comSheet.getAccuracy(),comSheet.getManufacturer()));//器具信息
 								printRecord.put("ApplianceNumber",String.format("%s[%s]", comSheet.getAppFactoryCode(),comSheet.getAppManageCode()));//器具编号
 								printRecord.put("Quantity",comSheet.getQuantity().toString());//台件数
@@ -751,10 +773,13 @@ public class CommissionSheetServlet extends HttpServlet{
 							jsonObj.put("ApplianceSpeciesName", ApplianceSpeciesName);
 						}
 						jsonObj.put("HeadName", cSheet.getHeadNameId());
+						jsonObj.put("HeadNameName", cSheet.getHeadName());
 						jsonObj.put("RecipientAddress", cSheet.getSampleAddress());	//送样地址
 						jsonObj.put("PickupAddress", cSheet.getReportAddress());	//取样地址
 						
 						jsonObj.put("Model", cSheet.getApplianceModel());
+						jsonObj.put("Range", cSheet.getRange());
+						jsonObj.put("Accuracy", cSheet.getAccuracy());
 						jsonObj.put("ApplianceCode", cSheet.getAppFactoryCode());	//出厂编号
 						jsonObj.put("ApplianceManageCode", cSheet.getAppManageCode());	//管理编号
 						jsonObj.put("Manufacturer", cSheet.getManufacturer());
@@ -773,12 +798,13 @@ public class CommissionSheetServlet extends HttpServlet{
 						jsonObj.put("Attachment", cSheet.getAttachment());
 						jsonObj.put("Remark", cSheet.getRemark());
 						jsonObj.put("AlloteeRule", SystemCfgUtil.getTaskAllotRule()==0?0:1);
+						jsonObj.put("LocalMissionCode", cSheet.getLocaleCommissionCode()==null?"":cSheet.getLocaleCommissionCode());
 						retJSON3.put("CommissionObj", jsonObj);
 					}else{	
 						if(req.getParameter("Type")==null){
-							throw new Exception("委托单号或密码错误！"+req.getParameter("Type"));
+							throw new Exception("委托单号或密码错误！");
 						}else{
-							throw new Exception("委托单号或密码错误，或者该委托单不是预留委托单！"+req.getParameter("Type"));
+							throw new Exception("委托单号或密码错误，或者该委托单不是预留委托单！");
 						}
 					}
 				} catch (Exception e){
@@ -807,6 +833,7 @@ public class CommissionSheetServlet extends HttpServlet{
 					String CustomerName = req.getParameter("CustomerName");//委托单位名称
 					String DateFrom = req.getParameter("DateFrom");
 					String DateEnd = req.getParameter("DateEnd");
+					//String localeCode = req.getParameter("localeCode");
 					String Status = req.getParameter("Status");
 					int page = 1;
 					if (req.getParameter("page") != null)
@@ -837,6 +864,9 @@ public class CommissionSheetServlet extends HttpServlet{
 					if(Status != null && Status.length() > 0 ){
 						keys.add(new KeyValueWithOperator("status", Integer.valueOf(Status), "="));
 					}
+//					if(localeCode != null && localeCode.length() > 0 ){
+//						keys.add(new KeyValueWithOperator("localeCommissionCode", "%"+localeCode+"%", "like"));
+//					}
 					
 					List<CommissionSheet> cSheetRetList = cSheetMgr.findPagedAllBySort(page, rows, "commissionDate", false, keys);
 					int total = cSheetMgr.getTotalCount(keys);
@@ -1014,7 +1044,7 @@ public class CommissionSheetServlet extends HttpServlet{
 								wQuatity = cSheetRet.getQuantity() - ((Long)wQuantityList.get(0)).intValue();  //有效器具数量
 							}
 							int iSubContract = cSheetMgr.getTotalCountByHQL(hqlQueryString_SubContract, cSheetRet.getId());
-							if(iSubContract > 0 || cSheetRet.getCommissionType() == 5 ){	//该委托单有转包或该业务为其他业务，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
+							if(iSubContract > 0 || cSheetRet.getCommissionType() == 5||cSheetRet.getCommissionType() == 3 ){	//该委托单有转包或该业务为其他业务、公正计量，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
 								//无操作
 							}else{
 								if(finishQuantity < wQuatity){
@@ -1031,6 +1061,20 @@ public class CommissionSheetServlet extends HttpServlet{
 									}
 								}
 							}
+							
+							//转包业务没有转包/技术服务费不能完工确认
+							if(!cSheetRet.getSubcontract()){
+								CertificateFeeAssignManager feeAssignMgr = new CertificateFeeAssignManager();
+								List<CertificateFeeAssign> feeAssignList = feeAssignMgr.findByVarProperty(
+										new KeyValueWithOperator("commissionSheet.id", cSheetRet.getId(), "="),
+										new KeyValueWithOperator("originalRecord", null, "is null")
+										);
+								if(feeAssignList==null||feeAssignList.size()==0){
+									
+										throw new Exception(String.format("该委托单是转包业务但是没有录入转包/技术服务费!"));
+								}
+							}
+							
 							try{
 								cSheetMgr.commissionSheetFinishConfirm(cSheetRet, Handler, FinishLocation, today, wQuatity);
 								doneSuccessed++;
@@ -1117,6 +1161,18 @@ public class CommissionSheetServlet extends HttpServlet{
 						JSONObject printRecord = new JSONObject();
 						printRecord.put("Code", cSheet.getCode());	//委托单号
 						printRecord.put("Pwd", cSheet.getPwd());	//委托单密码
+						if (cSheet.getLocaleCommissionCode()!=null) {									//现场委托书号
+							printRecord.put("LocaleCommissionCode", cSheet.getLocaleCommissionCode());	
+						}
+						else
+							printRecord.put("LocaleCommissionCode", "");
+						
+						if(cSheet.getLocaleStaffId()!=null){											//现场负责人
+							SysUser Staff = (new UserManager()).findById(cSheet.getLocaleStaffId());
+							printRecord.put("LocaleCommissionStaff", Staff.getName());
+						}
+						else
+							printRecord.put("LocaleCommissionStaff", "");
 						printRecord.put("CommissionDate", sf.format(cSheet.getCommissionDate()));	//委托日期
 						printRecord.put("CustomerName", cSheet.getCustomerName());	//委托单位名称
 						printRecord.put("CustomerTel", cSheet.getCustomerTel());	//委托单位电话
@@ -1136,7 +1192,7 @@ public class CommissionSheetServlet extends HttpServlet{
 						printRecord.put("OtherRequirements", cSheet.getOtherRequirements());//其他要求
 						printRecord.put("Location", cSheet.getLocation());	//存放位置
 						printRecord.put("Allotee", cSheet.getAllotee());	//派定人
-						printRecord.put("ReceiverName", ((SysUser)req.getSession().getAttribute("LOGIN_USER")).getName());	//接收人姓名
+						printRecord.put("ReceiverName", cSheet.getReceiverName());	//接收人姓名
 						
 						Address RecipientAddressObj = cSheet.getSampleAddress()==null?null:addrMgr.findById(cSheet.getSampleAddress()); //样品接收地点
 						Address PickupAddressObj = cSheet.getReportAddress()==null?null:addrMgr.findById(cSheet.getReportAddress());	//取样、取报告地点
@@ -1243,7 +1299,7 @@ public class CommissionSheetServlet extends HttpServlet{
 							condList.add(new KeyValueWithOperator("commissionDate", new Timestamp(Date.valueOf(BeginDate).getTime()), ">="));
 						}
 						if(EndDate != null && EndDate.length() > 0){
-							condList.add(new KeyValueWithOperator("commissionDate", new Timestamp(Date.valueOf(EndDate).getTime()), "<"));
+							condList.add(new KeyValueWithOperator("commissionDate", new Timestamp(Date.valueOf(EndDate).getTime()), "<="));
 						}
 						if(ApplianceName != null && ApplianceName.trim().length() > 0 ){
 							String appName = URLDecoder.decode(ApplianceName.trim(), "UTF-8");
@@ -1316,6 +1372,18 @@ public class CommissionSheetServlet extends HttpServlet{
 								JSONObject printRecord = new JSONObject();
 								printRecord.put("Code", cSheet.getCode());	//委托单号
 								printRecord.put("Pwd", cSheet.getPwd());	//委托单密码
+								if (cSheet.getLocaleCommissionCode()!=null) {									//现场委托书号
+									printRecord.put("LocaleCommissionCode", cSheet.getLocaleCommissionCode());	
+								}
+								else
+									printRecord.put("LocaleCommissionCode", "");
+								
+								if(cSheet.getLocaleStaffId()!=null){											//现场负责人
+									SysUser Staff = (new UserManager()).findById(cSheet.getLocaleStaffId());
+									printRecord.put("LocaleCommissionStaff", Staff.getName());
+								}
+								else
+									printRecord.put("LocaleCommissionStaff", "");
 								printRecord.put("CommissionDate", sf.format(cSheet.getCommissionDate()));	//委托日期
 								printRecord.put("CustomerName", cSheet.getCustomerName());	//委托单位名称
 								printRecord.put("CustomerTel", cSheet.getCustomerTel());	//委托单位电话
@@ -1388,6 +1456,7 @@ public class CommissionSheetServlet extends HttpServlet{
 						String BeginDate = req.getParameter("BeginDate");
 						String EndDate = req.getParameter("EndDate");
 						String Code = req.getParameter("Code");	//委托单号
+						String localeCode = req.getParameter("localeCode");
 						
 						String CommissionStatus = req.getParameter("CommissionStatus");	//委托单状态：空字符串为全部；1为未完工；2为已完工确认的
 						
@@ -1414,11 +1483,18 @@ public class CommissionSheetServlet extends HttpServlet{
 							if(CommissionStatus.equals("1")){
 								condList.add(new KeyValueWithOperator("status", 3, "<"));//未完工
 							}else if(CommissionStatus.equals("2")){
-								condList.add(new KeyValueWithOperator("status", 3, ">="));//已完工确认
+								condList.add(new KeyValueWithOperator("status", 3, "="));//已完工确认
+							}else if(CommissionStatus.equals("4")){
+								condList.add(new KeyValueWithOperator("status", 4, "="));//已结账
+							}else if(CommissionStatus.equals("9")){
+								condList.add(new KeyValueWithOperator("status", 9, "="));//已结束
 							}
 						}
+						if(localeCode != null && localeCode.length() > 0 ){
+							condList.add(new KeyValueWithOperator("localeCommissionCode", "%"+localeCode+"%", "like"));
+						}
 						totalSize9 = cSheetMgr.getTotalCount(condList);
-						List<CommissionSheet> retList = cSheetMgr.findPagedAllBySort(page, rows, "commissionDate", false, condList);
+						List<CommissionSheet> retList = cSheetMgr.findPagedAllBySort(page, rows, "finishDate", false, condList);
 						if(retList != null && retList.size() > 0){
 							ApplianceSpeciesManager speciesMgr = new ApplianceSpeciesManager();
 							ApplianceStandardNameManager standardNameMgr = new ApplianceStandardNameManager();
@@ -1428,6 +1504,7 @@ public class CommissionSheetServlet extends HttpServlet{
 							String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 							String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 							String hqlQueryString_SubContract = "select count(*) from SubContract as model where model.commissionSheet.id=? and model.status<>1 and model.receiveDate is not null";
+							
 							for(CommissionSheet cSheet : retList){
 								JSONObject jsonObj = new JSONObject();
 								jsonObj.put("Id", cSheet.getId());
@@ -1479,10 +1556,12 @@ public class CommissionSheetServlet extends HttpServlet{
 								jsonObj.put("Repair", cSheet.getRepair()?1:0);	//修理
 								jsonObj.put("ReportType", cSheet.getReportType());	//报告形式
 								jsonObj.put("OtherRequirements", cSheet.getOtherRequirements()==null?"":cSheet.getOtherRequirements());	//其它要求
-								jsonObj.put("Location", cSheet.getLocation()==null?"":cSheet.getLocation());	//存放位置
+								jsonObj.put("Location", cSheet.getFinishLocation()==null?"":cSheet.getLocation());	//存放位置
+								jsonObj.put("FinishLocation", cSheet.getFinishLocation()==null?"":cSheet.getFinishLocation());	//存放位置
 								jsonObj.put("Allotee", cSheet.getAllotee()==null?"":cSheet.getAllotee());	//派定人
 								jsonObj.put("CommissionDate", sf.format((cSheet.getCommissionType()==2 && cSheet.getLocaleCommissionDate()!=null)?cSheet.getLocaleCommissionDate():cSheet.getCommissionDate()));		//委托日期								
 								jsonObj.put("Remark", cSheet.getRemark()==null?"":cSheet.getRemark());	//备注
+								jsonObj.put("LocaleCommissionCode", cSheet.getLocaleCommissionCode());
 								//费用信息
 								jsonObj.put("TestFee", cSheet.getTestFee()==null?0:cSheet.getTestFee());
 								jsonObj.put("RepairFee", cSheet.getRepairFee()==null?0:cSheet.getRepairFee());
@@ -1510,7 +1589,7 @@ public class CommissionSheetServlet extends HttpServlet{
 									jsonObj.put("EffectQuantity", cSheet.getQuantity());
 								}
 								int iSubContract = cSheetMgr.getTotalCountByHQL(hqlQueryString_SubContract, cSheet.getId());
-								if(iSubContract > 0 || cSheet.getCommissionType() == 5){	//该委托单有转包(或该委托单为其他业务)，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
+								if(iSubContract > 0 || cSheet.getCommissionType() == 5||cSheet.getCommissionType() == 3){	//该委托单有转包(或该委托单为其他业务或者公正计量)，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
 									jsonObj.put("IsSubContract", true);
 								}else{
 									jsonObj.put("IsSubContract", false);
@@ -1594,6 +1673,15 @@ public class CommissionSheetServlet extends HttpServlet{
 						jsonObj.put("CustomerClassification", (new CustomerManager()).findById(cSheet.getCustomerId()).getClassification());
 						jsonObj.put("LocaleCommissionCode", cSheet.getLocaleCommissionCode());
 						jsonObj.put("LocaleCommissionDate", cSheet.getLocaleCommissionDate());
+						jsonObj.put("HeadNameName", cSheet.getHeadName());//台头名称
+						jsonObj.put("Allotee", cSheet.getAllotee()==null?"":cSheet.getAllotee());	//派定人
+						jsonObj.put("Location", cSheet.getLocation()==null?"":cSheet.getLocation());
+						jsonObj.put("FinishLocation", cSheet.getFinishLocation()==null?"":cSheet.getFinishLocation());
+						jsonObj.put("Attachment", cSheet.getAttachment());
+						if(cSheet.getLocaleStaffId()!=null){
+							SysUser Staff = (new UserManager()).findById(cSheet.getLocaleStaffId());
+							jsonObj.put("LocaleCommissionStaff", Staff.getName());
+						}
 						jsonObj.put("CheckOutStaffId", cSheet.getCheckOutStaffId());
 						jsonObj.put("CheckOutStaff", cSheet.getCheckOutStaffId()==null?"":(new UserManager()).findById(cSheet.getCheckOutStaffId()).getName());
 						jsonObj.put("CheckOutTime", cSheet.getCheckOutDate()==null?"":cSheet.getCheckOutDate());
@@ -1614,6 +1702,18 @@ public class CommissionSheetServlet extends HttpServlet{
 						JSONObject printRecord = new JSONObject();
 						printRecord.put("Code", cSheet.getCode());	//委托单号
 						printRecord.put("Pwd", cSheet.getPwd());	//委托单密码
+						if (cSheet.getLocaleCommissionCode()!=null) {									//现场委托书号
+							printRecord.put("LocaleCommissionCode", cSheet.getLocaleCommissionCode());	
+						}
+						else
+							printRecord.put("LocaleCommissionCode", "");
+						
+						if(cSheet.getLocaleStaffId()!=null){											//现场负责人
+							SysUser Staff = (new UserManager()).findById(cSheet.getLocaleStaffId());
+							printRecord.put("LocaleCommissionStaff", Staff.getName());
+						}
+						else
+							printRecord.put("LocaleCommissionStaff", "");
 						printRecord.put("CommissionDate", sf.format(cSheet.getCommissionDate()));	//委托日期
 						printRecord.put("CustomerName", cSheet.getCustomerName());	//委托单位名称
 						printRecord.put("CustomerTel", cSheet.getCustomerTel());	//委托单位电话
@@ -2310,12 +2410,7 @@ public class CommissionSheetServlet extends HttpServlet{
 										cusConMgr.update(c);
 									}else{
 										CustomerContactor c = new CustomerContactor();
-										///////////////////////////////////////
-										Customer a=new Customer();
-										a.setId(CustomerId);
-										c.setCustomer(a);
-										//////////////////////////////////////
-										//c.setCustomerId(CustomerId);
+										c.setCustomerId(CustomerId);
 										c.setName(ContactPerson);
 										c.setCellphone1(ContactorTel);
 										c.setLastUse(now);
@@ -2663,12 +2758,7 @@ public class CommissionSheetServlet extends HttpServlet{
 										cusConMgr.update(c);
 									}else{
 										CustomerContactor c = new CustomerContactor();
-										///////////////////////////////////////
-										Customer a=new Customer();
-										a.setId(CustomerId);
-										c.setCustomer(a);
-										//////////////////////////////////////
-										//c.setCustomerId(CustomerId);
+										c.setCustomerId(CustomerId);
 										c.setName(ContactPerson);
 										c.setCellphone1(ContactorTel);
 										c.setLastUse(now);
@@ -2696,6 +2786,18 @@ public class CommissionSheetServlet extends HttpServlet{
 						JSONObject printRecord = new JSONObject();
 						printRecord.put("Code", comSheet.getCode());	//委托单号
 						printRecord.put("Pwd", comSheet.getPwd());	//委托单密码
+						if (comSheet.getLocaleCommissionCode()!=null) {									//现场委托书号
+							printRecord.put("LocaleCommissionCode", comSheet.getLocaleCommissionCode());	
+						}
+						else
+							printRecord.put("LocaleCommissionCode", "");
+						
+						if(comSheet.getLocaleStaffId()!=null){											//现场负责人
+							SysUser Staff = (new UserManager()).findById(comSheet.getLocaleStaffId());
+							printRecord.put("LocaleCommissionStaff", Staff.getName());
+						}
+						else
+							printRecord.put("LocaleCommissionStaff", "");
 						printRecord.put("CommissionDate", sdf.format(comSheet.getCommissionDate()));	//委托日期
 						printRecord.put("CustomerName", comSheet.getCustomerName());	//委托单位名称
 						printRecord.put("CustomerTel", comSheet.getCustomerTel());	//委托单位电话
@@ -2830,6 +2932,540 @@ public class CommissionSheetServlet extends HttpServlet{
 				}finally{
 					resp.setContentType("text/json;charset=utf-8");
 					resp.getWriter().write(retJSON18.toString());
+				}
+				break;
+			case 19: // 修改委托单
+				try {
+					String QuotationId = req.getParameter("QuotationId");	//报价单号
+					String CommissionDate = req.getParameter("CommissionDate");		//委托日期
+					String PromiseDate = req.getParameter("PromiseDate").trim();			//承诺日期
+					String CommissionType = req.getParameter("CommissionType");		//委托形式
+					String CustomerName  = req.getParameter("CustomerName").trim();		//委托单位
+					String CustomerTel = req.getParameter("CustomerTel").trim();
+					String CustomerAddress = req.getParameter("CustomerAddress").trim();
+					String CustomerZipCode = req.getParameter("CustomerZipCode").trim();
+					String ContactPerson = req.getParameter("ContactPerson").trim();
+					String ContactorTel = req.getParameter("ContactorTel").trim();
+					String SampleFrom = req.getParameter("SampleFrom");	//证书单位
+					String BillingTo = req.getParameter("BillingTo");	//开票单位
+					
+					String CustomerHandler = req.getParameter("CustomerHandler");	//委托人
+//					String ReceiverName = req.getParameter("ReceiverName").trim();	//接收人
+					
+					String HeadNameId = req.getParameter("HeadName").trim();	//台头名称ID
+					String RecipientAddress = req.getParameter("RecipientAddress");	//送样地址
+					String PickupAddress = req.getParameter("PickupAddress");		//取件地址					
+					
+					String comSheetCode = req.getParameter("comSheetCode").trim();	//检验的器具
+					
+					String LocaleCommissionCode = null;	//现场委托单号
+					Timestamp LocaleCommissionDate = null;	//现场检测时间
+					Integer LocaleStaffId = null;	//现场检测负责人ID
+					
+					if((CommissionDate == null || CommissionDate.length() == 0) && !CommissionType.equals("2")){
+						throw new Exception("委托日期为空！");
+					}
+					if(SampleFrom.length() == 0){
+						SampleFrom = CustomerName;
+					}
+					if(BillingTo.length() == 0){
+						BillingTo = CustomerName;
+					}
+					if(RecipientAddress == null || RecipientAddress.length() == 0){
+						RecipientAddress = null;
+					}
+					if(PickupAddress == null || PickupAddress.length() == 0){
+						PickupAddress = null;
+					}
+					CustomerManager cusMgr = new CustomerManager();		//客户管理Mgr
+					Integer CustomerId;
+					List<Customer> cusList = cusMgr.findByVarProperty(new KeyValueWithOperator("name",CustomerName,"="), 
+							new KeyValueWithOperator("status", 1, "<>"));	//查找委托单位的ID
+					if(cusList != null && cusList.size() == 1){
+						CustomerId = cusList.get(0).getId();
+					}else if(cusList != null && cusList.size() > 1){
+						throw new Exception("数据库中找到多个名称相同的委托单位:"+CustomerName+", 请到‘委托单位信息管理’进行修改！");
+					}else{
+						throw new Exception("委托单位不存在，新客户请先新建委托单位！");
+					}
+					Timestamp now = new Timestamp(System.currentTimeMillis());
+					
+					
+					ApplianceSpeciesManager speciesMgr = new ApplianceSpeciesManager();	//器具分类管理Mgr
+					ApplianceStandardNameManager sNameMgr = new ApplianceStandardNameManager();	//器具标准名称管理Mgr
+					AppliancePopularNameManager popNameMgr = new AppliancePopularNameManager();	//器具常用名称管理Mgr
+					SubContractorManager subConMgr = new SubContractorManager();	//转包方管理Mgr
+					ApplianceManufacturerManager mafMgr = new ApplianceManufacturerManager();	//制造厂管理Mgr
+					
+					AddressManager addrMgr = new AddressManager();
+					Address HeadNameAddr = new AddressManager().findById(Integer.parseInt(HeadNameId));	//台头名称的单位
+					
+					QualificationManager qualMgr = new QualificationManager();	//检测人员资质管理Mgr
+					List<Integer> qualList = new ArrayList<Integer>();
+					qualList.add(FlagUtil.QualificationType.Type_Jianding);
+					qualList.add(FlagUtil.QualificationType.Type_Jianyan);
+					qualList.add(FlagUtil.QualificationType.Type_Jiaozhun);
+					
+					List<CommissionSheet> comList = new ArrayList<CommissionSheet>();	//委托单列表
+					
+					List<SubContractor> subConList = new ArrayList<SubContractor>();	//委托单列表对应的转包方：如委托单没有转包方，则为null
+					List<SysUser> alloteeList = new ArrayList<SysUser>();	//委托单列表对应的派定人：如委托单没有派定人，则为null
+					Timestamp commissionDate = new Timestamp(Date.valueOf(CommissionDate).getTime());	//委托日期
+					LocaleApplianceItemManager locAppItemMgr = new LocaleApplianceItemManager();	//现场检测器具条目的Mgr
+					/********************   存委托单    ******************/
+				
+					CommissionSheet comSheet = cSheetMgr.findByVarProperty(new KeyValueWithOperator("code", comSheetCode, "=")).get(0);
+					if(comSheet.getStatus()>=FlagUtil.CommissionSheetStatus.Status_YiWanGong){
+						throw new Exception("该委托单已完工或者已注销");
+					}
+					
+					comSheet.setCommissionDate(commissionDate);	//委托日期
+					if(comSheet.getCommissionType() == 2){	//现场检测：现场检测的时间
+						comSheet.setLocaleCommissionDate(commissionDate);
+					}
+					if(PromiseDate.length() > 0){
+						comSheet.setPromiseDate(Date.valueOf(PromiseDate));	//承诺日期
+					}
+				
+					comSheet.setCommissionType(Integer.parseInt(CommissionType));//委托形式
+					comSheet.setCustomerId(CustomerId);	//委托单位ID
+					comSheet.setCustomerName(CustomerName);
+					comSheet.setCustomerTel(CustomerTel);
+					comSheet.setCustomerAddress(CustomerAddress);
+					comSheet.setCustomerZipCode(CustomerZipCode);
+					comSheet.setCustomerContactor(ContactPerson);
+					comSheet.setCustomerContactorTel(ContactorTel);
+					comSheet.setSampleFrom(SampleFrom);
+					comSheet.setBillingTo(BillingTo);
+					comSheet.setCustomerHandler(CustomerHandler);	//委托人
+					//comSheet.setReceiverId(((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId());	//接收人ID
+					//comSheet.setReceiverName(((SysUser)req.getSession().getAttribute("LOGIN_USER")).getName());	//接收人姓名
+					
+					comSheet.setHeadNameId(HeadNameAddr.getId());	//台头名称ID
+					comSheet.setHeadName(HeadNameAddr.getHeadName());	//台头名称
+					comSheet.setHeadNameEn(HeadNameAddr.getHeadNameEn()==null?"":HeadNameAddr.getHeadNameEn());	//台头名称英文
+					comSheet.setSampleAddress(RecipientAddress==null?null:Integer.parseInt(RecipientAddress));//样品接收地点
+					comSheet.setReportAddress(PickupAddress==null?null:Integer.parseInt(PickupAddress));	//取样、取报告地点
+					
+					//委托单其他信息（必填信息）				
+					/**********************   添加器具信息    ************************/
+					
+					String SpeciesType = req.getParameter("SpeciesType");	//器具分类类型
+					String ApplianceSpeciesId = req.getParameter("ApplianceSpeciesId");	//器具类别ID/标准名称ID
+					String ApplianceName = req.getParameter("ApplianceName").trim();	//器具名称
+					String Manufacturer= req.getParameter("Manufacturer");	//制造厂
+					//System.out.println("SpeciesType:"+SpeciesType+"ApplianceSpeciesId:"+ApplianceSpeciesId);
+					if(Integer.parseInt(SpeciesType) == 0){	//0:标准名称；1：分类名称
+						comSheet.setSpeciesType(false);	
+						String stdName = sNameMgr.findById(Integer.parseInt(ApplianceSpeciesId)).getName();
+						if(ApplianceName == null || ApplianceName.trim().length() == 0){
+							ApplianceName = stdName;	//器具名称未填写，则默认为标准名称或分类名称
+						}else{	//如果已填写，判断是否等于标准名称，如果不等于标准名称，则存入常用名称表中
+							if(!stdName.equalsIgnoreCase(ApplianceName.trim())){
+								List<AppliancePopularName> popRetList = popNameMgr.findByVarProperty(new KeyValueWithOperator("applianceStandardName.id", Integer.parseInt(ApplianceSpeciesId), "="), new KeyValueWithOperator("popularName", ApplianceName.trim(), "="));
+								if(popRetList != null && popRetList.size() == 0){
+									ApplianceStandardName sNameTemp = new ApplianceStandardName();
+									sNameTemp.setId(Integer.parseInt(ApplianceSpeciesId));
+									AppliancePopularName popNameTemp = new AppliancePopularName();
+									popNameTemp.setApplianceStandardName(sNameTemp);
+									popNameTemp.setPopularName(ApplianceName);
+									popNameTemp.setBrief(LetterUtil.String2Alpha(ApplianceName.trim()));
+									popNameTemp.setStatus(0);
+									popNameMgr.save(popNameTemp);
+								}
+							}
+						}
+						
+						//按需增加制造厂
+						if(Manufacturer != null && Manufacturer.trim().length() > 0){
+							int intRet = mafMgr.getTotalCount(new KeyValueWithOperator("applianceStandardName.id", Integer.parseInt(ApplianceSpeciesId), "="), new KeyValueWithOperator("manufacturer", Manufacturer.trim(), "="));
+							if(intRet == 0){
+								ApplianceStandardName sNameTemp = new ApplianceStandardName();
+								sNameTemp.setId(Integer.parseInt(ApplianceSpeciesId));
+								ApplianceManufacturer maf = new ApplianceManufacturer();
+								maf.setApplianceStandardName(sNameTemp);
+								maf.setManufacturer(Manufacturer.trim());
+								maf.setBrief(LetterUtil.String2Alpha(Manufacturer.trim()));
+								maf.setStatus(0);
+								mafMgr.save(maf);
+							}
+						}
+					}else{
+						comSheet.setSpeciesType(true);	
+						if(ApplianceName == null || ApplianceName.trim().length() == 0){
+							ApplianceName = speciesMgr.findById(Integer.parseInt(ApplianceSpeciesId)).getName();;	//器具名称未填写，则默认为标准名称或分类名称
+						}
+					}
+					comSheet.setApplianceSpeciesId(Integer.parseInt(ApplianceSpeciesId));
+					
+					comSheet.setApplianceName(ApplianceName);	//存器具名称
+					comSheet.setAppFactoryCode(req.getParameter("ApplianceCode").trim());		//出厂编号
+					comSheet.setAppManageCode(req.getParameter("AppManageCode").trim());		//管理编号
+					comSheet.setApplianceModel(req.getParameter("Model"));		//型号规格
+					comSheet.setRange(req.getParameter("Range"));		//测量范围
+					comSheet.setAccuracy(req.getParameter("Accuracy"));	//精度等级
+					comSheet.setManufacturer(req.getParameter("Manufacturer"));		//制造厂商
+					comSheet.setQuantity(Integer.parseInt(req.getParameter("Quantity")));		//台件数
+					//System.out.println("Mandatory:"+req.getParameter("Mandatory"));
+					comSheet.setMandatory(Integer.parseInt(req.getParameter("Mandatory").trim())==0?false:true);	//强制检验
+					comSheet.setUrgent(req.getParameter("Ness")==null?true:false);		//是否加急
+					comSheet.setSubcontract(req.getParameter("Trans")==null?true:false);		//是否转包（0：转包，1:不需要转包）
+					
+					String SubContractor = req.getParameter("SubContractor");
+					if(req.getParameter("Trans")!=null && SubContractor!= null && SubContractor.trim().length() > 0){	//转包
+						List<SubContractor> subConRetList = subConMgr.findByVarProperty(new KeyValueWithOperator("name",SubContractor.trim(),"="));
+						if(subConRetList != null && subConRetList.size() > 0){
+							subConList.add(subConRetList.get(0));
+						}else{
+							subConList.add(null);
+						}
+					}else{
+						subConList.add(null);
+					}
+					comSheet.setAppearance(req.getParameter("Appearance"));//外观附件
+					comSheet.setRepair(Integer.parseInt(req.getParameter("Repair"))==0?false:true);		//需修理否
+					comSheet.setReportType(Integer.parseInt(req.getParameter("ReportType")));	//报告形式
+					comSheet.setOtherRequirements(req.getParameter("OtherRequirements"));	//其他要求
+					comSheet.setLocation(req.getParameter("Location"));		//存放位置						
+					
+					comSheet.setStatus(0);//已收件	
+					
+					/**********************  判断派定人是否存在及有效，并加入到alloteeList   ****************************/
+					String Allotee = req.getParameter("Allotee");
+					if(Allotee != null && Allotee.trim().length() > 0){
+						Allotee = Allotee.trim();
+						comSheet.setAllotee(Allotee);		//派定人
+						List<Object[]> qualRetList = qualMgr.getQualifyUsers(Allotee, comSheet.getApplianceSpeciesId(), comSheet.getSpeciesType()?1:0, qualList);
+						if(qualRetList != null && qualRetList.size() > 0){
+							boolean alloteeChecked = false;
+							for(Object[] objArray : qualRetList){
+								if(!qualMgr.checkUserQualify((Integer)objArray[0], comSheet.getApplianceSpeciesId(), comSheet.getSpeciesType()?1:0, FlagUtil.QualificationType.Type_Except)){	//没有该检验项目的检验排外属性
+									alloteeChecked = true;
+									SysUser tempUser = new SysUser();
+									tempUser.setId((Integer)objArray[0]);
+									tempUser.setName((String)objArray[1]);
+									
+									alloteeList.add(tempUser);
+									comSheet.setStatus(1);	//设置委托单状态：已分配
+									break;
+								}
+							}
+							
+							if(!alloteeChecked){
+								throw new Exception(String.format("派定人 '%s' 不存在或没有资质检验项目：%s，请重新选择！", Allotee, comSheet.getApplianceName()));
+							}
+						}else{
+							throw new Exception(String.format("派定人 '%s' 不存在或没有资质检验项目：%s，请重新选择！", Allotee, comSheet.getApplianceName()));
+						}
+					}else{
+						comSheet.setAllotee(null);		//派定人
+						alloteeList.add(null);
+					}
+		
+					comList.add(comSheet);					
+					//委托单对象添加结束
+			
+					if(cSheetMgr.updateByBatch2(comList,subConList,alloteeList,(SysUser)req.getSession().getAttribute("LOGIN_USER"),(SysUser)req.getSession().getAttribute("LOGIN_USER"),now)){
+						
+						JSONObject retObj=new JSONObject();
+						retObj.put("IsOK", true);
+						JSONArray retArray = new JSONArray();
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+//						UserManager userMgr = new UserManager();
+//						String ReceiverName = ReceiverId.length()>0?userMgr.findById(Integer.parseInt(ReceiverId)).getName():"";//接收人姓名
+						
+						Address RecipientAddressObj = RecipientAddress==null?null:addrMgr.findById(Integer.parseInt(RecipientAddress)); //样品接收地点
+						Address PickupAddressObj = PickupAddress==null?null:addrMgr.findById(Integer.parseInt(PickupAddress));	//取样、取报告地点
+						UserManager uMgr = new UserManager();
+					
+						
+						JSONObject record = new JSONObject();
+						record.put("Id", 1);
+						record.put("CommissionNumber", comSheet.getCode());		//委托单号
+						JSONObject printRecord = new JSONObject();
+						printRecord.put("Code", comSheet.getCode());	//委托单号
+						printRecord.put("Pwd", comSheet.getPwd());	//委托单密码
+						if (comSheet.getLocaleCommissionCode()!=null) {									//现场委托书号
+							printRecord.put("LocaleCommissionCode", comSheet.getLocaleCommissionCode());	
+						}
+						else
+							printRecord.put("LocaleCommissionCode", "");
+						
+						if(comSheet.getLocaleStaffId()!=null){											//现场负责人
+							SysUser Staff = (new UserManager()).findById(comSheet.getLocaleStaffId());
+							printRecord.put("LocaleCommissionStaff", Staff.getName());
+						}
+						else
+							printRecord.put("LocaleCommissionStaff", "");
+						printRecord.put("CommissionDate", sdf.format(comSheet.getCommissionDate()));	//委托日期
+						printRecord.put("CustomerName", comSheet.getCustomerName());	//委托单位名称
+						printRecord.put("CustomerTel", comSheet.getCustomerTel());	//委托单位电话
+						printRecord.put("CustomerAddress", comSheet.getCustomerAddress());	//委托单位地址
+						printRecord.put("CustomerZipCode", comSheet.getCustomerZipCode());	//委托单位邮政编码
+						printRecord.put("SampleFrom", comSheet.getSampleFrom());	//证书单位名称
+						printRecord.put("BillingTo", comSheet.getBillingTo());	//开票单位名称
+						
+						printRecord.put("ApplianceName", comSheet.getApplianceName());	//器具名称
+						printRecord.put("ApplianceInfo",String.format("%s/%s/%s/%s", comSheet.getApplianceModel(),comSheet.getRange(),comSheet.getAccuracy(),comSheet.getManufacturer()));//器具信息
+						printRecord.put("ApplianceNumber",String.format("%s[%s]", comSheet.getAppFactoryCode(),comSheet.getAppManageCode()));//器具编号
+						printRecord.put("Quantity",comSheet.getQuantity().toString());//台件数
+						printRecord.put("MandatoryInspection", CommissionSheetFlagUtil.getMandatoryByFlag(comSheet.getMandatory()));//强制检验
+						printRecord.put("Appearance", comSheet.getAppearance());//外观附件
+						printRecord.put("Repair", CommissionSheetFlagUtil.getRepairByFlag(comSheet.getRepair()));//需修理否
+						printRecord.put("ReportType",CommissionSheetFlagUtil.getReportTypeByFlag(comSheet.getReportType()));//报告形式
+						printRecord.put("OtherRequirements", comSheet.getOtherRequirements());//其他要求
+						printRecord.put("Location", comSheet.getLocation());	//存放位置
+						printRecord.put("Allotee", comSheet.getAllotee());	//派定人
+						printRecord.put("ReceiverName", ((SysUser)req.getSession().getAttribute("LOGIN_USER")).getName());	//接收人姓名
+						
+						printRecord.put("HeadName",HeadNameAddr.getHeadName());	//台头名称
+						printRecord.put("RecipientAddressName", RecipientAddressObj==null?"":RecipientAddressObj.getAddress());	//送样地址
+						printRecord.put("RecipientAddressTel", (RecipientAddressObj==null || RecipientAddressObj.getTel()==null)?"":RecipientAddressObj.getTel());
+						printRecord.put("PickupAddressName", PickupAddressObj==null?"":PickupAddressObj.getAddress());	//取样地址
+						printRecord.put("PickupAddressTel", (PickupAddressObj==null || PickupAddressObj.getTel()==null)?"":PickupAddressObj.getTel());
+						
+						SysUser allotee = alloteeList.get(0);
+						if(allotee != null){
+							 SysUser tempUser = uMgr.findById(allotee.getId());
+							printRecord.put("AlloteeJobNum",tempUser.getJobNum());	//员工工号
+						}else{
+							printRecord.put("AlloteeJobNum","");	//员工工号
+						}
+						
+						//record.put("PrintObj", printRecord);
+						//retArray.put(record);
+						
+						//retObj.put("CommissionSheetList", retArray);
+						retObj.put("PrintObj", printRecord);
+    
+						resp.setContentType("text/html;charset=utf-8");
+						resp.getWriter().write(retObj.toString());
+					}else{
+						throw new Exception("保存委托单信息失败！");
+					}
+					
+				} catch(NumberFormatException e){	//字符串转Integer错误
+					
+					JSONObject retObj=new JSONObject();
+					try {
+						retObj.put("IsOK", false);
+						retObj.put("msg", String.format("处理失败！错误信息：数据输入不完整或格式错误！"));
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+					if(e.getClass() == java.lang.NumberFormatException.class){	//自定义的消息
+						log.debug("exception in CommissionSheetServlet-->case 19", e);
+					}else{
+						log.error("error in CommissionSheetServlet-->case 19", e);
+					}
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().write(retObj.toString());
+				}catch (Exception e){
+					
+					JSONObject retObj=new JSONObject();
+					try {
+						retObj.put("IsOK", false);
+						retObj.put("msg", String.format("处理失败！错误信息：%s", (e!=null && e.getMessage()!=null)?e.getMessage():"无"));
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+					if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+						log.debug("exception in CommissionSheetServlet-->case 19", e);
+					}else{
+						log.error("error in CommissionSheetServlet-->case 19", e);
+					}
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().write(retObj.toString());
+				}
+				break;
+			case 20:	//查找委托单的信息
+				JSONObject retJSON20 = new JSONObject();
+				try {
+					String Code = req.getParameter("Code");	//委托单号
+					String Pwd = req.getParameter("Pwd");	//委托单密码
+					String CommissionId = null;
+					if(Code == null || Code.trim().length() == 0 || Pwd == null || Pwd.trim().length() == 0){
+						throw new Exception("委托单号或密码为空！");
+					}
+					ViewAppSpeStandardPopularNameManager mainMgr = new ViewAppSpeStandardPopularNameManager();
+					List<CommissionSheet> cSheetRetList=new ArrayList<CommissionSheet>();
+					String queryString1 = "from CommissionSheet as model " +
+							" where (model.status = ? or model.status = ? ) and model.code = ? and model.pwd = ?";
+					cSheetRetList=cSheetMgr.findByHQL(queryString1, 0,1,Code,Pwd);
+					//cSheetRetList = cSheetMgr.findByVarProperty(new KeyValueWithOperator("code", Code, "="),new KeyValueWithOperator("pwd", Pwd, "="));
+					
+						
+					if(cSheetRetList != null && cSheetRetList.size() > 0){
+						CommissionSheet cSheet = cSheetRetList.get(0);
+						SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+						retJSON20.put("IsOK", true);
+						
+						JSONObject jsonObj = new JSONObject();
+						jsonObj.put("CommissionId", cSheet.getId());	//委托单ID
+						CommissionId = cSheet.getId().toString();	//委托单Id
+						jsonObj.put("CommissionCode", cSheet.getCode());
+						jsonObj.put("CommissionPwd", cSheet.getPwd());
+						jsonObj.put("CommissionStatus", cSheet.getStatus());	//委托单状态
+						jsonObj.put("CommissionType", cSheet.getCommissionType());
+						jsonObj.put("CommissionDate", sf.format((cSheet.getCommissionType()==2 && cSheet.getLocaleCommissionDate()!=null)?cSheet.getLocaleCommissionDate():cSheet.getCommissionDate()));
+						jsonObj.put("CustomerName", cSheet.getCustomerName());
+						jsonObj.put("CustomerTel", cSheet.getCustomerTel());
+						jsonObj.put("CustomerAddress", cSheet.getCustomerAddress());
+						jsonObj.put("CustomerZipCode", cSheet.getCustomerZipCode());
+						jsonObj.put("ContactPerson", cSheet.getCustomerContactor());
+						jsonObj.put("ContactorTel", cSheet.getCustomerContactorTel());
+						jsonObj.put("SampleFrom", cSheet.getSampleFrom());
+						jsonObj.put("CustomerHandler", cSheet.getCustomerHandler());//委托人
+						jsonObj.put("BillingTo", cSheet.getBillingTo());
+						jsonObj.put("ApplianceName", cSheet.getApplianceName());	//器具名称	
+						if(cSheet.getSpeciesType()!=null){
+							jsonObj.put("SpeciesType", cSheet.getSpeciesType()?1:0);
+							jsonObj.put("ApplianceSpeciesId", cSheet.getApplianceSpeciesId());
+							String queryString = "from ViewApplianceSpecialStandardNamePopularName as model " +
+								" where model.id.id = ? and model.id.type = ? ";
+							List<ViewApplianceSpecialStandardNamePopularName> vRetList = mainMgr.findPageAllByHQL(queryString, 1, 30, cSheet.getApplianceSpeciesId(), jsonObj.getInt("SpeciesType"));
+							String ApplianceSpeciesName="";
+							
+							if(vRetList!=null&&vRetList.size()>0){
+								ApplianceSpeciesName=vRetList.get(0).getName();
+							}
+							
+							jsonObj.put("ApplianceSpeciesName", ApplianceSpeciesName);
+						}
+						jsonObj.put("HeadName", cSheet.getHeadNameId());
+						jsonObj.put("RecipientAddress", cSheet.getSampleAddress());	//送样地址
+						jsonObj.put("PickupAddress", cSheet.getReportAddress());	//取样地址
+						
+						jsonObj.put("Model", cSheet.getApplianceModel());
+						jsonObj.put("Range", cSheet.getRange());
+						jsonObj.put("Accuracy", cSheet.getAccuracy());
+						jsonObj.put("ApplianceCode", cSheet.getAppFactoryCode());	//出厂编号
+						jsonObj.put("ApplianceManageCode", cSheet.getAppManageCode());	//管理编号
+						jsonObj.put("Manufacturer", cSheet.getManufacturer());
+						jsonObj.put("Quantity", cSheet.getQuantity());
+						jsonObj.put("Mandatory", cSheet.getMandatory()?1:0);	//强制检定
+						jsonObj.put("Ness", cSheet.getUrgent()?1:0);			//是否加急
+						jsonObj.put("Repair", cSheet.getRepair()?1:0);			//是否修理
+						jsonObj.put("Trans", cSheet.getSubcontract()?1:0);			//是否转包
+						jsonObj.put("Allotee", cSheet.getAllotee()==null?"":cSheet.getAllotee());//派定人
+						jsonObj.put("Appearance", cSheet.getAppearance());	//外观附件
+						jsonObj.put("OtherRequirements", cSheet.getOtherRequirements());	//其他要求
+						jsonObj.put("Status", cSheet.getStatus());	//委托单状态
+						if(cSheet.getStatus() != 0 && cSheet.getStatus() != 1){
+							throw new Exception("该委托单不是已收件或者已分配状态");
+						}
+						jsonObj.put("ReportType", cSheet.getReportType());	//报告形式
+						jsonObj.put("Location", cSheet.getLocation()==null?"":cSheet.getLocation());	//存放位置
+						jsonObj.put("TotalFee", cSheet.getTotalFee());	//委托单总计费用
+						jsonObj.put("Attachment", cSheet.getAttachment());
+						jsonObj.put("Remark", cSheet.getRemark());
+						jsonObj.put("AlloteeRule", SystemCfgUtil.getTaskAllotRule()==0?0:1);
+						jsonObj.put("PromiseDate", sf.format((cSheet.getPromiseDate()==null)?cSheet.getCommissionDate():cSheet.getPromiseDate()));
+						
+						retJSON20.put("CommissionObj", jsonObj);
+					}else{	
+						
+						throw new Exception("委托单号或密码错误！");
+						
+					}
+									
+					if(CommissionId == null || CommissionId.trim().length() == 0){
+						throw new Exception("查找原始记录时委托单未指定！");
+					}
+					OriginalRecordManager oRecordMgr = new OriginalRecordManager();
+					//先查找证书编号不为空 的并按证书编号排序（按certificate.certificateCode排序只能查找到certificate不为null的记录）
+					List<OriginalRecord> oRecRetList = oRecordMgr.findByPropertyBySort("certificate.certificateCode", true,
+							new KeyValueWithOperator("commissionSheet.id", Integer.parseInt(CommissionId), "="), 
+							new KeyValueWithOperator("status", 1, "<>"),
+							new KeyValueWithOperator("taskAssign.status", 1, "<>")
+					);
+					//再查找没有证书编号的记录
+					List<OriginalRecord> oRecRetList2 = oRecordMgr.findByPropertyBySort("id", true,
+							new KeyValueWithOperator("commissionSheet.id", Integer.parseInt(CommissionId), "="), 
+							new KeyValueWithOperator("status", 1, "<>"),
+							new KeyValueWithOperator("certificate", null, "is null"),
+							new KeyValueWithOperator("taskAssign.status", 1, "<>")
+					);
+					
+					oRecRetList.addAll(oRecRetList2);
+					
+					if(oRecRetList != null && oRecRetList.size() > 0){
+						throw new Exception("该委托单已经生成了原始记录！");
+					}
+				} catch (Exception e){
+					
+					try {
+						retJSON20.put("IsOK", false);
+						retJSON20.put("msg", String.format("查询委托单失败！错误信息：%s", (e!=null && e.getMessage()!=null)?e.getMessage():"无"));
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+					if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+						log.debug("exception in CommissionSheetServlet-->case 20", e);
+					}else{
+						log.error("error in CommissionSheetServlet-->case 20", e);
+					}
+				}finally{
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().write(retJSON20.toString());
+				}
+				break;
+			case 21: // 修改委托单的完工存放位置
+				try {
+					String comSheetCode = req.getParameter("FinishComCode");	//委托单号
+					String finishLocation = req.getParameter("FinishLocation");
+				
+					List<CommissionSheet> comSheetList = cSheetMgr.findByVarProperty(new KeyValueWithOperator("code", comSheetCode, "="));
+					if(comSheetList==null){
+						throw new Exception("查询出错");
+					}
+					CommissionSheet comSheet = comSheetList.get(0);
+					comSheet.setFinishLocation(finishLocation);
+					JSONObject retObj=new JSONObject();
+					
+					if(cSheetMgr.update(comSheet)){
+						retObj.put("IsOK", true);
+					}else{
+						retObj.put("IsOK", false);
+						retObj.put("msg", String.format("修改委托单失败！"));
+					}
+    
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().write(retObj.toString());
+					
+					
+				} catch(NumberFormatException e){	//字符串转Integer错误
+					
+					JSONObject retObj=new JSONObject();
+					try {
+						retObj.put("IsOK", false);
+						retObj.put("msg", String.format("处理失败！错误信息：数据输入不完整或格式错误！"));
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+					if(e.getClass() == java.lang.NumberFormatException.class){	//自定义的消息
+						log.debug("exception in CommissionSheetServlet-->case 19", e);
+					}else{
+						log.error("error in CommissionSheetServlet-->case 19", e);
+					}
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().write(retObj.toString());
+				}catch (Exception e){
+					
+					JSONObject retObj=new JSONObject();
+					try {
+						retObj.put("IsOK", false);
+						retObj.put("msg", String.format("处理失败！错误信息：%s", (e!=null && e.getMessage()!=null)?e.getMessage():"无"));
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+					if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+						log.debug("exception in CommissionSheetServlet-->case 21", e);
+					}else{
+						log.error("error in CommissionSheetServlet-->case 21", e);
+					}
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().write(retObj.toString());
 				}
 				break;
 			}

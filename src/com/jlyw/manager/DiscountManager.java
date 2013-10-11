@@ -2,6 +2,7 @@ package com.jlyw.manager;
 
 import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import com.jlyw.hibernate.CertificateFeeAssign;
@@ -18,7 +19,7 @@ public class DiscountManager {
 	public static final String queryStringAllOldFeeByCommissionSheetId = CertificateFeeAssignManager.queryStringAllOldFeeByCommissionSheetId;
 	//HQL语句：根据委托单Id查询该委托单下的所有费用记录
 	public static final String queryString_CertificateFeeAssignByCommissionSheetId = CertificateFeeAssignManager.queryString_CertificateFeeAssignByCommissionSheetId;
-	private DiscountDAO m_dao = new DiscountDAO();
+	private  DiscountDAO m_dao = new DiscountDAO();
 	
 	/**
 	 * 根据Discount Id 查找 Discount对象
@@ -215,12 +216,14 @@ public class DiscountManager {
 	 * @return
 	 */
 	public boolean discountExecute(Discount discount) throws Exception{
-		Transaction tran = m_dao.getSession().beginTransaction();
+		Session session = m_dao.getSession();
+		Transaction tran = session.beginTransaction();
 		try {	
 			DiscountComSheetDAO dCSheetDAO = new DiscountComSheetDAO();
 			CertificateFeeAssignDAO feeAssignDAO = new CertificateFeeAssignDAO();
 			List<DiscountComSheet> dCSheetList = dCSheetDAO.findByVarProperty("DiscountComSheet", 
 					new KeyValueWithOperator("discount.id", discount.getId(), "="));	//查找所有委托单的折扣信息
+			int count = 1;
 			for(DiscountComSheet dCSheet : dCSheetList){
 				CommissionSheet cSheet = dCSheet.getCommissionSheet();
 				if(cSheet.getCheckOutDate() != null && cSheet.getDetailListCode() != null){	//委托单已结帐
@@ -337,9 +340,28 @@ public class DiscountManager {
 				    	f.setTotalFee(new Double(f.getTestFee().intValue() + f.getRepairFee().intValue() + f.getMaterialFee().intValue() + f.getCarFee().intValue() + f.getDebugFee().intValue() + f.getOtherFee().intValue()));
 				    }
 				    
+				  //更新原始记录费用的HQL
+					String updateString = "update OriginalRecord as o set " +
+							" testFee=(select SUM(a.testFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id)," +
+							" repairFee=(select SUM(a.repairFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+							" materialFee=(select SUM(a.materialFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+							" carFee=(select SUM(a.carFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+							" debugFee=(select SUM(a.debugFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+							" otherFee=(select SUM(a.otherFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id), " +
+							" totalFee=(select SUM(a.totalFee) from CertificateFeeAssign as a where a.originalRecord.id=o.id and a.originalRecord.certificate.id = a.certificate.id) " +
+							" where o.id=? ";
 				    //更新费用记录
 				    for(CertificateFeeAssign feeAssign : feeAssignList){
 				    	feeAssignDAO.update(feeAssign);
+				    	
+				    	if(feeAssign.getOriginalRecord() != null){
+							m_dao.updateByHQL(updateString, feeAssign.getOriginalRecord().getId());
+						}
+				    	count++;
+				    	if(count%50==0){
+					    	session.flush();
+					    	session.clear();
+				    	}
 				    } //end 更新费用记录
 			    }//end else
 			}//end for：处理一个委托单
@@ -354,4 +376,31 @@ public class DiscountManager {
 			m_dao.closeSession();
 		}
 	}
+	
+	/*public static void main(String[] args){
+		DiscountComSheetDAO dCSheetDAO = new DiscountComSheetDAO();
+		CertificateFeeAssignDAO feeAssignDAO = new CertificateFeeAssignDAO();
+		  String queryString_DistinctOriginalRecord = "select distinct a.originalRecord from CertificateFeeAssign as a " +
+			" where a.commissionSheet.code = ? and ( " +
+			" 	(a.originalRecord is null and a.certificate is null) or " +
+			"	(a.originalRecord in (from OriginalRecord as o where o.status<>1 and o.taskAssign.status<>1 and o.certificate = a.certificate)) " +
+			" ) ";
+		    List<OriginalRecord> oriRecordList = feeAssignDAO.findByHQL(queryString_DistinctOriginalRecord, "20132015572");
+		  //更新原始记录费用的HQL
+			String updateString = "update OriginalRecord as o set " +
+					" testFee=(select SUM(a.testFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id)," +
+					" repairFee=(select SUM(a.repairFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
+					" materialFee=(select SUM(a.materialFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
+					" carFee=(select SUM(a.carFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
+					" debugFee=(select SUM(a.debugFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
+					" otherFee=(select SUM(a.otherFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id), " +
+					" totalFee=(select SUM(a.totalFeeOld) from CertificateFeeAssign as a where a.originalRecord.id=o.id) " +
+					" where o.id=? ";
+		    if(oriRecordList!=null){
+		    	for(OriginalRecord o:oriRecordList){	
+		    		System.out.println(o.getId());
+					//m_dao.updateByHQL(updateString, o.getId());						
+		    	}
+		    }
+	}*/
 }

@@ -8,6 +8,7 @@ import com.jlyw.hibernate.BaseHibernateDAO;
 import com.jlyw.hibernate.CommissionSheet;
 import com.jlyw.hibernate.DetailList;
 import com.jlyw.hibernate.DetailListDAO;
+import com.jlyw.hibernate.Withdraw;
 import com.jlyw.util.KeyValueWithOperator;
 
 /**
@@ -322,6 +323,35 @@ private DetailListDAO m_dao = new DetailListDAO();
 				m_dao.save(oRecord);
 			}
 			tran.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			tran.rollback();
+			return false;
+		} finally {
+			m_dao.closeSession();
+		}
+	}
+
+	public List<DetailList> findByVarProperty(List<KeyValueWithOperator> keys) {
+		// TODO Auto-generated method stub
+		return m_dao.findByVarProperty("DetailList", keys);
+	}
+	
+	/**
+	 * 注销未结账的清单
+	 * 
+	 * @param appSpecies DetailList对象
+	 * @return 更新成功，返回true；否则返回false
+	 */
+	public boolean logOutDetailList(DetailList appSpecies){
+		Transaction tran = m_dao.getSession().beginTransaction();
+		try {			
+			
+			
+			m_dao.updateByHQL("update CommissionSheet set detailListCode = ? where detailListCode = ? ","",appSpecies.getCode());	//置清单号为空
+			m_dao.updateByHQL("update DetailList set status = 1 where id = ? ",appSpecies.getId());	//置已结束状态		
+			tran.commit() ;
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

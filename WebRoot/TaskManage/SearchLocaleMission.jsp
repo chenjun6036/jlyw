@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=gb2312" language="java" import="java.sql.*" errorPage="" %>
+<%@ page contentType="text/html; charset=gb2312" language="java" import="java.sql.*,com.jlyw.hibernate.SysUser" errorPage="" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -479,12 +479,12 @@
 				singleSelect:true, 
                 nowrap: false,
                 striped: true,
-				url:'/jlyw/LocaleMissionServlet.do?method=8',
-				sortName: 'CreateDate',
+				//url:'/jlyw/LocaleMissionServlet.do?method=8',
+				//sortName: 'CreateDate',
 				remoteSort: false,
-				sortOrder:'dec',
+				//sortOrder:'dec',
 				idField:'Id',
-				pageSize:50,
+				pageSize:20,
 				frozenColumns:[[
 	                {field:'ck',checkbox:true}
 				]],
@@ -492,6 +492,7 @@
 					{field:'CreateDate',title:'创建信息',width:100,align:'center',sortable:true},
 					//{field:'CreatorName',title:'创建人',width:60,align:'center',sortable:true},
 					
+					{field:'Code',title:'委托书号',width:80,align:'center',sortable:true},
 					{field:'Status',title:'处理状态',width:60,align:'center',sortable:true,
 						formatter:function(value, rowData, rowIndex){
 							if(value == 0 || value =="0"){
@@ -523,11 +524,11 @@
 						}
 					},
 					{field:'Address',title:'单位地址',width:120,align:'center'},
-					
+					{field:'VehicleLisences',title:'乘车信息',width:120,align:'center'},
 					{field:'Department',title:'业务部门',width:80,align:'center'},
 					{field:'MissionDesc',title:'器具信息',width:120,align:'center'},
 					{field:'Staffs',title:'人员',width:180,align:'center'},
-					{field:'VehicleLisences',title:'乘车信息',width:120,align:'center'},
+					
 					{field:'SiteManagerName',title:'检测负责人',width:80,align:'center', 
 						formatter:function(value, rowData, rowIndex){
 							
@@ -562,8 +563,7 @@
 					{field:'Contactor',title:'联系人',width:80,align:'center'},
 					{field:'Tel',title:'单位电话',width:100,align:'center'},
 					{field:'ContactorTel',title:'联系人电话',width:100,align:'center'},
-					
-					{field:'Code',title:'委托书号',width:80,align:'center',sortable:true},
+					{field:'HeadNameName',title:'台头名称',width:120,align:'center'},
 					{field:'Region',title:'所在地区',width:60,align:'center',sortable:true},
 					{field:'ZipCode',title:'邮编',width:60,align:'center'},
 					
@@ -584,11 +584,11 @@
 						return 'color:#339900';	
 					}
 					else if(rowData.Status==4&&rowData.Tag == 1){	//未核定；；；已到暂定日期可是未安排
-						return 'color:#FFFF33';
+						return 'color:#0000FF';
 					}else if(rowData.Status==4&&rowData.Tag == 2){	//未核定；；；未到暂定日期
-						return 'color:#008000';
+						return 'color:#6600CC';
 					}else{
-						return 'color:#000000';
+						return 'color:#0000FF';
 					}
 				},
 				toolbar:[{
@@ -616,6 +616,8 @@
 							$("#table-Appliance").show();
 							$('#edit').window('open');
 							$('#frm_update_localmission').form('load', rowSelected);
+							
+							$("#HeadName").combobox('select',rowSelected.HeadNameId);
 							//$('#rid').combobox('setValue', rowSelected.RegionIdAdd);
 							$('#table5').datagrid('options').url='/jlyw/LocaleMissionServlet.do?method=11';
 							$('#table5').datagrid('options').queryParams={'Id':rowSelected.Id};
@@ -647,7 +649,7 @@
 							$("#table-Appliance").show();
 							$('#check').window('open');
 							$('#frm_check_localmission').form('load', rowSelected);
-							
+							$("#HeadNamecheck").combobox('select',rowSelected.HeadNameId);
 							$('#CheckDatecheck').datebox('setValue',rowSelected.TentativeDate)
 							//$('#rid').combobox('setValue', rowSelected.RegionIdAdd);
 							$('#table5').datagrid('options').url='/jlyw/LocaleMissionServlet.do?method=11';
@@ -738,16 +740,14 @@
 							
 							if(row)
 							{
-								    if(row.SiteManagerName!=null&&row.SiteManagerName.length>0&&row.ExactTime!=null&&row.ExactTime.length>0){
-								
+								    //if(row.SiteManagerName!=null&&row.SiteManagerName.length>0&&row.ExactTime!=null&&row.ExactTime.length>0){								
 										$('#localeMissionId').val(row.Id);
 										$('#MissionPrint-form').submit();
-									}else{
-										$.messager.alert('提示','现场检测负责人为空或者确定时间为空','warning');
-									}
-								
-												
+									//}else{
+									//	$.messager.alert('提示','现场检测负责人为空或者确定时间为空','warning');
+									//}												
 							}else{
+								//$('#MissionPrint-blank-form').submit()
 								$.messager.alert('提示','请选择一行数据','warning');
 							}
 						}
@@ -756,6 +756,25 @@
 					iconCls:'icon-add',
 					handler:function(){
 							generateSheet();
+						}
+				},'-',{
+					text:'打印空现场检测任务书',
+					iconCls:'icon-print',
+					handler:function(){
+							var row = $('#table2').datagrid('getSelected');
+							
+							if(row)
+							{
+								    //if(row.SiteManagerName!=null&&row.SiteManagerName.length>0&&row.ExactTime!=null&&row.ExactTime.length>0){								
+										$('#localeMissionId1').val(row.Id);
+										$('#MissionPrint-blank-form').submit()
+									//}else{
+									//	$.messager.alert('提示','现场检测负责人为空或者确定时间为空','warning');
+									//}												
+							}else{
+								//$('#MissionPrint-blank-form').submit()
+								$.messager.alert('提示','请选择一行数据','warning');
+							}
 						}
 				}]
 			});
@@ -1115,6 +1134,8 @@
 					$('#form-Appliance').form('clear');
 				}
 			});
+			
+			query();
 
 		});
 		
@@ -1171,7 +1192,7 @@
 		    }else{
 				rows[0].TestFee=getInt($('#TestFee').val());
 			}
-			var index = $("#table5").datagrid("getRowIndex", rows[0].Id);
+			var index = $("#table5").datagrid("getRowIndex", rows[0]);
 			rows[0].SpeciesType=$('#SpeciesType').val();
 			rows[0].ApplianceSpeciesId=$('#ApplianceSpeciesId').val();
 			//rows[0].ApplianceSpeciesName=$('#ApplianceSpeciesName').combobox('getValue');
@@ -1226,7 +1247,7 @@
 			//var data=$('#table2').datagrid('selectRecord',id);
 			//var rowdata=$('#table2').datagrid('getSelected');
 			$('#frm_update_localmission').form('load', rowdata);
-			
+			$("#HeadName").combobox('select',rowdata.HeadNameId);
 			$('#table5').datagrid('options').url='/jlyw/LocaleMissionServlet.do?method=11';
 			$('#table5').datagrid('options').queryParams={'Id':rowdata.Id};
 			
@@ -1240,7 +1261,7 @@
 			var History_EndDate=$('#History_EndDate').datebox('getValue');
 			
 			$('#table2').datagrid('options').url='/jlyw/LocaleMissionServlet.do?method=8';
-			$('#table2').datagrid('options').queryParams={'QueryName':encodeURI($("#QueryName").combobox('getText')),'Department':encodeURI($("#Department").val()),'MissionStatus':encodeURI($("#MissionStatus").val()),'History_BeginDate':encodeURI(History_BeginDate),'History_EndDate':encodeURI(History_EndDate)};
+			$('#table2').datagrid('options').queryParams={'QueryName':encodeURI($("#QueryName").combobox('getText')),'Department':encodeURI($("#Department").val()),'MissionStatus':encodeURI($("#MissionStatus").val()),'Code':encodeURI($('#QueryCode').val()),'History_BeginDate':encodeURI(History_BeginDate),'History_EndDate':encodeURI(History_EndDate)};
 			
 			$('#table2').datagrid('reload');
 		}
@@ -1363,7 +1384,16 @@
 			if(rowdata.Status==2){
 					$.messager.alert('提示','该任务状态“已完工”，不能进行修改！','info');
 					return false;
-			}			
+			}		
+			
+			if($("#CheckDatecheck").datebox('getValue')==null||$("#CheckDatecheck").datebox('getValue').length==0){
+				$.messager.alert('提示','核定任务请选择核定日期！','info');
+				return false;
+			}
+			if($("#SiteManagerNamecheck").combobox('getText')==null||$("#SiteManagerNamecheck").combobox('getText').length==0){
+				$.messager.alert('提示','核定任务请选择现场负责人！','info');
+				return false;
+			}
 			var rows = $("#table5").datagrid("getRows");	
 			$('#frm_check_localmission').form('submit',{
 				url: '/jlyw/LocaleMissionServlet.do?method=16',
@@ -1493,6 +1523,7 @@
 			$('#AssistStaff').val("");
 			$('#RepairFee').val("");
 			$('#MaterialFee').val("");
+			$('#TestFee').val("");
 		}
 		function inputQuo(){//
 			$('#inputQuo_window').window('open');//打开报价单查询窗口	
@@ -1614,8 +1645,8 @@
 				return false;
 			}
 			//console.info($('#NameAdd').combobox('getText'));
-			$('#table6').datagrid('options').url='/jlyw/LocaleMissionServlet.do?method=12';
-			$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#NameAdd').combobox('getText')),'ApplianceName':encodeURI($('#History_ApplianceName').val()),'BeginDate':$('#History_BeginDate').datebox('getValue'),'EndDate':$('#History_EndDate').datebox('getValue')};
+			$('#table6').datagrid('options').url='/jlyw/CommissionSheetServlet.do?method=1';
+			$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#NameAdd').combobox('getText')),'ApplianceName':encodeURI($('#History_ApplianceName').val()),'BeginDate':$('#table6_History_BeginDate').datebox('getValue'),'EndDate':$('#table6_History_EndDate').datebox('getValue')};
 			$('#table6').datagrid('reload');
 		}
 		
@@ -1735,6 +1766,10 @@
 		}
 	}
 	function openBDwindow(){
+		if($("#SiteManagerNameAdd").combobox('getText')==null||$("#SiteManagerNameAdd").combobox('getText').length==0){
+			$.messager.alert('提示',"请填写现场负责人！",'error');
+			return;
+		}
 		$('#MissionBD_window').window('open');//打开报价单查询窗口	
 		var nowDate = new Date();
 		var dateString=nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate());
@@ -1743,10 +1778,19 @@
 	}
 	
 	function generateSheet(){
+		
 		var row = $('#table2').datagrid('getSelected');
 							
 		if(row)
 		{
+			<%
+				SysUser loginuser = (SysUser)request.getSession().getAttribute("LOGIN_USER");
+			%>
+			if(!('<%=loginuser.getName()%>'==row.SiteManagerName||'<%=loginuser.getName()%>'=='系统管理员')){
+				$.messager.alert('提示','非现场负责人和系统管理员不能生成现场委托单!','warning');
+				return;
+			}
+				
 		 	if(row.SiteManagerName!=null&&row.SiteManagerName.length>0&&row.ExactTime!=null&&row.ExactTime.length>0){
 								
 					$('#TZ_LocaleCommissionCode').val(row.Code);
@@ -1825,15 +1869,20 @@
 			<form id="ff">
 			<table id="table1" style="width:980px">
 				<tr>
-					<td  align="right">
+					<td  align="left">
 					<label>委托单位：</label><select name="QueryName" id="QueryName" style="width:152px"></select>&nbsp;
-					<label>业务部门：</label><input name="Department" id="Department" style="width:132px"/>&nbsp;
-					<select name="MissionStatus" id="MissionStatus" style="width:100px"><option value="" selected="selected">全部</option><option value="4">未核定</option><option value="5">已核定</option><option value="1">已分配</option><option value="2">已完工</option></select>&nbsp;
-					<label>开始时间：</label><input class="easyui-datebox" id="History_BeginDate" type="text" style="width:100px" />&nbsp;
-					<label>结束时间：</label><input class="easyui-datebox" id="History_EndDate" type="text" style="width:100px" />&nbsp;</td>
-				    
-					<td  ><a href="javascript:void(0)" onclick="query()" class="easyui-linkbutton" iconCls="icon-search">查询</a></td>
+					<label>业务部门：</label><input name="Department" id="Department" style="width:152px"/>&nbsp;
+					<label>状&nbsp;&nbsp;&nbsp;&nbsp;态：</label><select name="MissionStatus" id="MissionStatus" style="width:152px"><option value="" >全部</option><option value="4">未核定</option><option value="5">已核定</option><option value="1">已分配</option><option value="2">已完成</option><option value="0" selected="selected">未完成</option></select>
+                    </td>
+					<td align="left"><a href="javascript:void(0)" onclick="query()" class="easyui-linkbutton" iconCls="icon-search">查询</a></td>
 				</tr>
+                <tr>
+                	<td align="left">
+                    <label>任务书号：</label><input class="easyui-validatebox" id="QueryCode" type="text" style="width:152px" />&nbsp;
+					<label>开始时间：</label><input class="easyui-datebox" id="History_BeginDate" type="text" style="width:152px" />&nbsp;
+					<label>结束时间：</label><input class="easyui-datebox" id="History_EndDate" type="text" style="width:152px" />
+                    </td>
+                </tr>
 			</table>
 			</form>
 		</div>
@@ -1842,6 +1891,9 @@
 		
 	<form id="MissionPrint-form" name="MissionPrint" method="post" action="/jlyw/LocaleMissionServlet.do?method=13" target="MissionPrintFrame">
 		<input id="localeMissionId" name="localeMissionId" type="hidden" />				
+	</form>
+	<form id="MissionPrint-blank-form" name="MissionPrint-blank-form" method="post" action="/jlyw/LocaleMissionServlet.do?method=18" target="MissionPrintFrame">	
+		<input id="localeMissionId1" name="localeMissionId" type="hidden" />		
 	</form>
 			
 	<iframe id="MissionPrintFrame" name="MissionPrintFrame" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>	
@@ -1886,7 +1938,10 @@
 						<td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
 						<td align="left"  ><input s id="Remark" name="Remark" style="width:200px" ></input></td>
 					</tr>
-					
+					<tr>
+						<td  align="right">台头名称：</td>
+			  			<td  align="left" colspan="5"><select name="HeadName" id="HeadName" style="width:178px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" mode="remote" url="/jlyw/AddressServlet.do?method=1" required="true" ></select></td>
+					</tr>
 					<tr >	
 						<td></td>
 						<td><a class="easyui-linkbutton" icon="icon-add" name="Add" href="javascript:void(0)" onclick="savereg()">确认修改</a></td>
@@ -1941,7 +1996,10 @@
 						<td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
 						<td align="left"  ><input  id="Remarkcheck" name="Remark" style="width:200px" ></input></td>
 					</tr>
-					
+					<tr>
+						<td  align="right">台头名称：</td>
+			  			<td  align="left" colspan="5"><select name="HeadName" id="HeadNamecheck" style="width:178px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" mode="remote" url="/jlyw/AddressServlet.do?method=1" required="true" editable="false"></select></td>
+					</tr>
 					<tr >	
 						<td></td>
 						<td><a class="easyui-linkbutton" icon="icon-add" name="Add" href="javascript:void(0)" onclick="saveregcheck()">确认核定</a></td>
@@ -1962,17 +2020,17 @@
 			<td align="right" style="width：10%">单位名称：</td>
 			<td align="left"  style="width：20%"><select name="Name" id="NameAdd" style="width:178px"></select><input type="hidden" name="CustomerId" id="CustomerIdAdd" /></td>
 			<td align="right" style="width：10%">邮&nbsp;&nbsp;&nbsp;&nbsp;编：</td>
-			<td align="left"  style="width：20%"><input id="zcdAdd" name="ZipCode" type="text" style="width:175px"  readonly="readonly"/></td>
+			<td align="left"  style="width：20%"><input id="zcdAdd" name="ZipCode" type="text" style="width:175px"  /></td>
 			<td align="right" style="width：10%">单位地址：</td>
-			<td align="left" style="width：20%"><input id="AddressAdd" name="Address" type="text" style="width:175px" readonly="readonly"/></td>
+			<td align="left" style="width：20%"><input id="AddressAdd" name="Address" type="text" style="width:175px" /></td>
 		</tr>
 		<tr >			
 		    <td align="right">单位电话：</td>
-		    <td align="left"><input id="TelAdd" name="Tel" type="text" style="width:175px" readonly="readonly"/></td>
+		    <td align="left"><input id="TelAdd" name="Tel" type="text" style="width:175px" /></td>
 			<td align="right">联 系 人：</td>
-			<td align="left"><input id="conAdd" name="Contactor" type="text" style="width:175px" readonly="readonly"/></td>
+			<td align="left"><input id="conAdd" name="Contactor" type="text" style="width:175px" /></td>
 		    <td align="right">联系人号码：</td>
-		    <td align="left"><input id="contactortelAdd" name="ContactorTel" type="text" style="width:175px" readonly="readonly"/></td>
+		    <td align="left"><input id="contactortelAdd" name="ContactorTel" type="text" style="width:175px"/></td>
 		</tr>
 
 		<tr >
@@ -1991,6 +2049,10 @@
 			<td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
 			<td align="left"  colspan="3"><input  id="RemarkAdd" name="Remark"  style="width:330px;"  ></input></td>
 			
+		</tr>
+		<tr>
+			<td  align="right">台头名称：</td>
+			<td  align="left" colspan="5"><select name="HeadName" id="HeadNameAdd" style="width:178px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" mode="remote" url="/jlyw/AddressServlet.do?method=1" required="true" editable="false"></select></td>
 		</tr>
 		<tr height="20px">	
 			
@@ -2102,7 +2164,7 @@
 				<!--<td width="10%" align="center" colspan="2"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-add" name="Add" onclick="AddRecord()">添加器具</a></td>-->
 			</tr>
 			<tr>
-				<td align="right">维修费：</td>
+				<!-- <td align="right">维修费：</td>
 				<td align="left">
 					<input id="RepairFee" name="RepairFee" class="easyui-numberbox" min="0" />
 				</td>
@@ -2113,7 +2175,7 @@
 				<td  align="right">检测费合计：</td>
 				<td  align="left">
 					<input id="TestFee" name="TestFee" type="text" class="easyui-numberbox" min="0" />
-				</td>		
+				</td> -->		
 				            
 			    <td  colspan="2" align="right">添加<input id="username" name="username" class="easyui-combobox"  url="" style="width:100px;" valueField="name" textField="name" panelHeight="150px" /></td>
 				<!--<td width="10%" align="center" colspan="2"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-add" name="Add" onclick="AddRecord()">添加器具</a></td>-->
@@ -2173,11 +2235,25 @@
 	  </td>
  </tr>
  <tr>
+	  <td >
+		  <label>交通方式：</label><select class="easyui-combobox" id="QTway1" name="QTway" type="text" style="width:140px" required="true" panelHeight="auto">					            <option value="所内派车" selected="selected">所内派车</option>
+		  	<option value="来车">来车</option>
+			<option value="步行" >步行</option>
+			<option value="摩托车">摩托车</option>
+			<option value="电动车" >电动车</option>
+			<option value="自驾车" >自驾车</option>
+			<option value="公交" >公交</option>
+		  </select>
 	  <td>
-	  <label>车&nbsp;牌&nbsp;号：</label><select id="Licence" name="Licence" style="width:140px" required="true"></select>
+	  <label>&nbsp;&nbsp;&nbsp;&nbsp;车&nbsp;牌&nbsp;号：</label><select id="Licence" name="Licence" style="width:140px" ></select>
+	  </td>
+ </tr>
+ <tr>
+	  <td>  
+	  <label>乘车司机：</label><select id="Drivername" name="Drivername" style="width:140px" ></select>	
 	  </td>
 	  <td>
-	  <label>&nbsp;&nbsp;&nbsp;&nbsp;乘车司机：</label><select id="Drivername" name="Drivername" style="width:140px" required="true"></select>
+	
 	  </td>
 </tr>
 	
@@ -2201,7 +2277,7 @@
 						<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="AddRecordFromHistory()">提交选中的历史记录</a>
 					</td>
 					<td style="text-align:right;padding-right:2px">
-						<label>器具名称：</label><input type="text" id="History_ApplianceName" value="" style="width:100px" />&nbsp;<label>开始时间：</label><input class="easyui-datebox" id="History_BeginDate" type="text" style="width:100px" />&nbsp;<label>截止时间：</label><input class="easyui-datebox" id="History_EndDate" type="text" style="width:100px" />&nbsp;<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-search" plain="true" title="查询历史记录" id="btnHistorySearch" onclick="doLoadHistoryAppItems()">查询历史记录</a>
+						<label>器具名称：</label><input type="text" id="History_ApplianceName" value="" style="width:100px" />&nbsp;<label>开始时间：</label><input class="easyui-datebox" id="table6_History_BeginDate" type="text" style="width:100px" />&nbsp;<label>截止时间：</label><input class="easyui-datebox" id="table6_History_EndDate" type="text" style="width:100px" />&nbsp;<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-search" plain="true" title="查询历史记录" id="btnHistorySearch" onclick="doLoadHistoryAppItems()">查询历史记录</a>
 					</td>
 				</tr>
 			</table>

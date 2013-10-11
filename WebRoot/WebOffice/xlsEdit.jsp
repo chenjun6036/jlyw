@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=GB2312" import="com.jlyw.hibernate.*" %>
+<%@ page contentType="text/html;charset=GBK" import="com.jlyw.hibernate.*" %>
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="css/style.css" />

@@ -44,7 +44,7 @@ public class SysContextListener implements ServletContextListener {
 		smsTimer.schedule(new SmsService(), 10*1000, 10*60*1000);// 调用SmsService，10*1000表示任务延迟10s执行，10*60*1000表示每隔10分钟执行任务，60*60*1000表示一个小时。
 		tempFileCleanTimer.schedule(new TempFileCleanService(), 15*1000, 20*60*1000);	//每20分钟执行一次
 		delInformationTimer.schedule(new InformationDeleteService(), 20*1000, 2*60*60*1000);	//2小时执行一次
-		authBackgroundRuningTimer.schedule(new AuthBackgroundRuningService(), 25*1000, 2*60*1000);	//2分钟执行一次
+		authBackgroundRuningTimer.schedule(new AuthBackgroundRuningService(), 2*1000, 1*60*1000);	//2分钟执行一次
 		specificationRuningTimer.schedule(new SpecificationReplaceService(), 30*1000, 24*60*60*1000);
 		log.debug("已经添加服务");
 		

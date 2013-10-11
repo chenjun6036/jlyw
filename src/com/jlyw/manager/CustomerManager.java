@@ -2,16 +2,19 @@ package com.jlyw.manager;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Transaction;
 
+import com.jlyw.hibernate.CommissionSheet;
+import com.jlyw.hibernate.CommissionSheetDAO;
 import com.jlyw.hibernate.Customer;
 import com.jlyw.hibernate.CustomerContactor;
 import com.jlyw.hibernate.CustomerContactorDAO;
 import com.jlyw.hibernate.CustomerDAO;
+import com.jlyw.hibernate.Reason;
+import com.jlyw.hibernate.ReasonDAO;
+import com.jlyw.hibernate.SysUser;
 import com.jlyw.hibernate.crm.InsideContactor;
 import com.jlyw.hibernate.crm.InsideContactorDAO;
 import com.jlyw.util.KeyValueWithOperator;
@@ -54,17 +57,40 @@ private CustomerDAO m_dao = new CustomerDAO();
 	 * @param CustomerContactor cusContactor对象
 	 * @return 插入成功，返回true；否则返回false
 	 */
+	public boolean save(Customer Customer, CustomerContactor cusContactor){
+		Transaction tran = m_dao.getSession().beginTransaction();
+		CustomerContactorDAO cusContactorDAO = new CustomerContactorDAO();
+		try {	
+			m_dao.save(Customer);
+			cusContactor.setCustomerId(Customer.getId());
+			cusContactorDAO.save(cusContactor);
+			tran.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			tran.rollback();
+			return false;
+		} finally {
+			m_dao.closeSession();
+		}
+	}
+	/**
+	 * 插入一条Customer和CustomerContactor记录
+	 * @param Customer Customer对象
+	 * @param CustomerContactor cusContactor对象
+	 * @return 插入成功，返回true；否则返回false
+	 */
 	public boolean save(Customer Customer, CustomerContactor cusContactor,InsideContactor insideCon){
 		Transaction tran = m_dao.getSession().beginTransaction();
 		CustomerContactorDAO cusContactorDAO = new CustomerContactorDAO();
 		InsideContactorDAO insideContactorDAO=new InsideContactorDAO();
 		try {	
 			m_dao.save(Customer);
-			//cusContactor.setCustomerId(Customer.getId());//修改为
-			cusContactor.setCustomer(Customer);
+			//cusContactor.setCustomer(Customer);//修改为
+			cusContactor.setCustomerId(Customer.getId());
 			cusContactorDAO.save(cusContactor);
+			if(insideCon.getSysUser().getId()!=null&&insideCon.getRole()!=null)
 			insideContactorDAO.save(insideCon);
-			
 			tran.commit();
 			return true;
 		} catch (Exception e) {
@@ -108,12 +134,11 @@ private CustomerDAO m_dao = new CustomerDAO();
 		CustomerContactor cusContactor;
 		try {			
 			m_dao.update(Customer);
-			List<CustomerContactor> list = cusContactorDAO.findByVarProperty("CustomerContactor", new KeyValueWithOperator("customer.id", Customer.getId(), "="), new KeyValueWithOperator("name", ContactorName, "="));
+			List<CustomerContactor> list = cusContactorDAO.findByVarProperty("CustomerContactor", new KeyValueWithOperator("customerId", Customer.getId(), "="), new KeyValueWithOperator("name", ContactorName, "="));
 			if(list==null||list.size()==0)
 			{
 				cusContactor = new CustomerContactor();
-				//cusContactor.setCustomerId(Customer.getId());
-				cusContactor.setCustomer(Customer);
+				cusContactor.setCustomerId(Customer.getId());
 				cusContactor.setName(ContactorName);
 				cusContactor.setCellphone1(Cellphone1);
 				if (Cellphone2 != null && !Cellphone2.equals(""))
@@ -277,6 +302,64 @@ private CustomerDAO m_dao = new CustomerDAO();
 		}
 	}
 	
+	/***
+	 * 合并委托单位
+	 * @param FC   合并至单位
+	 * @param Lc   被合并单位
+	 * @return
+	 */
+	public boolean MergeCustomer(Customer FC, Customer LC, SysUser user){
+		Transaction tran = m_dao.getSession().beginTransaction();
+		CommissionSheetDAO cSheetDAO = new CommissionSheetDAO();
+		try {
+			List<CommissionSheet> cSheetList = cSheetDAO.findByVarProperty("CommissionSheet", new KeyValueWithOperator("customerId", LC.getId(), "="));
+			for(CommissionSheet cSheet : cSheetList){
+				cSheet.setCustomerId(FC.getId());
+				cSheet.setCustomerAddress(FC.getAddress());
+				cSheet.setCustomerName(FC.getName());
+				cSheet.setSampleFrom(FC.getName());
+				cSheet.setBillingTo(FC.getName());
+				cSheet.setCustomerTel(FC.getTel());
+				cSheet.setCustomerZipCode(FC.getZipCode());
+				
+				cSheetDAO.update(cSheet);
+			}
+			LC.setStatus(1);
+			LC.setCancelDate(new Timestamp(System.currentTimeMillis()));
+			LC.setModifyDate(new Timestamp(System.currentTimeMillis()));
+			LC.setSysUserByModificatorId(user);
+			ReasonDAO rDAO = new ReasonDAO();
+			Timestamp today = new Timestamp(System.currentTimeMillis());
+			List<Reason> rList = rDAO.findByVarProperty("Reason", new KeyValueWithOperator("reason","合并委托单位","="), new KeyValueWithOperator("type", 22, "="));//查找注销原因
+			if(rList.size() > 0){	//更新原因
+				Reason reason = rList.get(0);
+				reason.setCount(reason.getCount()+1);
+				reason.setLastUse(today);
+				rDAO.update(reason);
+				LC.setReason(reason);	//注销原因
+			}else{	//新建原因
+				Reason reason = new Reason();
+				reason.setCount(1);
+				reason.setLastUse(today);
+				reason.setReason("合并委托单位");
+				reason.setStatus(0);
+				reason.setType(22);	//注销客户
+				rDAO.save(reason);
+				LC.setReason(reason);	//注销原因
+			}
+			
+			m_dao.update(LC);
+			tran.commit();
+			return true;
+		}catch(Exception e){
+			e.printStackTrace();
+			tran.rollback();
+			return false;
+		}finally{
+			m_dao.closeSession();
+		}
+	}
+	
 	public List<String> formatExcel(Object obj){
 		List<String> result = new ArrayList<String>();
 		Object[] temp = (Object[]) obj;
@@ -307,115 +390,6 @@ private CustomerDAO m_dao = new CustomerDAO();
 		result.add(((Customer)temp[0]).getModifyDate().toString());
 		result.add(((Customer)temp[0]).getSysUserByModificatorId().getName().toString());
 		result.add(((Customer)temp[0]).getSysUserByInsideContactorId()==null?"":((Customer)temp[0]).getSysUserByInsideContactorId().getName().toString());
-		/////////////////////////////////////////////////////////////////////////////////
-		Integer payVia=((Customer)temp[0]).getPayVia();
-		if(payVia!=null)
-		{
-			int s=payVia;
-			switch (s) {
-				case 1:
-				result.add("现金");
-				break;
-				case 2:
-					result.add("支票");				
-				break;
-				case 3:
-					result.add("付汇");
-				break;
-				case 4:
-					result.add("POS机");
-				break;
-				case 5:
-					result.add("其它");
-				break;
-			default:
-				result.add("/");
-				break;
-			}
-		}
-		else result.add("/");
-		Integer payType=((Customer)temp[0]).getPayType();
-		if(payType!=null)
-		{
-			int t=payType;
-			switch (t) {
-				case 1:
-				result.add("检后结账");
-				break;
-				case 2:
-					result.add("周期结账");				
-				break;
-				case 3:
-					result.add("预付款");
-				break;
-				case 4:
-					result.add("其它");
-				break;
-			default:
-				result.add("/");
-				break;
-			}
-		}else result.add("/");
-		Integer cycle=((Customer)temp[0]).getAccountCycle();
-		if(cycle!=null)
-		{
-			result.add(cycle.toString()+"个月");
-		}else result.add("/");
-		Integer v=((Customer)temp[0]).getCustomerValueLevel();
-		if(v!=null)
-		{
-			result.add(v.toString()+"级");
-		}else result.add("/");
-		Integer clevel=((Customer)temp[0]).getCustomerLevel();
-		if(clevel!=null)
-		{
-			int s=clevel;
-			switch (s) {
-				case 1:
-				result.add("VIP客户");
-				break;
-				case 2:
-					result.add("重点客户");				
-				break;
-				case 3:
-					result.add("重要客户");
-				break;
-				case 4:
-					result.add("一般客户");
-				break;
-				case 5:
-					result.add("特殊客户");
-				break;
-			default:
-				result.add("/");
-				break;
-			}
-		}
-		else result.add("/");
-		Integer trendency=((Customer)temp[0]).getTrendency();
-		if(trendency!=null)
-		{
-			int t=trendency;
-			switch (t) {
-				case 1:
-				result.add("升级可能");
-				break;
-				case 2:
-					result.add("降级可能");				
-				break;
-				case 3:
-					result.add("维持现状");
-				break;
-			default:
-				result.add("/");
-				break;
-			}
-		}else result.add("/");
-		result.add(((Customer)temp[0]).getOutput()==null?"/":((Customer)temp[0]).getOutput().toString());
-		result.add(((Customer)temp[0]).getOutputExpectation()==null?"/":((Customer)temp[0]).getOutputExpectation().toString());
-		result.add(((Customer)temp[0]).getServiceFeeLimitation()==null?"/":((Customer)temp[0]).getServiceFeeLimitation().toString());
-		
-		/////////////////////////////////////////////////////////////////////////////////
 		if(((CustomerContactor)temp[1])!=null)
 		{
 			result.add(((CustomerContactor)temp[1]).getName().toString());
@@ -434,9 +408,6 @@ private CustomerDAO m_dao = new CustomerDAO();
 		return result;
 	}
 	
-	////////////////////////////////////////////////////////////////////////////////////
-	
-	////////////////////////////////////////////////////////////////////////////////////
 	public List<String> formatTitle(){
 		List<String> result = new ArrayList<String>();
 		result.add("序号");
@@ -466,18 +437,6 @@ private CustomerDAO m_dao = new CustomerDAO();
 		result.add("修改时间");
 		result.add("修改人");
 		result.add("内部联系人");
-		
-		/////////////////////////
-		result.add("付款方式");
-		result.add("付款类型");
-		result.add("结账周期");
-		result.add("价值等级");
-		result.add("企业等级");
-		result.add("变动趋势");
-		result.add("产值当年值");
-		result.add("产值期望值");
-		result.add("服务费用限值");
-		////////////////////////
 		result.add("单位联系人");
 		result.add("联系人手机1");
 		result.add("联系人手机2");

@@ -125,7 +125,9 @@ public class WithdrawServlet extends HttpServlet {
 						w.setWithdrawDate(new Timestamp(DateTimeFormatUtil.DateFormat.parse(WithdrawDate.trim()).getTime()));
 					}
 					w.setLocation(Location);	//¥Ê∑≈Œª÷√
-					if(withdrawMgr.update(w)){
+					CommissionSheet comSheet = w.getCommissionSheet();
+					comSheet.setFinishLocation(Location);
+					if(withdrawMgr.withdrawUpdate(w)){
 						retJSON1.put("IsOK", true);
 						return;
 					}else{

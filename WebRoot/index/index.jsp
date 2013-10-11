@@ -1,12 +1,12 @@
-<%@ page contentType="text/html; charset=gb2312" language="java" import="java.sql.*" errorPage="" %>
-<%@ page import="java.sql.*,com.jlyw.hibernate.*"%>
+<%@ page contentType="text/html; charset=gbk" language="java" import="java.sql.*" errorPage="" %>
+<%@ page import="java.sql.*,com.jlyw.hibernate.*,java.lang.*"%>
 <%
 	SysUser loginuser = (SysUser)request.getSession().getAttribute("LOGIN_USER");
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<meta http-equiv="Content-Type" content="text/html; charset=gbk" />
 <title>无标题文档</title>
 
 
@@ -56,7 +56,41 @@
 			pagination:true
 		});
 		
-		$('#uploaded_file_table1').datagrid({		
+		$('#overdue').datagrid({
+			//title:'通知',
+			singleSelect:true, 
+			fit: true,
+			nowrap: false,
+			striped: true,
+			border:false,
+			//url:'/jlyw/TaskServlet.do?method=11',
+//			sortName: 'userid',
+// 			sortOrder: 'desc',
+			remoteSort: true,	//默认按服务器的排序
+//			idField:'id',
+			columns:[
+				[
+					{field:'Allotte',title:'派定人',width:80,align:'center'},
+					{field:'Days',title:'超期天数',width:60,align:'center'},
+					{field:'Code',title:'委托单号',width:80,align:'center'},
+					{field:'Customer',title:'委托单位',width:160,align:'center'},
+					{field:'CommissionDate',title:'委托日期',width:100,align:'center'},
+					{field:'PromiseDate',title:'承诺日期',width:100,align:'center'},
+					{field:'ApplianceSpeciesName',title:'器具授权名',width:100,align:'center'},
+					{field:'ApplianceName',title:'器具名称',width:100,align:'center'},
+					{field:'Quantity',title:'数量',width:100,align:'center'},
+					{field:'WithQuantity',title:'退样数量',width:100,align:'center'},
+					{field:'Status',title:'状态',width:100,align:'center'},
+					{field:'LocaleSiteManager',title:'现场负责人',width:100,align:'center'},
+					{field:'OtherRequirements',title:'其他要求',width:100,align:'center'},
+					{field:'Remark',title:'备注',width:100,align:'center'}	
+				]
+			],
+			pagination:true,
+			rownumbers:true
+		});
+		
+		/*$('#uploaded_file_table1').datagrid({		
 			iconCls:'icon-tip',
 			idField:'_id',
 			fit:true,
@@ -75,8 +109,8 @@
 			]],
 			pagination:true
 	
-		});
-		
+		});*/
+	
 		$.ajax({
 			type: "post",
 			url: "/jlyw/CrmServlet.do?method=49",
@@ -86,7 +120,7 @@
 					console.log(result.total);
 					 $.messager.show({
 		                title: "预警提示",
-		                msg: "<a href='/jlyw/crm/CustomerService/WarningList.jsp' id='warning'>您有"+result.total+"条预警信息！</a>",
+		                msg: "<a href='/jlyw/crm/CustomerService/WarningList.jsp' id='warning'>您有"+result.total+"条关怀预警信息！</a>",
 		                showType: 'slide',
 		                timeout: 0
 		            });
@@ -118,39 +152,10 @@
 			}
 		});
 	}
-/* 	
-	$(function(){
-		$.ajax({
-			type: "post",
-			url: "/jlyw/CrmServlet.do?method=49",
-			dataType: "json",	//服务器返回数据的预期类型
-			success: function(data, textStatus){
-				var result = eval("("+data+")");
-				if(result.IsOk && result.total > 0){
-					console.log(result.total);
-					 $.messager.show({
-		                title: "预警提示",
-		                msg: "您有"+result.total+"条预警信息！",
-		                showType: 'slide',
-		                timeout: 0
-		            });
-				}
-			}
-		});
-	}); */
 	
 	</script>
 	<style type="text/css">
-	a#warning,a#warning:visited{
-		font-size:14px;
-		text-decoration: none;
-		color: #FF0000;
-	}
-	
-	a#warning:hover{
-		text-decoration: underline;
-	}
-	
+
 	.right_title{
 			background:url(rightbg01.gif) repeat-x;
 			color:#595a5b;
@@ -257,10 +262,16 @@
 		    </div>	
 		</td>
 		<td height="300px">
-			<div id="p1" class="easyui-panel" style="width:520px;height:300px;"
+			<!--<div id="p1" class="easyui-panel" style="width:520px;height:300px;"
 				title="最近上传的共享文件" collapsible="false"  closable="false" scroll="no">
 					
 					<table  class="easyui-datagrid" id="uploaded_file_table1" url="/jlyw/FileDownloadServlet.do?method=1&FileType=105&FilesetName=20120525102011109_4380"></table>
+						
+		    </div>-->
+            <div id="p1" class="easyui-panel" style="width:520px;height:300px;"
+				title="超期信息" collapsible="false"  closable="false" scroll="no">
+					
+					<table  class="easyui-datagrid" id="overdue" url="/jlyw/TaskAssignServlet.do?method=11"></table>
 						
 		    </div>
 		</td>
@@ -294,10 +305,38 @@
 				</tr>
 				</table>-->
 					<div style="height:22px">欢迎您，${sessionScope.LOGIN_USER.name}</div>
-					<div style="height:22px;wight:120px">◆您上次登陆的时间：${sessionScope.LastLoginTime}</div>
-					<div style="height:22px;wight:120px">◆您上次登陆的IP地址：${sessionScope.LastLoginIp}</div>				
-					<div style="height:22px;wight:120px">◆您本次登陆的时间：${sessionScope.LoginTime}</div>
-					<div style="height:22px;wight:120px">◆您本次登陆的IP地址：${sessionScope.LoginIp}</div>					
+					<%
+						//if(request.getSession().getAttribute("isOverdue").toString().equals("true")){
+						String Overdue = (String)session.getAttribute("isOverdue");
+						boolean isOverdue = (Overdue.equals("1")?true:false);
+						if(isOverdue){
+					%>
+						<div style="height:22px">◆<a style="text-decoration:underline" href="/jlyw/TaskManage/OverdueTask.jsp" target="_self"><span style='color: #0033FF'>您要进行延期审批的委托单数量：${sessionScope.OverdueNumber}</span></a></div>
+					<%
+						}
+					%>
+					<% 
+						String Withdraw = (String)session.getAttribute("isOverdue");
+						boolean isWithdraw = (Overdue.equals("1")?true:false);
+						if(isOverdue){
+					%>
+						<div style="height:22px">◆<a style="text-decoration:underline" href="/jlyw/TaskManage/WithdrawTask.jsp" target="_self"><span style='color: #0033FF'>您要进行退样审批的委托单数量：${sessionScope.WithdrawNumber}</span></a></div>
+					<%
+						}
+					%>
+					<% 
+						String Discount = (String)session.getAttribute("isOverdue");
+						boolean isDiscount = (Overdue.equals("1")?true:false);
+						if(isOverdue){
+					%>
+						<div style="height:22px;">◆<a style="text-decoration:underline" href="/jlyw/FeeManage/DiscountTask.jsp" target="_self"><span style='color: #0033FF'>您要进行折扣审批的委托单数量：${sessionScope.DiscountNumber}</span></a></div>	
+					<%
+						}
+					%>		
+					<div style="height:22px;">◆您上次登陆的时间：${sessionScope.LastLoginTime}</div>
+					<div style="height:22px;">◆您上次登陆的IP地址：${sessionScope.LastLoginIp}</div>				
+					<div style="height:22px;">◆您本次登陆的时间：${sessionScope.LoginTime}</div>
+					<div style="height:22px;">◆您本次登陆的IP地址：${sessionScope.LoginIp}</div>			
 				  	
 		    </div>
 	

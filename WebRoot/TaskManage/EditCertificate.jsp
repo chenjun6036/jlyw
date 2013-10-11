@@ -187,6 +187,13 @@
 			handler:function(){
 				javascript:history.go(-1);
 			}
+		},'-',{
+			text:'查看委托单附件等详细信息',
+			iconCls:'icon-search',
+			handler:function(){
+				$('#DetailForm_Code').val($('#Code').val());
+				$('#DetailForm').submit();
+			}
 		}]
 	});
 	$('#Appliance').datagrid({
@@ -641,7 +648,9 @@ function doEditCertificate(){
 		</jsp:include>
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
-
+		<form id="DetailForm" method="post" action="/jlyw/StatisticLook/MissionLookByCommissionSheetCode.jsp" target="_blank">
+        <input id="DetailForm_Code" type="hidden" name="Code"/>
+        </form>
 		<form id="SearchForm" method="post" >
 		<input id="Code" type="hidden" name="Code" value="<%= request.getParameter("Code")==null?"":request.getParameter("Code") %>" style="width:150px;" />
 		<input id="Pwd" type="hidden" name="Pwd" value="<%= request.getParameter("Pwd")==null?"":request.getParameter("Pwd") %>" style="width:150px;" />

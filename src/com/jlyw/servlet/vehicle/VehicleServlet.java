@@ -223,6 +223,7 @@ public class VehicleServlet extends HttpServlet{
 				resp.setContentType("text/html;charset=utf-8");
 				resp.getWriter().write(retObj7.toString());
 			}
+			break;
 		case 6://查询车牌号：Combobox（模糊查询）
 			JSONArray options = new JSONArray();
 			try {

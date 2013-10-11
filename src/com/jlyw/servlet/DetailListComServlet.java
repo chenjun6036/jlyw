@@ -42,6 +42,8 @@ import com.jlyw.manager.SubContractManager;
 import com.jlyw.manager.WithdrawManager;
 import com.jlyw.util.DateTimeFormatUtil;
 import com.jlyw.util.KeyValueWithOperator;
+import com.jlyw.util.SystemCfgUtil;
+import com.jlyw.util.FlagUtil.CommissionSheetStatus;
 
 public class DetailListComServlet extends HttpServlet {
 	private static Log log = LogFactory.getLog(DetailListComServlet.class);
@@ -120,7 +122,7 @@ public class DetailListComServlet extends HttpServlet {
 								jsonObj.put("ApplianceName", cSheet.getApplianceName()==null?"":cSheet.getApplianceName());	//器具名称（常用名称）							
 								jsonObj.put("CommissionDate", sf.format(cSheet.getCommissionDate()));		//委托日期			
 								int GenerateTag=0;
-								if(cSheet.getDetailListCode()!=null){			
+								if(cSheet.getDetailListCode()!=null&&cSheet.getDetailListCode().length()>0){			
 									GenerateTag=1;
 								}						
 								jsonObj.put("GenerateTag",GenerateTag);//是否已经生成清单的标志位								
@@ -240,7 +242,8 @@ public class DetailListComServlet extends HttpServlet {
 					JSONObject retObj=new JSONObject();
 					retObj.put("IsOK", true);
 					retObj.put("msg", "费用清单生成成功！");
-					retObj.put("DetailListId", deList.getId());
+					retObj.put("DetailListId", deList.getCode());
+					retObj.put("DetailListID", deList.getId());
 					resp.setContentType("text/html;charset=utf-8");
 					resp.getWriter().write(retObj.toString());
 				}else{
@@ -281,6 +284,8 @@ public class DetailListComServlet extends HttpServlet {
 
 					String DateFrom = req.getParameter("DateFrom");
 					String DateEnd = req.getParameter("DateEnd");
+					
+					String Type = req.getParameter("Type");
 				
 					List<Object> keys = new ArrayList<Object>();
 
@@ -405,6 +410,7 @@ public class DetailListComServlet extends HttpServlet {
 				int rows = 10;	//页面大小
 				if (req.getParameter("rows") != null)
 					rows = Integer.parseInt(req.getParameter("rows").toString());
+					String CustomerId = req.getParameter("CustomerId");
 					String CustomerName  = req.getParameter("CustomerName");					
 					String Code = req.getParameter("Code");	//委托单号
 					String FeeCode = req.getParameter("FeeCode");	//费用清单号
@@ -415,6 +421,11 @@ public class DetailListComServlet extends HttpServlet {
 					if(FeeCode != null && FeeCode.length() > 0){
 						//condList.add(new KeyValueWithOperator("detailList.code", FeeCode, "="));
 						QueryHQL=QueryHQL + " and a.code ='" + FeeCode + "' ";
+					}
+					if(CustomerId != null && CustomerId.length() > 0){
+						String cusId =  URLDecoder.decode(CustomerId.trim(), "UTF-8"); //解决jquery传递中文乱码问题
+										
+						QueryHQL=QueryHQL + " and a.code in (select c.detailListCode from CommissionSheet as c where c.customerId ="+cusId+")";
 					}
 					if(CustomerName != null && CustomerName.length() > 0){
 						String cusName =  URLDecoder.decode(CustomerName.trim(), "UTF-8"); //解决jquery传递中文乱码问题
@@ -682,36 +693,12 @@ public class DetailListComServlet extends HttpServlet {
 								}
 							}
 							jsonObj.put("ApplianceName", cSheet.getApplianceName()==null?"":cSheet.getApplianceName());	//器具名称（常用名称）
-							jsonObj.put("ApplianceCode", cSheet.getAppFactoryCode());	//出厂编号
-							jsonObj.put("AppManageCode", cSheet.getAppManageCode());	//管理编号
-							jsonObj.put("Model", cSheet.getApplianceName()==null?"":cSheet.getApplianceModel()==null?"":cSheet.getApplianceModel());	//型号规格
-							jsonObj.put("Range", cSheet.getRange());		//测量范围
-							jsonObj.put("Accuracy", cSheet.getAccuracy());	//精度等级
-							jsonObj.put("Manufacturer", cSheet.getManufacturer()==null?"":cSheet.getManufacturer());	//制造厂商
 							jsonObj.put("Quantity", cSheet.getQuantity()==null?"":cSheet.getQuantity());	//台/件数
-							jsonObj.put("MandatoryInspection", cSheet.getMandatory()?1:0);	//强制检验
-							jsonObj.put("Urgent", cSheet.getUrgent()?1:0);	//加急
-							jsonObj.put("Trans", cSheet.getSubcontract()?1:0);	//转包
-							if(!cSheet.getSubcontract()){	//0：转包
-								List<SubContract> subRetList = (new SubContractManager()).findByVarProperty(new KeyValueWithOperator("commissionSheet.id", cSheet.getId(),"="), new KeyValueWithOperator("status", 0, "="));
-								if(subRetList != null && subRetList.size() > 0){
-									jsonObj.put("SubContractor", subRetList.get(0).getSubContractor().getName());	//转包方
-								}else{
-									jsonObj.put("SubContractor", "");	//转包方
-								}
-							}else{
-								jsonObj.put("SubContractor", "");
-							}
-							jsonObj.put("Appearance", cSheet.getAppearance()==null?"":cSheet.getAppearance());	//外观附件
-							jsonObj.put("Repair", cSheet.getRepair()?1:0);	//修理
 							jsonObj.put("ReportType", cSheet.getReportType());	//报告形式
-							jsonObj.put("OtherRequirements", cSheet.getOtherRequirements()==null?"":cSheet.getOtherRequirements());	//其它要求
-							jsonObj.put("Location", cSheet.getLocation()==null?"":cSheet.getLocation());	//存放位置
+							jsonObj.put("FinishLocation", cSheet.getFinishLocation()==null?"":cSheet.getFinishLocation());	//存放位置
 							jsonObj.put("Allotee", cSheet.getAllotee()==null?"":cSheet.getAllotee());	//派定人
 							jsonObj.put("CommissionDate", sf.format(cSheet.getCommissionDate()));		//委托日期
 							jsonObj.put("Status", cSheet.getStatus());	//委托单状态
-							
-							jsonObj.put("Attachment", cSheet.getAttachment());
 							
 							/***********在CertificateFeeAssign(原始记录证书费用分配)中查找委托单的费用详情***********/
 							List<Object[]> FList=feeMgr.findByHQL(queryStringTotalFeeByCommissionSheetId, cSheet.getId());												
@@ -769,6 +756,8 @@ public class DetailListComServlet extends HttpServlet {
 				/*** 打印所选清单的委托单费用信息 **/
 				int DetailListId = Integer.parseInt(req.getParameter("DetailListId")); // 清单ID
 				
+				String DetailListType = req.getParameter("DetailListType"); // 打印或者预览，有值代表预览
+				
 				CommissionSheetManager cSheetMgr1 = new CommissionSheetManager();	
 				WithdrawManager withdrawMgr = new WithdrawManager();
 				OriginalRecordManager oRecordMgr = new OriginalRecordManager();
@@ -776,7 +765,7 @@ public class DetailListComServlet extends HttpServlet {
 				DetailListManager deListMgr = new DetailListManager();	
 				DetailList deListRet = deListMgr.findById(DetailListId);
 
-				List<CommissionSheet> comList = cSheetMgr1.findByVarProperty(new KeyValueWithOperator("detailListCode", deListRet.getCode(), "="));
+				List<CommissionSheet> comList = cSheetMgr1.findByPropertyBySort("code",true,new KeyValueWithOperator("detailListCode", deListRet.getCode(), "="));
 				
 				if(comList != null && comList.size() > 0){
 					totalSize5=comList.size();
@@ -851,13 +840,37 @@ public class DetailListComServlet extends HttpServlet {
 					    }
 						jsonArray.put(jsonObj);
 					}
+					/*int temp=idid;
+					for(int m=0;m<19-temp;m++){
+						JSONObject jsonObj = new JSONObject();
+						
+						jsonObj.put("Id", idid++);
+						jsonObj.put("CommissionSheetCode","" ); // 委托单Code
+						jsonObj.put("ApplianceName", ""); // 器具名称
+						jsonObj.put("Quantity", ""); // 数量
+						jsonObj.put("FinishLocation",""); // 存放位置
 					
-					
+						jsonObj.put("TQuantity",""); // 退样数量
+						
+				    	jsonObj.put("TestFee", 0.0);
+						jsonObj.put("RepairFee", 0.0);
+						jsonObj.put("MaterialFee", 0.0);
+						jsonObj.put("CarFee", 0.0);
+						jsonObj.put("DebugFee", 0.0);
+						jsonObj.put("OtherFee", 0.0);
+						jsonObj.put("TotalFee", 0.0);
+					   
+						jsonArray.put(jsonObj);
+					}*/
+										
 					retObj2.put("rows",jsonArray);
 					retObj2.put("total", totalSize5);
 					
 					SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 					retObj2.put("DetailListDate",deListRet.getStatus()==2?sf.format(deListRet.getLastEditTime()):"");//结账日期
+					java.util.Date now = new java.util.Date();
+					retObj2.put("NowDate", sf.format(now));
+					
 					retObj2.put("DetailListSysUser",deListRet.getStatus()==2?deListRet.getSysUser().getName():"");//结账人
 					//retObj2.put("DetailListSysUser","sssssss");//结账人
 					retObj2.put("DetailListCode",deListRet.getCode());
@@ -869,6 +882,12 @@ public class DetailListComServlet extends HttpServlet {
 					retObj2.put("JDfee", JDfee);//检定费
 					retObj2.put("QTfee", deListRet.getTotalFee()==null?0:deListRet.getTotalFee()-JDfee);//其他费
 					retObj2.put("IsOK", true);
+					
+					if(DetailListType!=null){
+						retObj2.put("DetailListType", "YL");
+					}else{
+						retObj2.put("DetailListType", "DY");
+					}
 						
 				}
 				req.getSession().setAttribute("FeeList", retObj2);
@@ -898,13 +917,14 @@ public class DetailListComServlet extends HttpServlet {
 			try {
 				/*** 打印所选清单的所有原始记录费用信息 **/
 				int DetailListId = Integer.parseInt(req.getParameter("DetailListId")); // 清单ID			
+				String DetailListType = req.getParameter("DetailListType"); // 打印或者预览，有值代表预览
 				CommissionSheetManager cSheetMgr1 = new CommissionSheetManager();	
 				OriginalRecordManager oRecordMgr = new OriginalRecordManager();
 				
 				DetailListManager deListMgr = new DetailListManager();	
 				DetailList deListRet = deListMgr.findById(DetailListId);
 			
-				List<CommissionSheet> comList = cSheetMgr1.findByVarProperty(new KeyValueWithOperator("detailListCode", deListRet.getCode(), "="));
+				List<CommissionSheet> comList = cSheetMgr1.findByPropertyBySort("code",true,new KeyValueWithOperator("detailListCode", deListRet.getCode(), "="));
 				
 				if(comList != null && comList.size() > 0){
 				totalSize6=comList.size();
@@ -994,11 +1014,17 @@ public class DetailListComServlet extends HttpServlet {
 					}		
 							
 				}
+				
+				
 				retObj6.put("rows",jsonArray);
 				retObj6.put("total", totalSize6);
 		
 				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 				retObj6.put("DetailListDate",deListRet.getStatus()==2?sf.format(deListRet.getLastEditTime()):"");//结账日期
+				
+				java.util.Date now = new java.util.Date();
+				retObj6.put("NowDate", sf.format(now));
+				
 				retObj6.put("DetailListSysUser",deListRet.getStatus()==2?deListRet.getSysUser().getName():"");//结账人
 				//retObj2.put("DetailListSysUser","sssssss");//结账人
 				retObj6.put("DetailListCode",deListRet.getCode());
@@ -1010,6 +1036,12 @@ public class DetailListComServlet extends HttpServlet {
 				retObj6.put("JDfee", JDfee);//检定费
 				retObj6.put("QTfee", deListRet.getTotalFee()==null?0:deListRet.getTotalFee()-JDfee);//其他费
 				retObj6.put("IsOK", true);
+				
+				if(DetailListType!=null){
+					retObj6.put("DetailListType", "YL");
+				}else{
+					retObj6.put("DetailListType", "DY");
+				}
 			}
 			req.getSession().setAttribute("FeeList", retObj6);
 			//System.out.println("333");
@@ -1029,6 +1061,63 @@ public class DetailListComServlet extends HttpServlet {
 
 		}finally{}
 		break;
+		case 7://根据清单号，注销清单
+			JSONObject retObj13 = new JSONObject();
+			try{
+				String DetailListId = req.getParameter("DetailListId");
+				
+				if(DetailListId == null || DetailListId.length() == 0){
+					throw new Exception("清单号未指定！");
+				}
+				DetailListManager deListMgr = new DetailListManager();	
+				DetailList deListRet = deListMgr.findById(Integer.parseInt(DetailListId));
+				
+				if(deListRet.getStatus()==1){   //注销
+					throw new Exception("该清单已注销 ！");
+				}else if(deListRet.getStatus()==0){  //正常			
+					deListMgr.logOutDetailList(deListRet);
+				}else {
+					
+					List<CommissionSheet> cSheetList = cSheetMgr.findByVarProperty(new KeyValueWithOperator("detailListCode", deListRet.getCode(), "="),new KeyValueWithOperator("status", CommissionSheetStatus.Status_YiJieZhang, "="));
+					
+					if(cSheetList!=null&&cSheetList.size()>0){
+						for(CommissionSheet cSheet:cSheetList){
+							if(cSheet == null){
+								throw new Exception("找不到指定的委托单！");
+							}
+							if(cSheet.getCheckOutDate() == null){
+								throw new Exception("该委托单尚未结账，不能执行结账挡回！");
+							}
+							SysUser loginUser = (SysUser)req.getSession().getAttribute(SystemCfgUtil.SessionAttrNameLoginUser);
+							cSheetMgr.checkOutReject(cSheet, loginUser);
+						}
+					}
+					
+					List<CommissionSheet> cSheetList2 = cSheetMgr.findByVarProperty(new KeyValueWithOperator("detailListCode", deListRet.getCode(), "="),new KeyValueWithOperator("status", CommissionSheetStatus.Status_YiJieZhang, "="));
+					if(cSheetList2==null||cSheetList2.size()==0){
+						deListRet.setStatus(1);
+						deListMgr.update(deListRet);
+					}
+				}
+				retObj13.put("IsOK", true);
+				retObj13.put("msg", "挡回成功！");
+			}catch(Exception e){
+				try {
+					retObj13.put("IsOK", false);
+					retObj13.put("msg", String.format("挡回失败！错误信息：%s", (e!=null && e.getMessage()!=null)?e.getMessage():"无"));
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in CommissionSheetServlet-->case 7", e);
+				}else{
+					log.error("error in CommissionSheetServlet-->case 7", e);
+				}
+			}finally{
+				resp.setContentType("text/html;charset=utf-8");
+				resp.getWriter().write(retObj13.toString());
+			}
+			break;
 		}
 	}
 

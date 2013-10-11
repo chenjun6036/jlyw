@@ -7,20 +7,24 @@ public class UIDUtil {
 	public static final SimpleDateFormat formater = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 	public static final SimpleDateFormat formater1 = new SimpleDateFormat("yyyyMMdd");
 	private static long LastCurrentTimeMillis = 0;	//最后一次获取字符串的时间
+	private static Object MutexObjectOf22BitUID = new Object();		//用于互斥访问
+	
 	/**
 	 * 获取22位的ID字符串
 	 * ID字符串规则：yyyyMMddHHmmssSSS_XXXX(XXXX为四位随机数)
 	 * @return 22位的ID字符串
 	 */
 	public static String get22BitUID(){
-		long currentTimeMillis = System.currentTimeMillis();
-		if(currentTimeMillis <= LastCurrentTimeMillis){
-			currentTimeMillis = LastCurrentTimeMillis + 10;	//往后延10ms
+		synchronized (MutexObjectOf22BitUID) {
+			long currentTimeMillis = System.currentTimeMillis();
+			if(currentTimeMillis <= LastCurrentTimeMillis){
+				currentTimeMillis = LastCurrentTimeMillis + 10;	//往后延10ms
+			}
+			LastCurrentTimeMillis = currentTimeMillis;
+			Random rand = new Random(currentTimeMillis);
+			int randInt = rand.nextInt(10000);	//返回0~9999之间的随机数
+			return String.format("%s_%04d", formater.format(new java.sql.Date(currentTimeMillis)), randInt);
 		}
-		LastCurrentTimeMillis = currentTimeMillis;
-		Random rand = new Random(currentTimeMillis);
-		int randInt = rand.nextInt(10000);	//返回0~9999之间的随机数
-		return String.format("%s_%04d", formater.format(new java.sql.Date(currentTimeMillis)), randInt);
 	}
 	/**
 	 * 获取14位的ID字符串(清单号)

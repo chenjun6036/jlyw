@@ -29,11 +29,14 @@ import com.jlyw.hibernate.Specification;
 import com.jlyw.hibernate.Standard;
 import com.jlyw.hibernate.StandardAppliance;
 import com.jlyw.hibernate.SysUser;
+import com.jlyw.hibernate.VerifyAndAuthorize;
 import com.jlyw.manager.AddressManager;
 import com.jlyw.manager.CertificateManager;
 import com.jlyw.manager.OriginalRecordManager;
+import com.jlyw.manager.QualificationManager;
 import com.jlyw.manager.UserManager;
 import com.jlyw.util.ExcelUtil;
+import com.jlyw.util.FlagUtil;
 import com.jlyw.util.KeyValueWithOperator;
 import com.jlyw.util.MongoDBUtil;
 import com.jlyw.util.SystemCfgUtil;
@@ -281,6 +284,7 @@ public class FileDownloadServlet extends HttpServlet {
 					}
 				}
 				
+			
 				OutputStream osTemplate = null, osRecord = null;	//模板文件，xml定义文件，原始记录文件的文件流
 				InputStream isTemplate = null, isRecord = null;
 				File fTemplate = null, fXML = null, fRecord = null;
@@ -530,6 +534,7 @@ public class FileDownloadServlet extends HttpServlet {
 				String VersionStr = req.getParameter("Version");//证书的版本号
 				String XlsTemplateFileId = req.getParameter("XlsTemplateFileId");	//原始记录Excel模板文件ID（用于拷贝证书数据页）
 				
+				
 				StringBuilder alertString=new StringBuilder();//字数超过限制时的提示信息
 				
 				if(OriginalRecordId == null || OriginalRecordId.length() == 0){
@@ -614,6 +619,9 @@ public class FileDownloadServlet extends HttpServlet {
 						throw new Exception("保存证书编号失败，请稍后再试！");
 					}
 				}
+				
+				
+				
 				
 				File fDocTemplate = null, fDocXML = null, fDocOut = null;//证书模板文件，证书xml定义文件, 证书文件
 				File fXlsTemplate = null, fXlsXML = null;	//原始记录Excel模板文件、Excel对应 的XML定义文件

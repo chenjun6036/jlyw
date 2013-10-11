@@ -38,7 +38,7 @@ public class FlagUtil {
 	}
 	
 	public static class BaseTypeInfoType{  //基础信息类型
-		public static final int Type_CustomerType = 11;  //企业分类
+		public static final int Type_CustomerType = 11;  //企业分类，没有与数据中保持一致，本应是Classification
 		public static final int Type_TestLogTester = 12; //检定单位
 		public static final int Type_SpecificationType = 13; //规程规范类别
 		public static final int Type_StandardIssuedBy = 14;  //计量标准发证机关
@@ -57,6 +57,8 @@ public class FlagUtil {
 		public static final int Type_UserNation = 27;   //员工民族
 		public static final int Type_Insustry = 28;   //行业
 		
+		public static final int Type_Customer_Type = 29;   //单位类型
+
 		
 		public static String getBaseTypeInfo(int type){
 			switch(type){
@@ -96,6 +98,8 @@ public class FlagUtil {
 				return "民族";
 			case Type_Insustry:
 				return "行业";
+			case Type_Customer_Type:
+				return "单位类型";
 			default:
 					return "";
 			}
@@ -139,6 +143,8 @@ public class FlagUtil {
 				return "SysUser|Nation";
 			case Type_Insustry:
 				return "Customer|Industry";
+			case Type_Customer_Type:
+				return "Customer|CustomerType";
 			default:
 					return "";
 			}

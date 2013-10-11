@@ -26,7 +26,7 @@
             <column name="Tester" length="200" not-null="true" />
         </property>
         <property name="certificateId" type="java.lang.String">
-            <column name="CertificateId" length="20" not-null="true" />
+            <column name="CertificateId" length="30" not-null="true" />
         </property>
         <property name="confirmMeasure" type="java.lang.String">
             <column name="ConfirmMeasure" length="500" />

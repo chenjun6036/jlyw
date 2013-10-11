@@ -25,9 +25,9 @@
 	
 	
 	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"N10","typeClass":"java.lang.String","type":"w","indexStr":"1"},
-	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"AA10","typeClass":"java.lang.String","type":"w","indexStr":"2"},
-	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"AL10","typeClass":"java.lang.String","type":"w","indexStr":"3"},
-	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"AT10","typeClass":"java.lang.String","type":"w","indexStr":"4"},
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"X10","typeClass":"java.lang.String","type":"w","indexStr":"2"},
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"AH10","typeClass":"java.lang.String","type":"w","indexStr":"3"},
+	{"attribute":"SpecificationCode","fieldClass":"技术规范","desc":"编号","sheetName":"原始记录","rowIndex":"AR10","typeClass":"java.lang.String","type":"w","indexStr":"4"},
 	
 	{"attribute":"Name","fieldClass":"计量标准","desc":"名称","sheetName":"原始记录","rowIndex":"D12","typeClass":"java.lang.String","type":"w","indexStr":"1"},
 	{"attribute":"Range","fieldClass":"计量标准","desc":"测量范围","sheetName":"原始记录","rowIndex":"N12","typeClass":"java.lang.String","type":"w","indexStr":"1"},

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>回访信息管理</title>
+<title>预警信息</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -85,11 +85,14 @@
 				columns:[[
 					{field:'customer',title:'客户单位',width:150,align:'center'},
 					{field:'name',title:'联系人姓名',width:150,align:'center'},
-					{field:'birthday',title:'生日',width:80,align:'center'},
-					{field:'type',title:'类型',width:80,align:'center',
+					{field:'date',title:'日期',width:80,align:'center'},
+					{field:'type',title:'类型',width:120,align:'center',
 						formatter:function(value,rowData,rowIndex){
 							if(value == 1){
 								return "生日";
+							}
+							else if(value == 2){
+								return "检定周期到期";
 							}
 						}},
 					{field:'priority',title:'处理级别',width:80,align:'center',formatter:function(value,rowData,rowIndex){
@@ -104,7 +107,7 @@
 				]],
 				pagination:true,
 				rownumbers:true,
-				toolbar:[/* {
+				/*toolbar:[ {
 					text:'编辑',
 					iconCls:'icon-edit',
 					handler:function(){
@@ -125,7 +128,7 @@
 					//	$.messager.alert('提示','请选择一行数据','warning');
 						}
 					}
-				},'-', */{
+				},'-', *//* {
 						text:'导出',
 						iconCls:'icon-save',
 						handler:function(){
@@ -148,7 +151,7 @@
 								}
 							});
 						}
-				}],
+				} ],*/
 				onClickRow:function(rowIndex, rowData){
 				
 				}

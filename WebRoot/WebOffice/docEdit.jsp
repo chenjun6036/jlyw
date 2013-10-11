@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=GB2312" import="com.jlyw.hibernate.*,com.jlyw.manager.*,com.jlyw.util.*" %>
+<%@ page contentType="text/html;charset=GBK" import="com.jlyw.hibernate.*,com.jlyw.manager.*,com.jlyw.util.*" %>
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
@@ -12,6 +12,7 @@
 			String modXlsFileId = "";	//原始记录Excel模板文件的ID（用于拷贝证书数据页模板）
 			String version = "-1";
 			String staffId = "-1";	//检校人员（任务分配人员）
+			String verifierName = "-1";	//核验人员姓名
 			
 			if (request.getParameter("OriginalRecordId") != null
 					&& !request.getParameter("OriginalRecordId").equals("")) {
@@ -37,6 +38,10 @@
 				staffId = request.getParameter("StaffId");
 			}
 			
+			if(request.getParameter("VerifierName") != null 
+					&& !request.getParameter("VerifierName").equals("")){
+				verifierName = request.getParameter("VerifierName");
+			}
 			//若文件名为空，则获取文件名
 			if((fileName == null || fileName.length() == 0) && oRecordId != null && oRecordId.length() > 0){
 				OriginalRecord oRecord = new OriginalRecordManager().findById(Integer.parseInt(oRecordId));
@@ -250,7 +255,7 @@ function WebOffice1_NotifyWordEvent(eventname) {
 									value="  返回  ">&nbsp;
 								<% if(session.getAttribute("LOGIN_USER")!=null && staffId.equalsIgnoreCase(((SysUser)session.getAttribute("LOGIN_USER")).getId().toString())){ %>
 								<input name="button93" type="button"
-									onClick="return SubmitCertificate('<%=fileName%>','<%=oRecordId%>','<%=version%>')" value="  提交  "
+									onClick="return SubmitCertificate('<%=fileName%>','<%=oRecordId%>','<%=version%>','<%=verifierName%>')" value="  提交  "
 									classs="rollout">
 								<% }%>
 							</td>

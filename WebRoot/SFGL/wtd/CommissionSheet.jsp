@@ -65,6 +65,7 @@ $(function(){
 	<DIV class="JlywCenterLayoutDIV">  
 		<form id="CommissionSheetForm" method="post" >
 			<input type="hidden" name="Appliances" id="Appliances" value="" />
+			<input type="hidden" name="ComSheetType" id="ComSheetType" value="" /><!-- 现场向委托单导入的标识符，新建委托单界面应为空 -->
 		 <div class="easyui-panel" style="width:1005px; margin:0px; padding:0px" title="新建委托单">
 			<br />
 			<table width="1000px" id="table1">
@@ -72,6 +73,7 @@ $(function(){
 				  <td width="75" align="right">委托形式：</td>
 				  <td width="169"  align="left"><select name="CommissionType" style="width:152px">
 					  <option value="1" selected="selected">送样检测</option>
+					  <option value="2">现场检测</option>
 					  <option value="5">其它业务</option>
 					  <option value="6">自检业务</option>
 					  <option value="7">现场带回</option>

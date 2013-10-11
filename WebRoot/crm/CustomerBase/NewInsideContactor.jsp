@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>反馈信息管理</title>
+<title>新建内部联系人</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -105,12 +105,12 @@ $(function(){
 		   		success:function(data){
 		   			var result = eval("("+data+")");
 		   				$.messager.alert('提示',result.msg,'info');
-		   				if(result.IsOK)
+		   				if(result.IsOk)
 		   					cancel();
 		   		 }
 			});
 		}
-		$(function(){$("#role").combobox('setValue',2);});
+		$(function(){$("#role").combobox('setValue',1);});
 		
 	</script>
 </head>

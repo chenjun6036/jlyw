@@ -105,7 +105,7 @@
                 nowrap: false,
                 striped: true,
                 singleSelect:true, 
-				//url:'/jlyw/CustomerServlet.do?method=2',
+				url:'/jlyw/CrmServlet.do?method=25',
 				sortName:'Id',
 				sortOrder:'desc',
 				remoteSort: false,
@@ -133,24 +133,8 @@
 								return datas[i].name;
 						}
 					}},
-					{field:'CustomerType',title:'单位类型',width:80,align:'center',
-					formatter:function(value,rowData,rowIndex){
-							if(value == 0 || value == '0')
-							{
-								rowData['CustomerType']=0;
-							    return "单位";
-							}
-							else if(value == 1 || value == '1')
-							{
-								rowData['CustomerType']=1;
-								return "个人";
-							}
-							else if(value == 2 || value == '2')
-							{
-								rowData['CustomerType']=2;
-								return "网上注册单位";
-							}
-						}},
+					{field:'CustomerTypeName',title:'单位类型',width:80,align:'center'},
+					{field:'CustomerType',hidden:true},
 					{field:'Code',title:'单位代码',width:70,align:'center'},
 					{field:'Address',title:'单位地址',width:80,align:'center'},
 					{field:'AddressEn',title:'单位地址英文',width:100,align:'center'},
@@ -164,10 +148,15 @@
 								rowData['Status']=0;
 							    return "正常";
 							}
-							else
+							else if(value == 1 || value == '1')
 							{
 								rowData['Status']=1;
 								return '<span style="color:red">注销</span>';
+							}
+							else 
+							{
+								rowData['Status']=-1;
+							    return "未知";
 							}
 							
 						}},
@@ -183,10 +172,10 @@
 					{field:'SpecialDemands',title:'特殊要求',width:80,align:'center'},
 					{field:'CreditAmount',title:'信用额度',width:80,align:'center'},
 					{field:'Remark',title:'备注',width:80,align:'center'},
-					{field:'Contactor',title:'联系人',width:80,align:'center'},
+					{field:'Contactor',title:'外部联系人',width:80,align:'center'},
 					{field:'ContactorTel1',title:'手机号码1',width:80,align:'center'},
 					{field:'ContactorTel2',title:'手机号码2',width:80,align:'center'},
-					{field:'ModifyDate',title:'最近修改日期',width:100,align:'center'},
+					
 					////////////////////////////////////////////////////////////////
 					{field:'PayVia',title:'支付方式',width:100,align:'center',
 					formatter:function(value,rowData,index)
@@ -296,10 +285,11 @@
 					}},
 					{field:'OutputExpectation',title:'产值期望值',width:100,align:'center'},
 					{field:'ServiceFeeLimitation',title:'服务费用限值',width:100,align:'center'},
-					{field:'Industry',title:'所在行业',width:100,align:'center'},
-					
+					{field:'Industry',hidden:true},
+					{field:'IndustryName',title:'所在行业',width:100,align:'center'},
 					////////////////////////////////////////////////////////////////
-					{field:'Modificator',title:'修改者',width:100,align:'center'}
+					{field:'Modificator',title:'修改者',width:100,align:'center'},
+					{field:'ModifyDate',title:'最近修改日期',width:200,align:'center'}
 				]],
 				pagination:true,
 				rownumbers:true,
@@ -352,7 +342,7 @@
 			});
 			
 			$('#contactors').datagrid({
-				title:'联系人信息',
+				title:'外部联系人信息',
 				width:900,
 				height:300,
                 nowrap: false,
@@ -411,7 +401,7 @@
 						}
 				},'-',{
 						text:'注销',
-						iconCls:'icon-edit',
+						iconCls:'icon-remove',
 						handler:function(){
 							var select = $('#contactors').datagrid('getSelected');
 							if(select)
@@ -465,6 +455,8 @@
 			$('#edit').dialog('close');
 			$('#del').dialog('close');
 			$('#edit_con').dialog('close');
+			$('#log_off_con').dialog('close');
+			
 		}
 		
 		function SubmitContactor(){
@@ -484,10 +476,10 @@
 		function query()
 		{
 			$('#table2').datagrid('options').url='/jlyw/CrmServlet.do?method=25';
-			$('#table2').datagrid('options').queryParams={'queryname':encodeURI($('#queryname').combobox('getValue')),'queryZipCode':encodeURI($('#queryZipCode').val()),'queryAddress':encodeURI($('#queryAddress').val()),'queryTel':encodeURI($('#queryTel').val()),'queryInsideContactor':encodeURI($('#queryInsideContactor').combobox('getValue')),'queryClassi':encodeURI($('#queryClassi').combobox('getValues')),'queryCredit':encodeURI($('#queryCredit').val()),'queryContactor':encodeURI($('#queryContactor').val()),'queryContactorTel':encodeURI($('#queryContactorTel').val())};
+			$('#table2').datagrid('options').queryParams={'queryname':encodeURI($('#queryname').combobox('getText')),'queryZipCode':encodeURI($('#queryZipCode').val()),'queryAddress':encodeURI($('#queryAddress').val()),'queryTel':encodeURI($('#queryTel').val()),'queryInsideContactor':encodeURI($('#queryInsideContactor').combobox('getText')),'queryClassi':encodeURI($('#queryClassi').combobox('getValues')),'queryCredit':encodeURI($('#queryCredit').val()),'queryContactor':encodeURI($('#queryContactor').val()),'queryContactorTel':encodeURI($('#queryContactorTel').val())};
 			$('#table2').datagrid('reload');
 			
-			$('#queryname').combobox('setValue',"");
+			//$('#queryname').combobox('setValue',"");
 			$('#queryInsideContactor').combobox('setValue',"");
 		}
 		
@@ -537,8 +529,9 @@
 		   	success:function(data){
 		   		var result = eval("("+data+")");
 		   		$.messager.alert('提示',result.msg,'info');
-		   		if(result.IsOK){
-		   			$('#table1').datagrid('reload');
+		   		if(result.IsOk){
+		   			$("#edit").dialog('close');
+		   			$('#table2').datagrid('reload');
 		   			cancel();
 		   			}
 		   		}
@@ -570,6 +563,15 @@
 	});
 }
 );
+function Resets()
+{
+$('#query').form('clear');
+}
+
+function Reset()
+{
+$('#frm_edit_customer').form('clear');
+}
 
 
 function LogOffContactor(){
@@ -606,12 +608,12 @@ function LogOffContactor(){
 	<div border="true" style="width:900px;overflow:hidden;position:relative;">
 		<div>
 			<br />
-			<br />
+			<br /><form id="query">
 			<table id="table1" style="width:900px">
-            <form id="query">
+            
 				<tr>
 					<td align="right">单位名称：</td>
-				  	<td align="left"><input class="easyui-combobox" style="width:152px" id="queryname" name="queryName" url="" panelHeight="150px"></input></td>
+				  	<td align="left"><input class="easyui-combobox" style="width:152px" id="queryname" name="queryName"  panelHeight="150px"></input></td>
                     <td align="right">邮政编码：</td>
 				  	<td align="left"><input class="easyui-validate" id="queryZipCode" name="queryZipCode"></input></td>
                     <td align="right">单位地址：</td>
@@ -624,7 +626,7 @@ function LogOffContactor(){
 				  	<td align="left"><input id="queryInsideContactor" name="queryInsideContactor" class="easyui-combobox"  url="" style="width:152px;" valueField="name" textField="name" panelHeight="150px" /></td>
                     <td align="right">分类：</td>
 				  	<td align="left"><input id="queryClassi" name="queryClassi" class="easyui-combobox" style="width:152px" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=11"/></td>
-                     <td width="100"><a href="javascript:void(0)" onclick="$('#query').form('clear');" class="easyui-linkbutton" iconCls="icon-reload">重置</a></td>
+                     <td width="100"><a href="javascript:void(0)" onclick="Resets()" class="easyui-linkbutton" iconCls="icon-reload">重置</a></td>
 				</tr>
                 <tr>
 					<td align="right">信用度：</td>
@@ -635,8 +637,8 @@ function LogOffContactor(){
 				  	<td align="left"><input id="queryContactorTel" name="queryContactorTel" class="easyui-validatebox"/></td>
 					<td width="100"><a href="javascript:void(0)" onclick="query()" class="easyui-linkbutton" iconCls="icon-search">查询</a></td>
 				</tr>
-                </form>
-			</table>
+               
+			</table> </form>
 		</div>
 		
 
@@ -689,18 +691,15 @@ function LogOffContactor(){
 		<option value="11">十一个月</option>
 		<option value="12">十二个月</option>
 		</select></td>
-		<td align="right">联&nbsp;系&nbsp;人：</td>
-			<td align="left"><input id="con" name="Contactor" type="text" class="easyui-validatebox" required="true"/></td>
+		<td align="right">外部联系人：</td>
+			<td align="left"><input id="con" name="Contactor" type="text" style="border:none;" class="easyui-validatebox" readonly="readonly" /></td>
 		</tr>
 		
 		<tr height="30px">
 			<td align="right">单位类型：</td>
 			<td align="left" >
-				<select id="customerType" name="CustomerType" class="easyui-combobox" style="width:145px" required="true" panelHeight="auto" editable="false">
-					<option value='0'>国有企业</option>
-					<option value='1'>外资企业</option>
-					<option value='2'>中外合资企业</option>
-					<option value='3'>民营企业</option>
+				<select id="customerType" name="CustomerType" class="easyui-combobox" style="width:145px" required="true" panelHeight="auto" valueField="id" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=29" editable="false">
+					
 				</select>
 			</td>
 			<td align="right">单位地址：</td>
@@ -752,7 +751,7 @@ function LogOffContactor(){
 			<td align="right">单位状态：</td>
 			<td align="left">
 				<select id="sta" name="Status" class="easyui-combobox" style="width:145px" panelHeight="auto" editable="false">
-						<option value='0' selected>正常</option>
+						<option value='0'>正常</option>
 						<option value='1'>注销</option>
 				 </select></td>
 		</tr>
@@ -780,9 +779,7 @@ function LogOffContactor(){
 		<option value="5">5级</option>
 		<option value="6">6级</option>
 		<option value="7">7级</option>
-		<option value="8">8级</option>
-		<option value="9">9级</option>
-		<option value="10">10级</option>
+		
 		
 		</select>
 		
@@ -841,7 +838,7 @@ function LogOffContactor(){
 			<td></td>
 			<td><a class="easyui-linkbutton" icon="icon-add" name="Add" href="javascript:void(0)" onclick="savereg()">修改</a></td>
 			<td></td>
-			<td><a class="easyui-linkbutton" icon="icon-reload" name="Reset" href="javascript:void(0)" onclick="cancel()">重置</a></td>
+			<td><a class="easyui-linkbutton" icon="icon-reload" name="Reset" href="javascript:void(0)" onclick="Reset()">重置</a></td>
 		</tr>
 	</table>
 	</form>

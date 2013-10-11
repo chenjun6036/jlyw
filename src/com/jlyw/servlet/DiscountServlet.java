@@ -117,6 +117,10 @@ public class DiscountServlet extends HttpServlet {
 					discount.setExecuteTime(new Timestamp(System.currentTimeMillis()));
 					discount.setSysUserByExecutorId((SysUser)req.getSession().getAttribute(SystemCfgUtil.SessionAttrNameLoginUser));	//办理人
 					if(discount.getExecuteResult()){	//审批通过，将费用写入到委托单的证书费用分配表（表CertificateFeeAssign中）
+						DiscountComSheetManager disComMgr = new DiscountComSheetManager();
+						List<DiscountComSheet> disCountList = disComMgr.findByVarProperty(new KeyValueWithOperator("discount.id",Integer.parseInt(DiscountId),"="),new KeyValueWithOperator("commissionSheet.status",FlagUtil.CommissionSheetStatus.Status_YiWanGong,"="));
+						if(disCountList==null||disCountList.size()==0)
+							throw new Exception("该委托单不是“已完工”！");						
 						discountMgr.discountExecute(discount);
 					}else{	//审批不通过
 						discountMgr.update(discount);

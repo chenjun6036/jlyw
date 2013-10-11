@@ -784,9 +784,9 @@ public class QuotationServlet extends HttpServlet {
 						JSONObject option = new JSONObject();
 						String popularName = (String) changeCellType(row.getCell(1));//常用名称或者标准名称
 
-						String querySQL="select model.Id from "+SystemCfgUtil.DBPrexName+"ApplianceStandardName as model where model.Name=? " +
+						String querySQL="select model.Id from "+SystemCfgUtil.DBPrexName+"ApplianceStandardName as model where model.Name=? and model.Status = 0 " +
 								" union " +
-								" select p.StandardNameId from "+SystemCfgUtil.DBPrexName+"AppliancePopularName as p where p.PopularName=? ";
+								" select p.StandardNameId from "+SystemCfgUtil.DBPrexName+"AppliancePopularName as p where p.PopularName=? and p.Status = 0 ";
 						option.put("CertificateName", popularName);//常用名称
 						option.put("Model", changeCellType(row.getCell(2)));
 						option.put("Accuracy",changeCellType(row.getCell(4)));                        	
@@ -832,7 +832,7 @@ public class QuotationServlet extends HttpServlet {
 							
 							
 							List<Object> keys = new ArrayList<Object>();
-							String queryStr="select Min(t.fee) as min,Max(t.fee) as max from TargetAppliance as t where t.applianceStandardName.name = ?";
+							String queryStr="select Min(t.fee) as min,Max(t.fee) as max from TargetAppliance as t where t.applianceStandardName.name = ? and t.status = 0 ";
 							keys.add(URLDecoder.decode(option.getString("StandardName"), "UTF-8"));
 							
 							if(option.getString("Model")!=null&&option.getString("Model").length()>0){

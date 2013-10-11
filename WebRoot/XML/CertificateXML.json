@@ -1,4 +1,4 @@
-﻿{"total":87,"rows":[
+﻿{"total":93,"rows":[
 		{"attribute":"AuthorizerPosition","desc":"批准人职务","indexStr":"", "tagName":"AuthorizerPosition"},
 		{"attribute":"AuthorizerPrinter","desc":"批准人（打印）","indexStr":"", "tagName":"AuthorizedPrinter"},
 		{"attribute":"CheckerPrinter","desc":"核验员（打印）","indexStr":"", "tagName":"CheckedPrinter"},
@@ -27,6 +27,12 @@
 		{"attribute":"DwTel","desc":"台头单位电话","indexStr":"", "tagName":"Tel"},
 		{"attribute":"DwComplainTel","desc":"台头单位投诉电话","indexStr":"", "tagName":"TelForComplain"},
 		{"attribute":"DwFax","desc":"台头单位传真","indexStr":"", "tagName":"Fax"},
+		{"attribute":"DwAuthorizationStatement","desc":"台头单位计量授权声明（中文）","indexStr":"", "tagName":"AuthorizationStatement"},
+		{"attribute":"DwAuthorizationStatementEn","desc":"台头单位计量授权声明（英文）","indexStr":"", "tagName":"AuthorizationStatementEn"},
+		{"attribute":"DwCNASStatement","desc":"台头单位实验室认可声明（中文）","indexStr":"", "tagName":"CNASStatement"},
+		{"attribute":"DwCNASStatementEn","desc":"台头单位实验室认可声明（英文）","indexStr":"", "tagName":"CNASStatementEn"},
+		{"attribute":"DwStandardStatement","desc":"台头单位溯源声明（中文）","indexStr":"", "tagName":"StandardStatement"},
+		{"attribute":"DwStandardStatementEn","desc":"台头单位溯源声明（英文）","indexStr":"", "tagName":"StandardStatementEn"},
 		
 		{"attribute":"SecurityCodeP1","desc":"安全码（第一部分）","indexStr":"", "tagName":"SecurityCodeA1"},
 		{"attribute":"SecurityCodeP2","desc":"安全码（第二部分）","indexStr":"", "tagName":"SecurityCodeA2"},

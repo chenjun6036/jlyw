@@ -92,7 +92,7 @@
 											dataType:"json",
 											success:function(data, textStatus){
 											
-												$.messager.alert('提示',data.msg,'info');
+												//$.messager.alert('提示',data.msg,'info');
 											}
 										});
 									}
@@ -137,7 +137,7 @@
 		function query()
 		{
 			$('#resources').datagrid('options').url='/jlyw/SysResourcesServlet.do?method=3';
-			$('#resources').datagrid('options').queryParams={'queryname':encodeURI($('#resourcesname').combobox('getValue'))};
+			$('#resources').datagrid('options').queryParams={'queryname':encodeURI($('#resourcesname').combobox('getText'))};
 			//$('#resources').datagrid('clearSelections');
 			$('#resources').datagrid('reload');
 		}

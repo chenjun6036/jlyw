@@ -26,7 +26,25 @@ $(function(){
 			CloseWaitingDlg();
 		}
 	 });
-	
+	$('#function-toolbar-TargetAppName').combobox({
+		valueField:'id',
+		textField:'name',
+		onSelect:function(){
+			
+		},
+		onChange:function(newValue, oldValue){
+			var allData = $(this).combobox('getData');
+			if(allData != null && allData.length > 0){
+				for(var i=0; i<allData.length; i++)
+				{
+					if(newValue==allData[i].id){
+						return false;
+					}
+				}
+			}
+			$(this).combobox('reload','/jlyw/TargetApplianceServlet.do?method=6&Status=0&TgtAppName='+newValue);
+		}
+	});
 	$('#SpecificationId').combobox({
 		valueField:'id',
 		textField:'name_num',
@@ -68,7 +86,6 @@ $(function(){
 		//url:'/jlyw/SpecificationServlet.do?method=2',
 		sortName: 'id',
 		remoteSort: false,
-		singleSelect:true, 
 		idField:'id',
 		frozenColumns:[[
 			{field:'ck',checkbox:true}
@@ -121,13 +138,12 @@ $(function(){
 		fit:false,
 		width:600,
 		height:200,
-		singleSelect:true, 
+		singleSelect:false, 
 		nowrap: false,
 		striped: true,
 		//url:'/jlyw/StandardServlet.do?method=2',
 		sortName: 'id',
 		remoteSort: false,
-		singleSelect:true, 
 		idField:'id',
 		frozenColumns:[[
 			{field:'ck',checkbox:true}
@@ -194,8 +210,10 @@ $(function(){
 		singleSelect:false, 
 		nowrap: false,
 		striped: true,
-		url:'',
-		idField:'Id',
+		//url:'/jlyw/StandardServlet.do?method=2',
+		sortName: 'id',
+		remoteSort: false,
+		idField:'id',
 		frozenColumns:[[
 			{field:'ck',checkbox:true}
 		]],
@@ -221,7 +239,7 @@ $(function(){
 		nowrap: false,
 		striped: true,
 //			collapsible:true,
-		url:'/jlyw/OriginalRecordServlet.do?method=0',
+		
 //			sortName: 'userid',
 // 			sortOrder: 'desc',
 		remoteSort: true,
@@ -317,14 +335,14 @@ $(function(){
 						}
 					}
 				},
-				
+				{field:'TotalFee',title:'×Ü¼Æ·ÑÓÃ',width:60,align:'center'},
 				{field:'TestFee',title:'¼ì²â·Ñ',width:60,align:'center'},
 				{field:'RepairFee',title:'ÐÞÀí·Ñ',width:60,align:'center'},
 				{field:'MaterialFee',title:'²ÄÁÏ·Ñ',width:60,align:'center'},
 				{field:'CarFee',title:'½»Í¨·Ñ',width:60,align:'center'},
 				{field:'DebugFee',title:'µ÷ÊÔ·Ñ',width:60,align:'center'},
-				{field:'OtherFee',title:'ÆäËû·ÑÓÃ',width:60,align:'center'},
-				{field:'TotalFee',title:'×Ü¼Æ·ÑÓÃ',width:60,align:'center'}
+				{field:'OtherFee',title:'ÆäËû·ÑÓÃ',width:60,align:'center'}
+				
 			]
 		],
 		pagination:false,
@@ -428,11 +446,18 @@ $(function(){
 				$('#CheckAndFeeForm').submit();	
 				
 			}
+		},'-',{
+			text:'²é¿´Î¯ÍÐµ¥Ã÷Ï¸',
+			iconCls:'icon-search',
+			handler:function(){
+				$('#DetailForm_Code').val($('#Code').val());
+				$('#DetailForm').submit();
+			}
 		}]
 	});
 	$('#Appliance').datagrid({
 		title:'Ñ¡ÔñÊÜ¼ìÆ÷¾ß',
-		width:600,
+		width:770,
 		height:300,
 		singleSelect:true, 
 		fit: false,
@@ -478,6 +503,7 @@ $(function(){
 			setAddOriginalFormRepairFee();	//ÐÞÀí·Ñ
 			
 			//Ä£°åÎÄ¼þË¢ÐÂ
+			$('#template_file_grid_new').datagrid('options').url='/jlyw/FileDownloadServlet.do?method=5';
 			$('#template_file_grid_new').datagrid('options').queryParams={'FilesetName':rowData.StandardNameFilesetName};
 			$('#template_file_grid_new').datagrid('reload');
 			
@@ -501,7 +527,7 @@ $(function(){
 		nowrap: false,
 		striped: true,
 //			collapsible:true,
-		url:'/jlyw/FileDownloadServlet.do?method=5',
+		//url:'/jlyw/FileDownloadServlet.do?method=5',
 //			sortName: 'userid',
 // 			sortOrder: 'desc',
 		remoteSort: false,
@@ -540,7 +566,7 @@ $(function(){
 		nowrap: false,
 		striped: true,
 //			collapsible:true,
-		url:'/jlyw/FileDownloadServlet.do?method=5',
+		//url:'/jlyw/FileDownloadServlet.do?method=5',
 //			sortName: 'userid',
 // 			sortOrder: 'desc',
 		remoteSort: false,
@@ -571,16 +597,16 @@ $(function(){
 		}]
 	});
 	
-	$('#template_doc_file_grid').datagrid({
+	/*$('#template_doc_file_grid').datagrid({
 		title:'Ö¤ÊéÄ£°å',
 		singleSelect:true, 
 		fit: true,
 		nowrap: false,
 		striped: true,
-//			collapsible:true,
+			collapsible:true,
 		url:'/jlyw/FileDownloadServlet.do?method=6',
-//			sortName: 'userid',
-// 			sortOrder: 'desc',
+			sortName: 'userid',
+ 			sortOrder: 'desc',
 		remoteSort: false,
 		idField:'_id',
 		frozenColumns:[[
@@ -603,7 +629,7 @@ $(function(){
 			}	
 		}],
 		pagination:true
-	});
+	});*/
 	
 	$("#VerifyAndAuthorizeForm-Authorizer").combobox({
 		valueField:'id',
@@ -876,7 +902,7 @@ $(function(){
 		valueField:'name',
 		textField:'name',
 		onSelect:function(record){
-			doSearchTargetAppliance();
+			//doSearchTargetAppliance();
 		},
 		onChange:function(newValue, oldValue){
 			
@@ -902,7 +928,7 @@ $(function(){
 		valueField:'name',
 		textField:'name',
 		onSelect:function(record){
-			doSearchTargetAppliance();
+			//doSearchTargetAppliance();
 		},
 		onChange:function(newValue, oldValue){
 			if($("#function-toolbar-StandardName").combobox('getValue')==null||$("#function-toolbar-StandardName").combobox('getValue').length==0){
@@ -926,7 +952,7 @@ $(function(){
 		valueField:'name',
 		textField:'name',
 		onSelect:function(record){
-			doSearchTargetAppliance();
+			//doSearchTargetAppliance();
 		},
 		onChange:function(newValue, oldValue){
 			if($("#function-toolbar-StandardName").combobox('getValue')==null||$("#function-toolbar-StandardName").combobox('getValue').length==0){
@@ -955,7 +981,7 @@ $(function(){
 		height:450,
 		nowrap: false,
 		striped: true,
-		url:'/jlyw/OriginalRecordServlet.do?method=18',
+		//url:'/jlyw/OriginalRecordServlet.do?method=18',
 		remoteSort: true,
 		idField:'OriginalRecordId',
 		frozenColumns:[[
@@ -1073,6 +1099,7 @@ function doLoadCommissionSheet(fromByCode){	//²éÕÒÎ¯ÍÐµ¥
 				}
 				
 				//¼ÓÔØÔ­Ê¼¼ÇÂ¼ÐÅÏ¢
+				$('#OriginalRecord').datagrid('options').url='/jlyw/OriginalRecordServlet.do?method=0';
 				$('#OriginalRecord').datagrid('options').queryParams={'CommissionId':$('#CommissionId').val()};
 				$('#OriginalRecord').datagrid('reload');
 				
@@ -1120,6 +1147,9 @@ function doLoadCommissionSheet(fromByCode){	//²éÕÒÎ¯ÍÐµ¥
 				$("#AddOriginalForm input[name='Quantity']:first").val("1");
 				
 				//$("#AddOriginalForm-FirstIsUnqualified").combobox("select", "ºÏ¸ñ");
+				if($("#LocalMissionCode").val()!=""&&$("#LocalMissionCode").val().length>0){
+					$("#AddOriginalForm-WorkDate").datebox('setValue',$("#CommissionDate").datebox('getValue'));
+				}
 									
 			}else{
 				$.messager.alert('²éÑ¯Ê§°Ü£¡',result.msg,'error');
@@ -1140,6 +1170,7 @@ function doLoadOrEditOriginalRecord(type)  //ÏÂÔØ»ò±à¼­Ô­Ê¼¼ÇÂ¼:typeÎª0Ê±ÏÂÔØÔ­Ê
 	if(row == null){
 		if(type==1 || type=="1"){
 			$("#AddOriginalForm-OriginalRecordId").val('');
+			//$("#AddOriginalForm-OriginalRecordId").val('');
 			$("#AddOriginalForm-WorkStaffId").val('');
 			$("#AddOriginalForm input[name='Quantity']:first").val('1');	//ÖØÖÃÆ÷¾ßÊýÁ¿
 			
@@ -1149,7 +1180,16 @@ function doLoadOrEditOriginalRecord(type)  //ÏÂÔØ»ò±à¼­Ô­Ê¼¼ÇÂ¼:typeÎª0Ê±ÏÂÔØÔ­Ê
 			
 			$("#add_original_record_window").window("open");
 			
-			$("#function-toolbar-StandardName").combobox('clear');
+			if($("#SpeciesType").val()==0){
+				$("#function-toolbar-StandardName").combobox('setText',$("#ApplianceSpeciesName").val());
+				$("#function-toolbar-StandardName").combobox('setValue',$("#ApplianceSpeciesName").val());
+				$("#standardNameIdstandardNameId").val($("#ApplianceSpeciesId").val());
+				$("#function-toolbar-Model").combobox('reload','/jlyw/ApplianceServlet.do?method=2&SpeciesType=0&ApplianceSpeciesId='+$("#ApplianceSpeciesId").val());	//ÐÍºÅ¹æ¸ñ
+				$("#function-toolbar-Range").combobox('reload','/jlyw/ApplianceServlet.do?method=3&SpeciesType=0&ApplianceSpeciesId='+$("#ApplianceSpeciesId").val());	//²âÁ¿·¶Î§
+				$("#function-toolbar-Accuracy").combobox('reload','/jlyw/ApplianceServlet.do?method=4&SpeciesType=0&ApplianceSpeciesId='+$("#ApplianceSpeciesId").val());	
+			}else{
+				$("#function-toolbar-StandardName").combobox('clear');
+			}
 			$("#function-toolbar-Model").combobox('loadData',[]);
 			$("#function-toolbar-Range").combobox('clear');
 			$("#function-toolbar-Range").combobox('loadData',[]);
@@ -1193,6 +1233,7 @@ function doLoadOrEditOriginalRecord(type)  //ÏÂÔØ»ò±à¼­Ô­Ê¼¼ÇÂ¼:typeÎª0Ê±ÏÂÔØÔ­Ê
 function doOpenSelecteTemplateWindow(filesetname)	//´ò¿ªÑ¡ÔñÔ­Ê¼¼ÇÂ¼Ä£°åÎÄ¼þµÄ´°¿Ú
 {
 	$("#select_xls_template_window").window('open');
+	$('#template_file_grid').datagrid('options').url='/jlyw/FileDownloadServlet.do?method=5';
 	$('#template_file_grid').datagrid('options').queryParams={'FilesetName':filesetname};
 	$('#template_file_grid').datagrid('reload');
 }
@@ -1297,7 +1338,7 @@ function doMakeCertificateDoc()	//Ö±½Ó±à¼­Ö¤Êé
 	
 	doOpenEditDocWebOfficeWindow();  //´ò¿ª±à¼­Ö¤ÊéµÄ´°¿Ú
 }
-function doSelecteDocTemplate()	//Ñ¡ÔñÖ¤ÊéÄ£°åÎÄ¼þ
+/*function doSelecteDocTemplate()	//Ñ¡ÔñÖ¤ÊéÄ£°åÎÄ¼þ
 {
 	var row = $('#template_doc_file_grid').datagrid('getSelected');
 	if(row == null){
@@ -1318,7 +1359,7 @@ function doSelecteDocTemplate()	//Ñ¡ÔñÖ¤ÊéÄ£°åÎÄ¼þ
 	}
 	
 	
-/*	$('#makecertificate-submit-form-TemplateFileId').val(row._id);
+	$('#makecertificate-submit-form-TemplateFileId').val(row._id);
 	$('#makecertificate-submit-form').form('submit', {
 		url:'/jlyw/FileUploadServlet.do?method=8',
 		onSubmit: function(){
@@ -1337,12 +1378,12 @@ function doSelecteDocTemplate()	//Ñ¡ÔñÖ¤ÊéÄ£°åÎÄ¼þ
 				$.messager.alert('Ìá½»Ê§°Ü£¡',result.msg,'error');
 			}
 		}
-	});*/	
-}
-function doCloseSelectedDocTemplateWindow()	//¹Ø±ÕÑ¡ÔñÖ¤ÊéÄ£°åÎÄ¼þµÄ´°¿Ú
+	});	
+}*/
+/*function doCloseSelectedDocTemplateWindow()	//¹Ø±ÕÑ¡ÔñÖ¤ÊéÄ£°åÎÄ¼þµÄ´°¿Ú
 {
 	$('#select_doc_template_window').window('close');
-}
+}*/
 
 
 /**
@@ -1399,6 +1440,8 @@ function doAddOriginalRecord(openXlsWin, bEditXls)
 			$('#makecertificate-submit-form-StaffId').val($("#AddOriginalForm-WorkStaffId").val());
 			$('#makecertificate-submit-form-Version').val("-1");
 			$('#makecertificate-submit-form-FileName').val("");
+			$('#makecertificate-submit-form-VerifierName').val($('#AddOriginalForm-VerifyUser').combobox('getValue'));
+
 			var tempResult = doOpenEditDocWebOfficeWindow();
 			if(tempResult){		//³É¹¦´ò¿ª±à¼­Ö¤ÊéµÄ´°¿Ú
 				$("#add_original_record_window").window("close");
@@ -1438,7 +1481,7 @@ function doAddOriginalRecord(openXlsWin, bEditXls)
 	});  
 }
 function doSearchTargetAppliance(){	//°´Ìõ¼þ²éÑ¯ÊÜ¼ìÆ÷¾ßÐÅÏ¢
-	$('#Appliance').datagrid('options').queryParams={'CommissionId':$('#CommissionId').val(),'StandardName':encodeURI($('#function-toolbar-StandardName').combobox('getValue')),'Model':encodeURI($('#function-toolbar-Model').combobox('getValue')),'Range':encodeURI($('#function-toolbar-Range').combobox('getValue')),'Accuracy':encodeURI($('#function-toolbar-Accuracy').combobox('getValue'))};
+	$('#Appliance').datagrid('options').queryParams={'CommissionId':$('#CommissionId').val(),'StandardName':encodeURI($('#function-toolbar-StandardName').combobox('getValue')),'Model':encodeURI($('#function-toolbar-Model').combobox('getValue')).replace(/\+/g,'%2B'),'Range':encodeURI($('#function-toolbar-Range').combobox('getValue')).replace(/\+/g,'%2B'),'Accuracy':encodeURI($('#function-toolbar-Accuracy').combobox('getValue')).replace(/\+/g,'%2B'),'TestFee':encodeURI($('#function-toolbar-TestFee').val()),'TargetAppName':encodeURI($('#function-toolbar-TargetAppName').combobox('getText'))};
 	$('#Appliance').datagrid('reload');
 }
 //¸üÐÂÔ­Ê¼¼ÇÂ¼ExcelµÄÅäÖÃÎÄ¼þ
@@ -1490,6 +1533,7 @@ function doOpenHistoryCertificateWindow(){		//´ò¿ªÀúÊ·Ö¤ÊéÐÅÏ¢µÄ´°¿Ú
 	
 	$('#load_from_history_certificate').window('open');
 	//¼ÓÔØÀúÊ·Ö¤ÊéÐÅÏ¢
+	$('#history_certificate_grid').datagrid('options').url='/jlyw/OriginalRecordServlet.do?method=18';
 	$('#history_certificate_grid').datagrid('options').queryParams={'StandardNameId':encodeURI(row.StandardNameId),'Model':encodeURI($('#load_from_history_certificate-toolbar-Model').val()),'Range':encodeURI($('#load_from_history_certificate-toolbar-Range').val()),'Accuracy':encodeURI($('#load_from_history_certificate-toolbar-Accuracy').val()),'WorkStaff':encodeURI($("#load_from_history_certificate-toolbar-WorkStaff").combobox("getValue"))};
 	$('#history_certificate_grid').datagrid('reload');
 	
@@ -1500,6 +1544,7 @@ function doSearchHistoryCertificate(){
 		$.messager.alert('ÌáÊ¾£¡','ÇëÏÈÑ¡ÔñÒ»¸öÆ÷¾ß±ê×¼Ãû£¡','info');
 		return false;
 	}
+	$('#history_certificate_grid').datagrid('options').url='/jlyw/OriginalRecordServlet.do?method=18';
 	$('#history_certificate_grid').datagrid('options').queryParams={'StandardNameId':encodeURI(row.StandardNameId),'Model':encodeURI($('#load_from_history_certificate-toolbar-Model').val()),'Range':encodeURI($('#load_from_history_certificate-toolbar-Range').val()),'Accuracy':encodeURI($('#load_from_history_certificate-toolbar-Accuracy').val()),'WorkStaff':encodeURI($("#load_from_history_certificate-toolbar-WorkStaff").combobox("getValue"))};
 	$('#history_certificate_grid').datagrid('reload');
 }
@@ -1591,45 +1636,82 @@ function setAddOriginalFormRepairFee(){
 //ÏÂÃæµÄ·½·¨ÊÇ2012-11-30Ö®ºó¼ÓµÄ
 function selectTechnicalDocsAndStandards(){//´ò¿ªÑ¡Ôñ¹æ³Ì±ê×¼µÄ´°¿Ú
 	$('#selectTechnicalDocsAndStandards_window').window('open');
+	
+	var row = $('#Appliance').datagrid('getSelected');
+	if(row == null){
+		$.messager.alert('ÌáÊ¾£¡','ÇëÏÈÑ¡ÔñÒ»¸öÆ÷¾ß±ê×¼Ãû£¡','info');
+		return false;
+	}
+	
+	$('#table_StandardAppliance').datagrid('options').url='/jlyw/RelationShipServlet.do?method=18';
+	$('#table_StandardAppliance').datagrid('options').queryParams={'param':encodeURI(2),'queryStr':encodeURI(row.TargetApplianceName)};
+	$('#table_StandardAppliance').datagrid('reload');
+	
+	$('#table_Standard').datagrid('options').url='/jlyw/RelationShipServlet.do?method=19';
+	$('#table_Standard').datagrid('options').queryParams={'param':encodeURI(2),'queryStr':encodeURI(row.TargetApplianceName)};
+	$('#table_Standard').datagrid('reload');
+	
+	$('#table_Specification').datagrid('options').url='/jlyw/RelationShipServlet.do?method=20';
+	$('#table_Specification').datagrid('options').queryParams={'param':encodeURI(1),'queryStr':encodeURI(row.TargetApplianceName)};
+	$('#table_Specification').datagrid('reload');
+
 }
 function DeleteStdAppRecord(){//É¾³ý±ê×¼Æ÷¾ß
-	var row = $('#table_StandardAppliance').datagrid('getSelected');
-	if(row == null){
+	var rows = $('#table_StandardAppliance').datagrid('getSelections');
+	if(rows == null){
 		$.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ±ê×¼Æ÷¾ß£¡","info");
 	}else{
-		var index = $('#table_StandardAppliance').datagrid('getRowIndex', row);
-		$('#table_StandardAppliance').datagrid('deleteRow', index);
+		for(var i=rows.length-1;i>=0;i--){
+			var index = $('#table_StandardAppliance').datagrid('getRowIndex', rows[i]);
+			$('#table_StandardAppliance').datagrid('deleteRow', index);
+		}
 	}	
 }
 function DeleteStdRecord(){//É¾³ý¼ÆÁ¿±ê×¼
-	var row = $('#table_Standard').datagrid('getSelected');
-	if(row == null){
+	var rows = $('#table_Standard').datagrid('getSelections');
+	if(rows == null){
 		$.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ¼ÆÁ¿±ê×¼£¡","info");
 	}else{
-		var index = $('#table_Standard').datagrid('getRowIndex', row);
-		$('#table_Standard').datagrid('deleteRow', index);
+		for(var i=rows.length-1;i>=0;i--){
+			var index = $('#table_Standard').datagrid('getRowIndex', rows[i]);
+			$('#table_Standard').datagrid('deleteRow', index);
+		}
 	}	
 }
 function DeleteSpecificationRecord(){//É¾³ý¼¼Êõ¹æ·¶
-	var row = $('#table_Specification').datagrid('getSelected');
-	if(row == null){
+	var rows = $('#table_Specification').datagrid('getSelections');
+	if(rows == null){
 		$.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ¼¼Êõ¹æ·¶£¡","info");
 	}else{
-		var index = $('#table_Specification').datagrid('getRowIndex', row);
-		$('#table_Specification').datagrid('deleteRow', index);
+		for(var i=rows.length-1;i>=0;i--){
+			var index = $('#table_Specification').datagrid('getRowIndex', rows[i]);
+			$('#table_Specification').datagrid('deleteRow', index);
+		}
 	}	
 }
 function submitDocsAndStandards(){//Ìá½»Ñ¡ÔñµÄ¼¼Êõ¹æ·¶
-	var rows1 = $('#table_StandardAppliance').datagrid('getRows');
-	var rows2 = $('#table_Standard').datagrid('getRows');
-	var rows3 = $('#table_Specification').datagrid('getRows');
-	if((rows1==null)&&(rows2==null)&&(rows3==null)){
+	var rows1 = $('#table_StandardAppliance').datagrid('getSelections');
+	var rows2 = $('#table_Standard').datagrid('getSelections');
+	var rows3 = $('#table_Specification').datagrid('getSelections');
+	if((rows1==null)||(rows2==null)||(rows3==null)){
 		$.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ¼¼Êõ¹æ·¶¡¢¼ÆÁ¿±ê×¼ºÍ±ê×¼Æ÷¾ßÖÐµÄÒ»Ïî»òÕß¶àÏî£¡","info");
 	}else{
-		$('#AddOriginalForm-StandardAppliancesString').val(JSON.stringify(rows1));
-		$('#AddOriginalForm-StandardsString').val(JSON.stringify(rows2));
-		$('#AddOriginalForm-SpecificationsString').val(JSON.stringify(rows3));
+		if(rows1!=null){
+			$('#AddOriginalForm-StandardAppliancesString').val(JSON.stringify(rows1));
+		}
+		if(rows2!=null){
+			$('#AddOriginalForm-StandardsString').val(JSON.stringify(rows2));
+		}
+		if(rows3!=null){
+			$('#AddOriginalForm-SpecificationsString').val(JSON.stringify(rows3));
+		}
 		$('#selectTechnicalDocsAndStandards_window').window('close');
 	}
+	$('#table_StandardAppliance').datagrid('clearSelections');
+	$('#table_Standard').datagrid('clearSelections');
+	$('#table_Specification').datagrid('clearSelections');
+	$('#StandardApplianceId').combobox('clear');
+	$('#StandardId').combobox('clear');
+	$('#SpecificationId').combobox('clear');
 }
 

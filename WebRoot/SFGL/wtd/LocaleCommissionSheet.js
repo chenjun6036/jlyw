@@ -116,7 +116,7 @@ $(function(){
 		title:'本次检验的器具',
 		width:1000,
 		height:300,
-		singleSelect:true, 
+		singleSelect:false, 
 		nowrap: false,
 		striped: true,
 		sortName: 'ApplianceCode',
@@ -129,14 +129,14 @@ $(function(){
 			{field:'CommissionNumber',title:'委托单号',width:80,align:'center'},
 			{field:'LocaleApplianceId', title:'现场检测条目ID', width:80,align:'center'},
 			{field:'ApplianceSpeciesName',title:'器具授权名',width:80,align:'center'},
-			{field:'ApplianceName',title:'器具名称',width:80,editor:'text',align:'center'},
-			{field:'ApplianceCode',title:'出厂编号',editor:'text',width:80,align:'center'},
-			{field:'AppManageCode',title:'管理编号',editor:'text',width:80,align:'center'},
-			{field:'Model',title:'型号规格',width:80,editor:'text',align:'center'},
-			{field:'Range',title:'测量范围',width:80,editor:'text',align:'center'},
-			{field:'Accuracy',title:'精度等级',width:80,editor:'text',align:'center'},
-			{field:'Manufacturer',title:'制造厂商',width:80,editor:'text',align:'center'},
-			{field:'Quantity',title:'台/件数',width:70,editor:'numberbox',align:'center'},
+			{field:'ApplianceName',title:'器具名称',width:80,align:'center'},
+			{field:'ApplianceCode',title:'出厂编号',width:80,align:'center'},
+			{field:'AppManageCode',title:'管理编号',width:80,align:'center'},
+			{field:'Model',title:'型号规格',width:80,align:'center'},
+			{field:'Range',title:'测量范围',width:80,align:'center'},
+			{field:'Accuracy',title:'精度等级',width:80,align:'center'},
+			{field:'Manufacturer',title:'制造厂商',width:80,align:'center'},
+			{field:'Quantity',title:'台/件数',width:70,align:'center'},
 			{field:'MandatoryInspection',title:'强制检验',width:80,align:'center',editor:{
 					type:'combobox',
 					options:{
@@ -181,7 +181,8 @@ $(function(){
 					}
 					
 				}},
-			{field:'Trans',title:'是否转包',width:80,editor:'text',align:'center',editor:{
+			{field:'Trans',title:'是否转包',width:80,align:'center'
+				/*,editor:{
 					type:'combobox',
 					options:{
 						valueField:'id',
@@ -189,7 +190,7 @@ $(function(){
 						data:products1,
 						required:true
 					}
-				},
+				}*/,
 				formatter:function(value,rowData,rowIndex){
 					if(value == 0 || value == '0')
 					{
@@ -203,7 +204,7 @@ $(function(){
 					}
 					
 				}},
-			{field:'SubContractor',title:'转包方',width:80,editor:'text',align:'center'},
+			{field:'SubContractor',title:'转包方',width:80,align:'center'},
 			{field:'Appearance',title:'外观附件',width:80,editor:'text',align:'center'},
 			{field:'Repair',title:'需修理否',width:100,editor:'text',align:'center',editor:{
 					type:'combobox',
@@ -260,7 +261,7 @@ $(function(){
 				}},
 			{field:'OtherRequirements',title:'其他要求',width:80,editor:'text',align:'center'},
 			{field:'Location',title:'存放位置',width:80,editor:'text',align:'center'},
-			{field:'Allotee',title:'派定人',width:80,editor:'text',align:'center'}
+			{field:'Allotee',title:'派定人',width:80,align:'center'}
 		]],
 		pagination:false,
 		rownumbers:true,
@@ -274,17 +275,34 @@ $(function(){
 				}
 				$('#table5').datagrid('loadData', {'total':0, 'rows':[]});
 			}
+		},{
+			text:'删除所选器具',
+			iconCls:'icon-remove',
+			handler:function(){
+				var rows = $('#table5').datagrid('getSelections');
+				var length = rows.length;
+				for(var i = length-1 ;i >=0; i--){
+					$('#table5').datagrid('deleteRow',$('#table5').datagrid('getRowIndex',rows[i]));
+				}
+			}
+		},'-',{
+			text:'完成编辑',
+			iconCls:'icon-save',
+			handler:function(){
+				$('#table5').datagrid('acceptChanges');
+			}
 		}],
 		onBeforeLoad:function(){
 			$(this).datagrid('rejectChanges');
+		},
+		onClickRow:function(rowIndex, rowDataParam){
+					
+//			if (lastIndex != rowIndex){
+				$('#table5').datagrid('endEdit', lastIndex);
+				$('#table5').datagrid('beginEdit', rowIndex);
+		//					}
+				lastIndex = rowIndex;
 		}
-//		onClickRow:function(rowIndex){			
-//					if (lastIndex != rowIndex){
-//				$('#table5').datagrid('endEdit', lastIndex);
-//				$('#table5').datagrid('beginEdit', rowIndex);
-//					}
-//			lastIndex = rowIndex;
-//		},
 		
 
 	});
@@ -407,10 +425,10 @@ $(function(){
 		pagination:false,
 		rownumbers:true,
 		toolbar:[{
-			text:'导入全部器具',
+			text:'导入所选器具',
 			iconCls:'icon-add',
 			handler:function(){
-				var rows = $("#table_LocItem").datagrid("getRows");
+				var rows = $("#table_LocItem").datagrid("getSelections");
 				for(var i = 0; i<rows.length; i++){
 					if(typeof(rows[i].ApplianceSpeciesId) == "undefined" || rows[i].ApplianceSpeciesId == ""){
 						$.messager.alert('提示',"现场检测条目ID为‘"+rows[i].Id+"’所对应的器具授权名不存在，请到‘现场业务管理’进行完善！",'info');
@@ -595,6 +613,7 @@ function doPrintCommissionSheet(){
 			return false;
 		}
 	}
+
 	for(var i=0; i<rows.length; i++){
 		Preview1(rows[i].PrintObj);
 	}

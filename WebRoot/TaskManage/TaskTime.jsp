@@ -62,7 +62,7 @@
 				fit: true,
                 nowrap: false,
                 striped: true,
-				url:'/jlyw/TaskAssignServlet.do?method=4',
+				//url:'/jlyw/TaskAssignServlet.do?method=4',
 				queryParams:{'CommissionNumber':encodeURI($('#Search_CommissionNumber').val())},
 //				sortName: 'id',
 //				sortOrder: 'desc',
@@ -72,7 +72,7 @@
 	                {field:'ck',checkbox:true}
 				]],
 				columns:[[
-			        {title:'委托单信息',colspan:8,align:'center'},
+			        {title:'委托单信息',colspan:9,align:'center'},
 					{field:'Urgent',title:'是否加急',width:60,rowspan:2,align:'center',
 						formatter:function(value,rowData,rowIndex){
 							if (0 == value){
@@ -97,6 +97,14 @@
 				],[
 					{field:'CommissionCode',title:'委托单号',width:100,sortable:true,align:'center'},
 					{field:'ApplianceName',title:'器具名称',width:100,align:'center'},
+					{field:'VerifyResult',title:'核验和签字结果',width:60,align:'center',
+						formatter:function(value,rowData,rowIndex){
+							if(value==true){
+								return '<span style="color:red;">有证书被驳回，请详细查看</span>';
+							}else{
+								return '';
+							}
+						}},
 					{field:'Quantity',title:'器具数量',width:60,align:'center'},
 					{field:'RecordQuantity',title:'已做器具数量',width:70,align:'center'},
 					{field:'FinishQuantity',title:'可完工器具数量',width:70,align:'center'},
@@ -106,7 +114,7 @@
 					{field:'CustomerContactorTel',title:'联系电话',width:80,align:'center'},
 					{field:'CommissionDate',title:'委托日期',width:80,sortable:true,align:'center'},
 					{field:'PromiseDate',title:'承诺检出日期',width:80,align:'center'},
-					{field:'IsOverdueWarningShort',title:'15天',width:60,align:'center',
+					{field:'IsOverdueWarningShort',title:'1天',width:60,align:'center',
 						 formatter:function(value,rowData,rowIndex){
 							if (true == value){
 								return "<span style='color:red;' title='距离超期还有："+rowData.OverdueWarningDays+"天'>告警</span>";
@@ -115,7 +123,7 @@
 							}
 						}
 					},
-					{field:'IsOverdueWarningLong',title:'30天',width:60,align:'center',
+					{field:'IsOverdueWarningLong',title:'2天',width:60,align:'center',
 						 formatter:function(value,rowData,rowIndex){
 							if (true == value){
 								return "<span style='color:red;' title='距离超期还有："+rowData.OverdueWarningDays+"天'>告警</span>";
@@ -134,12 +142,41 @@
 				rownumbers:true,
 				toolbar:"#task-table-search-toolbar",
 				onLoadSuccess:function(data){
-					if(data.rows.length > 0){
+					if(data.rows.length ==1){
 						$(this).datagrid('selectRow', 0);
 					}
 				}
 
 			});
+			var nowDate = new Date();
+			function getLastMonthYestdy(date) {  
+    			var daysInMonth = new Array([0], [31], [28], [31], [30], [31], [30], [31], [31], [30], [31], [30], [31]);  
+    			var strYear = date.getFullYear();  
+    			var strDay = date.getDate();  
+   			 var strMonth = date.getMonth() + 1;  
+   			 if (strYear % 4 == 0 && strYear % 100 != 0) {  
+			        daysInMonth[2] = 29;  
+			    }  
+			    if (strMonth - 1 == 0) {  
+			        strYear -= 1;  
+			        strMonth = 12;  
+			    }  
+			    else {  
+			        strMonth -= 1;  
+			    }  
+			    strDay = daysInMonth[strMonth] >= strDay ? strDay : daysInMonth[strMonth];  
+			    if (strMonth < 10) {  
+			        strMonth = "0" + strMonth;  
+			    }  
+			    if (strDay < 10) {  
+			        strDay = "0" + strDay;  
+			    }  
+			    return strYear + "-" + strMonth + "-" + strDay;  
+			}  
+			//getLastMonthYestdy(new Date()); //获得上个月在昨天这一天的日期  
+			$("#ComSheet_BeginDate").datebox('setValue', getLastMonthYestdy(nowDate));
+			$("#ComSheet_EndDate").datebox('setValue', nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate()));
+			doSearchTaskList();
 			
 		});
 		function doTask()
@@ -176,7 +213,8 @@
 		}
 		function doSearchTaskList()
 		{
-			$('#task-table').datagrid('options').queryParams={'CommissionNumber':encodeURI($('#Search_CommissionNumber').val()),'CustomerName':encodeURI($('#Search_CustomerName').val())};
+			$('#task-table').datagrid('options').url="/jlyw/TaskAssignServlet.do?method=4";
+			$('#task-table').datagrid('options').queryParams={'CommissionNumber':encodeURI($('#Search_CommissionNumber').val()),'CustomerName':encodeURI($('#Search_CustomerName').val()),'BeginDate':$('#ComSheet_BeginDate').datebox('getValue'),'EndDate':$('#ComSheet_EndDate').datebox('getValue')};
 			$('#task-table').datagrid('reload');
 		}
 		function doOpenUploadExcelWindow(){
@@ -253,7 +291,7 @@
 				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="doTask()">确定检验</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="doOpenUploadExcelWindow()">上传原始记录</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="doEditCertificate()">修改证书</a>
 			</td>
 			<td style="text-align:right;padding-right:4px">
-				<label>委托单号：</label><input type="text" id="Search_CommissionNumber" value="<%= request.getParameter("commissionsheetcode")==null?"":request.getParameter("commissionsheetcode") %>" style="width:120px" />&nbsp;<label>委托单位：</label><input type="text" id="Search_CustomerName" value="" style="width:120px" />&nbsp;<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-search" plain="true" title="查询我未完成的检验任务" id="btnHistorySearch" onclick="doSearchTaskList()">查询任务</a>
+				委托日期：<input class="easyui-datebox" id="ComSheet_BeginDate" type="text" style="width:80px" />~<input class="easyui-datebox" id="ComSheet_EndDate" type="text" style="width:80px" />&nbsp;<label>委托单号：</label><input type="text" id="Search_CommissionNumber" value="<%= request.getParameter("commissionsheetcode")==null?"":request.getParameter("commissionsheetcode") %>" style="width:80px" />&nbsp;<label>委托单位：</label><input type="text" id="Search_CustomerName" value="" style="width:120px" />&nbsp;<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-search" plain="true" title="查询我未完成的检验任务" id="btnHistorySearch" onclick="doSearchTaskList()">查询任务</a>
 			</td>
 		</tr>
 	</table>

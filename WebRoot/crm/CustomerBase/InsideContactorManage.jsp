@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>反馈信息管理</title>
+<title>内部联系信息管理</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -85,7 +85,7 @@ $(function(){
 	function query()
 	{
 		$('#table1').datagrid('options').url='/jlyw/CrmServlet.do?method=8';
-		$('#table1').datagrid('options').queryParams={'CustomerId':/* encodeURI */($('#customerId1').val())};
+		$('#table1').datagrid('options').queryParams={'CustomerId':encodeURI($('#customerName1').combobox('getText'))};
 		$('#table1').datagrid('reload');
 	}
 
@@ -102,7 +102,7 @@ $(function(){
                 nowrap: false,
                 striped: true,
                 singleSelect:true, 
-				//url:'/jlyw/CrmServlet.do?method=1',
+				url:'/jlyw/CrmServlet.do?method=8',
 				sortName:'Id',
 				sortOrder:'asc',
 				remoteSort: false,
@@ -118,7 +118,20 @@ $(function(){
 					{field:'ContactorName',title:'联系人',width:100,align:'center'},
 					{field:'JobNum',title:'联系人工号',width:80,align:'center'},
 					{field:'Cellphone1',title:'联系人电话',width:80,align:'center'},
-					{field:'Role',title:'角色',width:80,align:'center'},
+					{field:'Role',title:'角色',width:80,align:'center',
+					formatter:function(value,rowData,rowIndex){
+							if(value == 1 || value == '1')
+							{
+								rowData['Role']=1;
+							    return "A";
+							}
+							else
+							{
+								rowData['Role']=2;
+								return "B";
+							}
+							
+						}},
 					{field:'ContactorId',title:'Id',width:80,align:'center',hidden:true},
 					{field:'Id',title:'ID',width:80,align:'center',hidden:true}
 				]],
@@ -162,7 +175,7 @@ $(function(){
 							$('#frm_export').form('submit',{
 								success:function(data){
 									var result = eval("("+ data +")");
-									if(result.IsOK)
+									if(result.IsOk)
 									{
 										$('#filePath').val(result.Path);
 										$('#frm_down').submit();
@@ -250,7 +263,7 @@ $(function(){
 		<tr>
 			<td width="20%" align="right">联&nbsp;系&nbsp;单&nbsp;位：</td>
 			<td align="left" >
-			<input name="CustomerName1" id="customerName1" style="width:310px" class="easyui-combobox" required="true"></input>
+			<input name="CustomerName1" id="customerName1" style="width:310px" class="easyui-combobox" ></input>
 			<input id="customerId1" name="CustomerId1" type="hidden"/>
 			</td>
 			<td align="center">单位地址：

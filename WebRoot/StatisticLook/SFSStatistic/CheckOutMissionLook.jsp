@@ -35,7 +35,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 		});
@@ -55,6 +55,7 @@
 				//sortName: 'id',
 			  //sortOrder: 'desc',
 				remoteSort: false,
+				showFooter:true,
 				//idField:'id',
 				frozenColumns:[[
 	                {field:'ck',checkbox:true}
@@ -130,7 +131,14 @@
 					{field:'ApplianceSpeciesName',title:'器具授权名',width:80,align:'center'},
 					{field:'ApplianceName',title:'器具名称',width:80,align:'center'},
 					{field:'Quantity',title:'台/件数',width:70,align:'center'},
-					{field:'CommissionDate',title:'委托日期',width:80,align:'center'}
+					{field:'CommissionDate',title:'委托日期',width:80,align:'center'},
+					{field:'TotalFee',title:'总费用',width:70,align:'center'},
+					{field:'TestFee',title:'检测费',width:70,align:'center'},
+					{field:'RepairFee',title:'修理费',width:70,align:'center'},
+					{field:'MaterialFee',title:'材料费',width:70,align:'center'},
+					{field:'DebugFee',title:'调试费',width:70,align:'center'},
+					{field:'CarFee',title:'交通费',width:70,align:'center'},
+					{field:'OtherFee',title:'其他费用',width:70,align:'center'}
                 ]],
 				pagination:false,
 				rownumbers:true,

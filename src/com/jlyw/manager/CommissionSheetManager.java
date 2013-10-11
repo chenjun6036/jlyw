@@ -274,10 +274,6 @@ public class CommissionSheetManager {
 		return m_dao.findPageAllByHQL(queryString, currentPage, pageSize, arr);
 	}
 	
-	public List findPageAllByHQLWithAnyIterm(String queryString, int start, int end, List<Object> arr)
-	{
-		return m_dao.findPageAllByHQLWithAnyIterm(queryString, start, end, arr);
-	}
 	/**
 	 * 多条件查询
 	 * @param arr
@@ -325,9 +321,10 @@ public class CommissionSheetManager {
 	 * @param subConCreateUser 转包记录创建人
 	 * @param taskAssigner 任务分配人（可以为null，表示系统自动分配）
 	 * @param nowTime 创建记录的时间
+	 * @param ComSheetType 判断是现场导入的还是从新建委托单新建的、
 	 * @return 插入成功，返回true；否则返回false
 	 */
-	public boolean saveByBatch(List<CommissionSheet> cSheetList, List<SubContractor> subConList, List<SysUser> alloteeList, SysUser subConCreateUser, SysUser taskAssigner, Timestamp nowTime){
+	public boolean saveByBatch(List<CommissionSheet> cSheetList, List<SubContractor> subConList, List<SysUser> alloteeList, SysUser subConCreateUser, SysUser taskAssigner, Timestamp nowTime,String ComSheetType){
 		if(cSheetList == null || subConList == null || alloteeList == null || cSheetList.size() != subConList.size() || cSheetList.size() != alloteeList.size()){
 			return false;
 		}
@@ -401,7 +398,7 @@ public class CommissionSheetManager {
 				}
 			}
 			//如果为现场检测，则更新现场业务的状态为已完成（2）
-			if(cSheetList.size() > 0 && cSheetList.get(0).getCommissionType() == 2){
+			if(cSheetList.size() > 0 && cSheetList.get(0).getCommissionType() == 2&&ComSheetType!=null&&ComSheetType.length()>0){
 				LocaleApplianceItemDAO locAppItemDAO = new LocaleApplianceItemDAO();
 				LocaleApplianceItem locAppItem = locAppItemDAO.findById(cSheetList.get(0).getLocaleApplianceItemId());
 				LocaleMission locMission = locAppItem.getLocaleMission();
@@ -476,7 +473,7 @@ public class CommissionSheetManager {
 		}
 	}
 	/**
-	 * 更新CommissionSheet记录
+	 * 更新CommissionSheet记录(预留委托单修改时使用)
 	 * @param cSheetList CommissionSheet对象
 	 * @param subConList 委托单列表对应的转包方对象
 	 * @param alloteeList 派定人列表
@@ -566,6 +563,134 @@ public class CommissionSheetManager {
 				locMission.setStatus(2);	//已完成
 				new LocaleMissionDAO().update(locMission);
 			}
+			tran.commit();
+			return true;
+		} catch (Exception e) {
+			
+			if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+				log.debug("exception in CommissionSheetManager-->saveByBatch", e);
+			}else{
+				log.error("error in CommissionSheetManager-->saveByBatch", e);
+			}
+			tran.rollback();
+			return false;
+		} finally {
+			m_dao.closeSession();
+		}
+	}
+	/**
+	 * 更新CommissionSheet记录（修改委托单时使用）
+	 * @param cSheetList CommissionSheet对象
+	 * @param subConList 委托单列表对应的转包方对象
+	 * @param alloteeList 派定人列表
+	 * @param subConCreateUser 转包记录创建人
+	 * @param taskAssigner 任务分配人（可以为null，表示系统自动分配）
+	 * @param nowTime 创建记录的时间
+	 * @return 插入成功，返回true；否则返回false
+	 */
+	public boolean updateByBatch2(List<CommissionSheet> cSheetList, List<SubContractor> subConList, List<SysUser> alloteeList, SysUser subConCreateUser, SysUser taskAssigner, Timestamp nowTime){
+		if(cSheetList == null || subConList == null || alloteeList == null || cSheetList.size() != subConList.size() || cSheetList.size() != alloteeList.size()){
+			return false;
+		}
+		
+		TaskAssignDAO taskAssignDAO = new TaskAssignDAO();	//任务分配DAO
+		SubContractDAO subContractDAO = new SubContractDAO();	//转包记录DAO
+		Transaction tran = m_dao.getSession().beginTransaction();
+		try {
+//			ViewApplianceSpecialStandardNameProjectDAO vDAO = new ViewApplianceSpecialStandardNameProjectDAO();	//器具类别-标准名称-项目组关系DAO 
+			AppStdNameProTeamDAO tDAO = new AppStdNameProTeamDAO();	//标准名称-项目组关系DAO
+			TaskAssignManager tMgr = new TaskAssignManager();
+			SubContractorManager sMgr = new SubContractorManager();
+			List<Integer> typeList = new ArrayList<Integer>();
+			typeList.add(FlagUtil.QualificationType.Type_Jianding);
+			typeList.add(FlagUtil.QualificationType.Type_Jianyan);
+			typeList.add(FlagUtil.QualificationType.Type_Jiaozhun);
+			Calendar c = Calendar.getInstance();
+			c.set(Calendar.DAY_OF_YEAR, 1);
+			c.set(Calendar.HOUR_OF_DAY, 0);
+			c.set(Calendar.MINUTE, 0);
+			c.set(Calendar.SECOND, 0);
+			Timestamp tYear = new Timestamp(c.getTimeInMillis()); //今年的开始时间
+			
+			for(int i = 0; i < cSheetList.size(); i++){
+				CommissionSheet cSheet = cSheetList.get(i);
+				StringBuilder remark = new StringBuilder("");
+				if(cSheet.getRemark()!=null&&cSheet.getRemark().length()>0){
+					remark.append(cSheet.getRemark());
+					remark.append(";");
+				}
+				
+				remark.append(subConCreateUser.getName());
+				remark.append("在");
+				remark.append(DateTimeFormatUtil.DateTimeFormat.format(nowTime));
+				remark.append("修改了该委托单");
+				cSheet.setRemark(remark.toString());
+				m_dao.save(cSheet);
+				
+				List<TaskAssign> taskAssignList = tMgr.findByVarProperty(new KeyValueWithOperator("commissionSheet.id",cSheet.getId(),"="));
+				if(taskAssignList!=null){
+					for(TaskAssign taskAssign:taskAssignList){
+						taskAssign.setStatus(1);
+						taskAssignDAO.update(taskAssign);
+					}
+				}
+				List<SubContractor> subContractorList = sMgr.findByVarProperty(new KeyValueWithOperator("commissionSheet.id",cSheet.getId(),"="));
+				if(subContractorList!=null){
+					for(SubContractor subContractor:subContractorList){
+						subContractor.setStatus(1);
+						subContractDAO.update(subContractor);
+					}
+				}
+				
+				SubContractor subContractor = subConList.get(i);
+				if(subContractor != null){
+					SubContract subConObj = new SubContract();	//转包记录对象
+					subConObj.setCommissionSheet(cSheet);
+					subConObj.setSysUserByLastEditorId(subConCreateUser);
+					subConObj.setSubContractor(subContractor);
+					subConObj.setStatus(0);
+					subConObj.setLastEditTime(nowTime);
+					subContractDAO.save(subConObj);
+				}
+				SysUser allotee = alloteeList.get(i);
+				if(allotee != null){
+					TaskAssign taskAssignObj = new TaskAssign();	//任务分配对象
+					taskAssignObj.setCommissionSheet(cSheet);
+					taskAssignObj.setSysUserByAlloteeId(allotee);
+					taskAssignObj.setSysUserByAssignerId(taskAssigner);
+					taskAssignObj.setAssignTime(nowTime);
+					taskAssignObj.setStatus(0);
+					//查找“器具标准名称_项目组Id”
+					if(cSheet.getSpeciesType() == false){	//标准名称
+						List<AppStdNameProTeam> rList = tDAO.findByVarProperty("AppStdNameProTeam", new KeyValueWithOperator("applianceStandardName.id", cSheet.getApplianceSpeciesId(), "="));
+						if(rList != null && rList.size() == 1){
+							taskAssignObj.setAppStdNameProTeam(rList.get(0));
+						}
+					}else{	//分类名称:设置检测项目为null
+//						List<ViewApplianceSpecialStandardNameProject> rList = vDAO.findByVarProperty("ViewApplianceSpecialStandardNameProject", new KeyValueWithOperator("id.appSpeId", cSheet.getApplianceSpeciesId(), "="));
+//						if(rList != null && rList.size() == 1){
+//							AppStdNameProTeam temp = new AppStdNameProTeam();
+//							temp.setId(rList.get(0).getId().getAppStdProId());
+//							taskAssignObj.setAppStdNameProTeam(temp);
+//						}
+					}
+					taskAssignDAO.save(taskAssignObj);
+				}else{	//分配所有人
+					List<Object[]> retList = tMgr.getInspectQualifyUsersByRule(cSheet.getApplianceSpeciesId(), cSheet.getSpeciesType()?1:0, typeList, SystemCfgUtil.getTaskAllotRule(), tYear);
+					for(Object []obj : retList){
+						TaskAssign taskAssignObj = new TaskAssign();	//任务分配对象:不设置检验项目名称（“器具标准名称_项目组Id”）
+						SysUser alloteeTemp = new SysUser();
+						alloteeTemp.setId((Integer)obj[0]);
+						taskAssignObj.setCommissionSheet(cSheet);
+						taskAssignObj.setSysUserByAlloteeId(alloteeTemp);
+						taskAssignObj.setSysUserByAssignerId(null);	//设为空，说明系统自动分配
+						taskAssignObj.setAssignTime(nowTime);
+						taskAssignObj.setStatus(0);
+						taskAssignDAO.save(taskAssignObj);
+					}
+				}
+			}
+			
 			tran.commit();
 			return true;
 		} catch (Exception e) {
@@ -707,122 +832,139 @@ public class CommissionSheetManager {
 					cSheet.getLocaleCommissionCode() != null && 
 					cSheet.getLocaleApplianceItemId() != null && 
 					locAppItemDAO.findById(cSheet.getLocaleApplianceItemId()) != null){	//价格根据现场检测委托书的价格
-				Discount discount = null;
-				//查找是否有该检测委托书下的委托单的自动折扣申请记录，若有，则增加一个条目；否则，新增一个自动折扣申请记录。
-				List<Discount> discountList = dCSheetDAO.findByHQL("select model.discount from DiscountComSheet as model " +
-						" where model.commissionSheet.localeCommissionCode = ? and " +
-						" model.discount.customer.id = ? and " +
-						" model.discount.applyTime = model.discount.executeTime ",	//申请时间与批准时间相同（现场检测书自动折扣流程）
-						cSheet.getLocaleCommissionCode(),
-						cSheet.getCustomerId());
-				if(discountList.size() == 0){
-					discount = new Discount();
-					discount.setApplyTime(confirmTime);
-					Customer customer = new Customer();
-					customer.setId(cSheet.getCustomerId());
-					discount.setContector("");
-					discount.setContectorTel("");
-					discount.setCustomer(customer);
-					discount.setExecuteMsg("系统自动审批通过。");
-					discount.setExecuteResult(true);	//审核通过
-					discount.setExecuteTime(confirmTime);	//审核时间：与申请时间相同
-					
-					//设置申请原因
-					ReasonDAO rDAO = new ReasonDAO();
-					List<Reason> reasonList = rDAO.findByHQL("from Reason as model where model.type=? and model.reason=? ", 
-							FlagUtil.ReasonType.Type_Discount,
-							SysStringUtil.ReasonString.Reason_Discount_LocalMission);
-					if(reasonList.size() > 0){
-						Reason reason = reasonList.get(0);
-						reason.setCount(reason.getCount()+1);
-						reason.setLastUse(confirmTime);
-						rDAO.update(reason);
-						discount.setReason(reason);
-					}else{
-						Reason reason = new Reason();
-						reason.setCount(1);
-						reason.setLastUse(confirmTime);
-						reason.setReason(SysStringUtil.ReasonString.Reason_Discount_LocalMission);
-						reason.setStatus(0);
-						reason.setType(FlagUtil.ReasonType.Type_Discount);
-						rDAO.save(reason);
-						discount.setReason(reason);
-					}
-					
-					//设置申请人和审批人：均为‘系统管理员’
-					SysUser applyUser = null;
-					try{
-						applyUser = (SysUser)new SysUserDAO().findByHQL("from SysUser as model where model.userName = ? ", SystemCfgUtil.SystemManagerUserName).get(0);
-					}catch(Exception e){
-						throw new Exception(String.format("找不到用户名为'%s'(系统管理员)的用户账号，自动折扣流程处理失败！", SystemCfgUtil.SystemManagerUserName));
-					}
-					discount.setSysUserByRequesterId(applyUser);
-					discount.setSysUserByExecutorId(applyUser);
-				}else{
-					discount = discountList.get(0);
-				}
-				
-				//执行折扣操作
-				DiscountComSheet dCSheet = null;
-				if(discount.getId() == null){	//新的折扣
-					dCSheet = new DiscountComSheet();
-				}else{
-					List<DiscountComSheet> dCSheetList = dCSheetDAO.findByHQL("from DiscountComSheet as model " +
-							" where model.commissionSheet = ? and " +
-							" model.discount = ? ",
-							cSheet, discount);
-					if(dCSheetList.size() == 0){
-						dCSheet = new DiscountComSheet();
-					}else{
-						dCSheet = dCSheetList.get(0);
-					}
-				}
-				List<Object[]> feeList = feeAssignDAO.findByHQL(CertificateFeeAssignManager.queryStringAllAllFeeByCommissionSheetId, cSheet.getId());	//获取委托单的所有费用
-				if(!feeList.isEmpty()){
-					Object[] fee = feeList.get(0);
-					Double TestFee = fee[0]==null?0.0:(Double)fee[0];
-					Double RepairFee = fee[1]==null?0.0:(Double)fee[1];
-					Double MaterialFee = fee[2]==null?0.0:(Double)fee[2];
-					Double CarFee = fee[3]==null?0.0:(Double)fee[3];
-					Double DebugFee = fee[4]==null?0.0:(Double)fee[4];
-					Double OtherFee = fee[5]==null?0.0:(Double)fee[5];
-//					Double TotalFee = fee[6]==null?0.0:(Double)fee[6];
-					Double OldTestFee = fee[7]==null?0.0:(Double)fee[7];
-					Double OldRepairFee = fee[8]==null?0.0:(Double)fee[8];
-					Double OldMaterialFee = fee[9]==null?0.0:(Double)fee[9];
-					Double OldCarFee = fee[10]==null?0.0:(Double)fee[10];
-					Double OldDebugFee = fee[11]==null?0.0:(Double)fee[11];
-					Double OldOtherFee = fee[12]==null?0.0:(Double)fee[12];
-					Double OldTotalFee = fee[13]==null?0.0:(Double)fee[13];
-					
-					LocaleApplianceItem locAppItem = locAppItemDAO.findById(cSheet.getLocaleApplianceItemId());
-					dCSheet.setCommissionSheet(cSheet);
-					dCSheet.setDiscount(discount);
-					dCSheet.setTestFee(locAppItem.getTestCost()==null?TestFee:locAppItem.getTestCost());	//检测费
-					dCSheet.setRepairFee(locAppItem.getRepairCost()==null?RepairFee:locAppItem.getRepairCost());	//修理费
-					dCSheet.setMaterialFee(locAppItem.getMaterialCost()==null?MaterialFee:locAppItem.getMaterialCost());	//材料费
-					dCSheet.setDebugFee(DebugFee);
-					dCSheet.setCarFee(CarFee);
-					dCSheet.setOtherFee(OtherFee);
-					dCSheet.setTotalFee(dCSheet.getTestFee()+dCSheet.getRepairFee()+dCSheet.getMaterialFee()+dCSheet.getDebugFee()+dCSheet.getCarFee()+dCSheet.getOtherFee());
-					dCSheet.setOldTestFee(OldTestFee);
-					dCSheet.setOldRepairFee(OldRepairFee);
-					dCSheet.setOldMaterialFee(OldMaterialFee);
-					dCSheet.setOldCarFee(OldCarFee);
-					dCSheet.setOldDebugFee(OldDebugFee);
-					dCSheet.setOldOtherFee(OldOtherFee);
-					dCSheet.setOldTotalFee(OldTotalFee);
-					
-					if(discount.getId() == null){
-						new DiscountDAO().save(discount);	//存储折扣
-					}
-					if(dCSheet.getId() == null){
-						dCSheetDAO.save(dCSheet);
-					}else{
-						dCSheetDAO.update(dCSheet);
-					}
-					discountExecute(feeAssignDAO, dCSheet);
-				}
+//				Discount discount = null;
+//				//查找是否有该检测委托书下的委托单的自动折扣申请记录，若有，则增加一个条目；否则，新增一个自动折扣申请记录。
+//				List<Discount> discountList = dCSheetDAO.findByHQL("select model.discount from DiscountComSheet as model " +
+//						" where model.commissionSheet.localeCommissionCode = ? and " +
+//						" model.discount.customer.id = ? and " +
+//						" model.discount.applyTime = model.discount.executeTime ",	//申请时间与批准时间相同（现场检测书自动折扣流程）
+//						cSheet.getLocaleCommissionCode(),
+//						cSheet.getCustomerId());
+//				if(discountList.size() == 0){
+//					discount = new Discount();
+//					discount.setApplyTime(confirmTime);
+//					Customer customer = new Customer();
+//					customer.setId(cSheet.getCustomerId());
+//					discount.setContector("");
+//					discount.setContectorTel("");
+//					discount.setCustomer(customer);
+//					discount.setExecuteMsg("系统自动审批通过。");
+//					discount.setExecuteResult(true);	//审核通过
+//					discount.setExecuteTime(confirmTime);	//审核时间：与申请时间相同
+//					
+//					//设置申请原因
+//					ReasonDAO rDAO = new ReasonDAO();
+//					List<Reason> reasonList = rDAO.findByHQL("from Reason as model where model.type=? and model.reason=? ", 
+//							FlagUtil.ReasonType.Type_Discount,
+//							SysStringUtil.ReasonString.Reason_Discount_LocalMission);
+//					if(reasonList.size() > 0){
+//						Reason reason = reasonList.get(0);
+//						reason.setCount(reason.getCount()+1);
+//						reason.setLastUse(confirmTime);
+//						rDAO.update(reason);
+//						discount.setReason(reason);
+//					}else{
+//						Reason reason = new Reason();
+//						reason.setCount(1);
+//						reason.setLastUse(confirmTime);
+//						reason.setReason(SysStringUtil.ReasonString.Reason_Discount_LocalMission);
+//						reason.setStatus(0);
+//						reason.setType(FlagUtil.ReasonType.Type_Discount);
+//						rDAO.save(reason);
+//						discount.setReason(reason);
+//					}
+//					
+//					//设置申请人和审批人：均为‘系统管理员’
+//					SysUser applyUser = null;
+//					try{
+//						applyUser = (SysUser)new SysUserDAO().findByHQL("from SysUser as model where model.userName = ? ", SystemCfgUtil.SystemManagerUserName).get(0);
+//					}catch(Exception e){
+//						throw new Exception(String.format("找不到用户名为'%s'(系统管理员)的用户账号，自动折扣流程处理失败！", SystemCfgUtil.SystemManagerUserName));
+//					}
+//					discount.setSysUserByRequesterId(applyUser);
+//					discount.setSysUserByExecutorId(applyUser);
+//				}else{
+//					discount = discountList.get(0);
+//				}
+//				
+//				//执行折扣操作
+//				DiscountComSheet dCSheet = null;
+//				if(discount.getId() == null){	//新的折扣
+//					dCSheet = new DiscountComSheet();
+//				}else{
+//					List<DiscountComSheet> dCSheetList = dCSheetDAO.findByHQL("from DiscountComSheet as model " +
+//							" where model.commissionSheet = ? and " +
+//							" model.discount = ? ",
+//							cSheet, discount);
+//					if(dCSheetList.size() == 0){
+//						dCSheet = new DiscountComSheet();
+//					}else{
+//						dCSheet = dCSheetList.get(0);
+//					}
+//				}
+//				List<Object[]> feeList = feeAssignDAO.findByHQL(CertificateFeeAssignManager.queryStringAllAllFeeByCommissionSheetId, cSheet.getId());	//获取委托单的所有费用
+//				if(!feeList.isEmpty()){
+//					Object[] fee = feeList.get(0);
+//					Double TestFee = fee[0]==null?0.0:(Double)fee[0];
+//					Double RepairFee = fee[1]==null?0.0:(Double)fee[1];
+//					Double MaterialFee = fee[2]==null?0.0:(Double)fee[2];
+//					Double CarFee = fee[3]==null?0.0:(Double)fee[3];
+//					Double DebugFee = fee[4]==null?0.0:(Double)fee[4];
+//					Double OtherFee = fee[5]==null?0.0:(Double)fee[5];
+////					Double TotalFee = fee[6]==null?0.0:(Double)fee[6];
+//					Double OldTestFee = fee[7]==null?0.0:(Double)fee[7];
+//					Double OldRepairFee = fee[8]==null?0.0:(Double)fee[8];
+//					Double OldMaterialFee = fee[9]==null?0.0:(Double)fee[9];
+//					Double OldCarFee = fee[10]==null?0.0:(Double)fee[10];
+//					Double OldDebugFee = fee[11]==null?0.0:(Double)fee[11];
+//					Double OldOtherFee = fee[12]==null?0.0:(Double)fee[12];
+//					Double OldTotalFee = fee[13]==null?0.0:(Double)fee[13];
+//					
+//					LocaleApplianceItem locAppItem = locAppItemDAO.findById(cSheet.getLocaleApplianceItemId());
+//					dCSheet.setCommissionSheet(cSheet);
+//					dCSheet.setDiscount(discount);
+//					dCSheet.setTestFee(locAppItem.getTestCost()==null?TestFee:locAppItem.getTestCost());	//检测费
+//					dCSheet.setRepairFee(locAppItem.getRepairCost()==null?RepairFee:locAppItem.getRepairCost());	//修理费
+//					dCSheet.setMaterialFee(locAppItem.getMaterialCost()==null?MaterialFee:locAppItem.getMaterialCost());	//材料费
+//					dCSheet.setDebugFee(DebugFee);
+//					dCSheet.setCarFee(CarFee);
+//					dCSheet.setOtherFee(OtherFee);
+//					dCSheet.setTotalFee(dCSheet.getTestFee()+dCSheet.getRepairFee()+dCSheet.getMaterialFee()+dCSheet.getDebugFee()+dCSheet.getCarFee()+dCSheet.getOtherFee());
+//					dCSheet.setOldTestFee(OldTestFee);
+//					dCSheet.setOldRepairFee(OldRepairFee);
+//					dCSheet.setOldMaterialFee(OldMaterialFee);
+//					dCSheet.setOldCarFee(OldCarFee);
+//					dCSheet.setOldDebugFee(OldDebugFee);
+//					dCSheet.setOldOtherFee(OldOtherFee);
+//					dCSheet.setOldTotalFee(OldTotalFee);
+//					
+//					if(discount.getId() == null){
+//						new DiscountDAO().save(discount);	//存储折扣
+//					}
+//					if(dCSheet.getId() == null){
+//						dCSheetDAO.save(dCSheet);
+//					}else{
+//						dCSheetDAO.update(dCSheet);
+//					}
+//					discountExecute(feeAssignDAO, dCSheet);
+//				}
+//				//更新原始记录费用的HQL
+//				int Quantity = dCSheet.getCommissionSheet().getQuantity();
+//				List<Long> wQuantityList = (new WithdrawManager()).findByHQL("select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?", dCSheet.getCommissionSheet().getId(), true);
+//				if(wQuantityList != null && wQuantityList.size() > 0 && wQuantityList.get(0) != null){
+//					Quantity = Quantity - wQuantityList.get(0).intValue();
+//				}
+//				String ORecordupdateString = "update OriginalRecord as o set " +
+//						" testFee= o.quantity*" + dCSheet.getTestFee()/Quantity + "," +
+//						" repairFee= o.quantity*" + dCSheet.getRepairFee()/Quantity + ", " +
+//						" materialFee= o.quantity*" + dCSheet.getMaterialFee()/Quantity + ", " +
+//						" carFee= o.quantity*" + dCSheet.getCarFee()/Quantity + ", " +
+//						" debugFee= o.quantity*" + dCSheet.getDebugFee()/Quantity + ", " +
+//						" otherFee= o.quantity*" + dCSheet.getOtherFee()/Quantity + ", " +
+//						" totalFee= o.quantity*" + dCSheet.getTotalFee()/Quantity + " " +
+//						" where o.commissionSheet.id=? ";
+//			    	
+//						m_dao.updateByHQL(ORecordupdateString, dCSheet.getCommissionSheet().getId());
 			}else{	/***************  判断是否有协议     ***************/
 				//查询所有有正式证书的原始记录
 				Calendar calendar = Calendar.getInstance();
@@ -855,6 +997,16 @@ public class CommissionSheetManager {
 						}
 						if(dItem.getAccuracy() != null && dItem.getAccuracy().trim().length() > 0){
 							if(!dItem.getAccuracy().equalsIgnoreCase(oRecord.getAccuracy())){
+								continue;
+							}
+						}
+						if(dItem.getAppFactoryCode() != null && dItem.getAppFactoryCode().trim().length() > 0){
+							if(!dItem.getAppFactoryCode().equalsIgnoreCase(oRecord.getApplianceCode())){
+								continue;
+							}
+						}
+						if(dItem.getAppManageCode() != null && dItem.getAppManageCode().trim().length() > 0){
+							if(!dItem.getAppManageCode().equalsIgnoreCase(oRecord.getManageCode())){
 								continue;
 							}
 						}
@@ -976,6 +1128,23 @@ public class CommissionSheetManager {
 					}else{
 						dCSheetDAO.update(dCSheet);
 					}
+					//更新原始记录费用的HQL
+					int Quantity = dCSheet.getCommissionSheet().getQuantity();
+					List<Long> wQuantityList = (new WithdrawManager()).findByHQL("select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?", dCSheet.getCommissionSheet().getId(), true);
+					if(wQuantityList != null && wQuantityList.size() > 0 && wQuantityList.get(0) != null){
+						Quantity = Quantity - wQuantityList.get(0).intValue();
+					}
+					String ORecordupdateString = "update OriginalRecord as o set " +
+							" testFee= o.quantity*" + dCSheet.getTestFee()/Quantity + "," +
+							" repairFee= o.quantity*" + dCSheet.getRepairFee()/Quantity + ", " +
+							" materialFee= o.quantity*" + dCSheet.getMaterialFee()/Quantity + ", " +
+							" carFee= o.quantity*" + dCSheet.getCarFee()/Quantity + ", " +
+							" debugFee= o.quantity*" + dCSheet.getDebugFee()/Quantity + ", " +
+							" otherFee= o.quantity*" + dCSheet.getOtherFee()/Quantity + ", " +
+							" totalFee= o.quantity*" + dCSheet.getTotalFee()/Quantity + " " +
+							" where o.commissionSheet.id=? ";
+				    	
+							m_dao.updateByHQL(ORecordupdateString, dCSheet.getCommissionSheet().getId());
 				}
 			
 			}//end else(判断是否有协议)
@@ -1423,6 +1592,12 @@ public class CommissionSheetManager {
 	    	feeAssignDAO.update(feeAssign);
 	    } //end 更新费用记录
 			
+	}
+
+	public List<CommissionSheet> findByPropertyBySort(String orderby,
+			boolean asc, KeyValueWithOperator... keyValueWithOperator) {
+		// TODO Auto-generated method stub
+		return m_dao.findByPropertyBySort("CommissionSheet",orderby, asc, keyValueWithOperator);
 	}
 	
 }

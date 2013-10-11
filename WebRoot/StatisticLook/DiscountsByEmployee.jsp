@@ -31,7 +31,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 				

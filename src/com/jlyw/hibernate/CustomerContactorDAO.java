@@ -1,7 +1,7 @@
 package com.jlyw.hibernate;
 
-import java.sql.Timestamp;
 import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.criterion.Example;
@@ -19,21 +19,17 @@ import org.slf4j.LoggerFactory;
  * @see com.jlyw.hibernate.CustomerContactor
  * @author MyEclipse Persistence Tools
  */
+
 public class CustomerContactorDAO extends BaseHibernateDAO {
 	private static final Logger log = LoggerFactory
 			.getLogger(CustomerContactorDAO.class);
 	// property constants
+	public static final String CUSTOMER_ID = "customerId";
 	public static final String NAME = "name";
 	public static final String CELLPHONE1 = "cellphone1";
 	public static final String CELLPHONE2 = "cellphone2";
 	public static final String EMAIL = "email";
 	public static final String COUNT = "count";
-	public static final String REMARK = "remark";
-	public static final String STATUS = "status";
-	public static final String FORMER_DEP = "formerDep";
-	public static final String FORMER_JOB = "formerJob";
-	public static final String CUR_DEP = "curDep";
-	public static final String CUR_JOB = "curJob";
 
 	public void save(CustomerContactor transientInstance) {
 		log.debug("saving CustomerContactor instance");
@@ -72,9 +68,9 @@ public class CustomerContactorDAO extends BaseHibernateDAO {
 	public List findByExample(CustomerContactor instance) {
 		log.debug("finding CustomerContactor instance by example");
 		try {
-			List results = getSession()
-					.createCriteria("com.jlyw.hibernate.CustomerContactor")
-					.add(Example.create(instance)).list();
+			List results = getSession().createCriteria(
+					"com.jlyw.hibernate.CustomerContactor").add(
+					Example.create(instance)).list();
 			log.debug("find by example successful, result size: "
 					+ results.size());
 			return results;
@@ -99,6 +95,10 @@ public class CustomerContactorDAO extends BaseHibernateDAO {
 		}
 	}
 
+	public List findByCustomerId(Object customerId) {
+		return findByProperty(CUSTOMER_ID, customerId);
+	}
+
 	public List findByName(Object name) {
 		return findByProperty(NAME, name);
 	}
@@ -117,30 +117,6 @@ public class CustomerContactorDAO extends BaseHibernateDAO {
 
 	public List findByCount(Object count) {
 		return findByProperty(COUNT, count);
-	}
-
-	public List findByRemark(Object remark) {
-		return findByProperty(REMARK, remark);
-	}
-
-	public List findByStatus(Object status) {
-		return findByProperty(STATUS, status);
-	}
-
-	public List findByFormerDep(Object formerDep) {
-		return findByProperty(FORMER_DEP, formerDep);
-	}
-
-	public List findByFormerJob(Object formerJob) {
-		return findByProperty(FORMER_JOB, formerJob);
-	}
-
-	public List findByCurDep(Object curDep) {
-		return findByProperty(CUR_DEP, curDep);
-	}
-
-	public List findByCurJob(Object curJob) {
-		return findByProperty(CUR_JOB, curJob);
 	}
 
 	public List findAll() {

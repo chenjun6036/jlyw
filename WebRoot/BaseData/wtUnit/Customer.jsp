@@ -156,8 +156,8 @@
 			</td>
 			<td align="right">单位状态：</td>
 			<td align="left">
-				<select id="sta" name="Status" class="easyui-combobox" style="width:152px" required="true" panelHeight="auto">
-						<option value='0' selected>正常</option>
+				<select id="sta" name="Status"  style="width:152px" required="true" editable="false">
+						<option value='0' selected="selected">正常</option>
 						<option value='1'>注销</option>
 				 </select></td>
 		</tr>

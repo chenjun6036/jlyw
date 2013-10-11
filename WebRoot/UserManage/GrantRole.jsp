@@ -47,7 +47,7 @@
                 nowrap: false,
                 striped: true,
 //				collapsible:true,
-				url:'/jlyw/UserServlet.do?method=0',
+				url:'/jlyw/UserServlet.do?method=15',
 				remoteSort: false,
 				idField:'JobNum',
 				frozenColumns:[[
@@ -57,7 +57,8 @@
 					{field:'JobNum',title:'工号',width:80,sortable:true},
 					{field:'Name',title:'姓名',width:120},
 					{field:'userName',title:'用户名',width:100},
-					{field:'AdministrationPost',title:'行政职务',width:120}
+					{field:'AdministrationPost',title:'行政职务',width:120},
+					{field:'UserRoles',title:'拥有角色',width:320}
 				]],
 				toolbar:[{
 					text:'导出所选用户权限',
@@ -290,7 +291,7 @@
 		
 		function query()
 		{
-			$('#user').datagrid('options').url='/jlyw/UserServlet.do?method=0';
+			$('#user').datagrid('options').url='/jlyw/UserServlet.do?method=15';
 			$('#user').datagrid('options').queryParams={'queryname':encodeURI($('#username').combobox('getValue'))};
 			$('#user').datagrid('clearSelections');
 			$('#user').datagrid('reload');

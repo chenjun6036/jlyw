@@ -137,7 +137,7 @@ $(function(){
                 nowrap: false,
                 striped: true,
                 singleSelect:true, 
-				//url:'/jlyw/CrmServlet.do?method=18',
+				url:'/jlyw/CrmServlet.do?method=21',
 				sortName:'Id',
 				sortOrder:'asc',
 				remoteSort: false,
@@ -172,7 +172,7 @@ $(function(){
 				}
 				,'-',{
 						text:'修改',
-						iconCls:'icon-remove',
+						iconCls:'icon-edit',
 						handler:function(){
 						var select = $('#table1').datagrid('getSelected');
 						if(select){
@@ -187,7 +187,7 @@ $(function(){
 					}
 				},'-',{
 						text:'删除',
-						iconCls:'icon-add',
+						iconCls:'icon-cancel',
 						handler:function(){
 						//jConfirm('您的密码修改成功,是否继续修改?','提示信息',function(r){if(r){}else{history.back();}});
 						
@@ -211,49 +211,50 @@ $(function(){
 			});
 			
 		function Add(){
-		//closed();
 			$('#form2').form('submit',{
 				url: '/jlyw/CrmServlet.do?method=20',
 				onSubmit:function(){return $('#form2').form('validate');},
 		   		success:function(data){
 		   			var result = eval("("+data+")");
 		   			$.messager.alert('提示',result.msg,'info');
-		   			if(result.IsOK)
-		   				closed();
-		   			$('#table1').datagrid('reload');		
+		   			if(result.IsOk)
+		   			{
+		   				$('#addIterm').dialog('close');
+		   				$('#table1').datagrid('reload');
+		   			}		
 		   		}
 			});
 		}
 		function Add1(){
-		//closed();
 			$('#form3').form('submit',{
 				url: '/jlyw/CrmServlet.do?method=22',
 				onSubmit:function(){return $('#form3').form('validate');},
 		   		success:function(data){
 		   			var result = eval("("+data+")");
 		   			$.messager.alert('提示',result.msg,'info');
-		   			if(result.IsOK)
-		   				closed();
-		   			$('#table1').datagrid('reload');		
+		   			if(result.IsOk)
+		   			{
+		   				$('#changeIterm').dialog('close');
+		   				$('#table1').datagrid('reload');	
+		   			}	
 		   		}
 			});
 		}
 		function closed()
 		{
 			$('#addIterm').dialog('close');
-			//$('#del').dialog('close');
+			$('#changeIterm').dialog('close');
 			//$('#table1').datagrid('reload');
 		}
 		function del(){
-		//closed();
 			$('#delForm').form('submit',{
 				url:'/jlyw/CrmServlet.do?method=23',
 				//onSubmit:function(){return $(this).form('validate');},
 				success:function(data){
 					var result = eval("(" + data + ")");
 			   		$.messager.alert('提示',result.msg,'info');
-			   		if(result.IsOK)
-			   		 closed();
+			   		if(result.IsOk)
+			   		 //closed();
 			   		$('#table1').datagrid('reload');	
 				}
 			});
@@ -297,7 +298,7 @@ $(function(){
 			<input type="hidden" id="insideContactorId1" name="InsideContactorId1"/>
 			</td>
 			<td align="right">分配年份：</td>
-			<td><input id="year1" name="Year1"/></td>
+			<td><input id="year1" name="Year1" class="easyui-numberbox" min="1900" max="2100"/></td>
 		</tr>
 		<tr>
 			<td></td>
@@ -311,10 +312,9 @@ $(function(){
 	</form>
 <table id="table1"></table>
 <br />
-	 <div id="addIterm" class="easyui-window" title="修改" style="padding: 10px;width: 500px;height: 350px;"
-		iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
+	 <div id="addIterm" class="easyui-window" title="增加" style="padding: 10px;width: 500px;height: 350px;"
+		iconCls="icon-add" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="form2" method="post">
-				<div>
 					<table id="table3" iconCls="icon-edit" >
                        <tr>
                        <td>联系单位：
@@ -335,9 +335,9 @@ $(function(){
 						</tr>
 						<tr>
 						<td>分配额度：</td>
-						<td><input id="fee" name="Fee" required="true" class="easyui-validatebox"/></td>
+						<td><input id="fee" name="Fee" required="true" class="easyui-numberbox" min="0" precision="2"/></td>
 						<td>分配年份：</td>
-						<td><input id="year" name="Year" required="true" class="easyui-validatebox"/></td>
+						<td><input id="year" name="Year" required="true" class="easyui-numberbox" min="1900" max="2100"/></td>
 						</tr>
 						<tr>
 						<td>
@@ -352,14 +352,13 @@ $(function(){
 							<td><a class="easyui-linkbutton" iconCls="icon-cancel" href="javascript:void(0)" onclick="closed()">取消</a></td>
 						</tr>
 					</table>
-				</div>
+				
 			</form>
 		</div>
 	<br />
-	<div id="changeIterm" class="easyui-window" title="修改" style="padding: 10px;width: 500px;height: 350px;"
-		iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
+	<div id="changeIterm" class="easyui-window" title="修改" style="padding: 10px;width: 500px;height: 350px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="form3" method="post">
-				<div>
+				
 					<table id="table3" iconCls="icon-edit" >
                        <tr>
                        <td>联系单位：
@@ -383,9 +382,9 @@ $(function(){
 						</tr>
 						<tr>
 						<td>分配额度：</td>
-						<td><input id="fee" name="Fee" required="true" class="easyui-validatebox"/></td>
+						<td><input id="fee" name="Fee" required="true" class="easyui-numberbox" min="0" precision="2"/></td>
 						<td>分配年份：</td>
-						<td><input id="year" name="Year" required="true" class="easyui-validatebox"/></td>
+						<td><input id="year" name="Year" required="true" class="easyui-numberbox" min="1900" max="2100"/></td>
 						</tr>
 						<tr>
 						<td>
@@ -400,7 +399,6 @@ $(function(){
 							<td><a class="easyui-linkbutton" iconCls="icon-cancel" href="javascript:void(0)" onclick="closed()">取消</a></td>
 						</tr>
 					</table>
-				</div>
 			</form>
 		</div>
 		<form  method="post" id="delForm"><input type="hidden" id="delId" name="DelId" /></form>

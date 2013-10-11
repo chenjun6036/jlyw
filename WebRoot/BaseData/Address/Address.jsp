@@ -56,7 +56,13 @@
 							rowData['Status']=1;
 							return '<span style="color:red">过时</span>';
 						}
-					}}
+					}},
+					{field:'AuthorizationStatement',title:'计量授权声明',width:180,align:'center'},
+					{field:'AuthorizationStatementEn',title:'计量授权声明（英文）',width:180,align:'center'},
+					{field:'CNASStatement',title:'实验室认可声明',width:180,align:'center'},
+					{field:'CNASStatementEn',title:'实验室认可声明（英文）',width:180,align:'center'},
+					{field:'StandardStatement',title:'溯源声明',width:180,align:'center'},
+					{field:'StandardStatementEn',title:'溯源声明（英文）',width:180,align:'center'}
 				]],
 				pagination:false,
 				rownumbers:true,
@@ -150,7 +156,7 @@
 		
 		<table id="table2" style="height:500px; width:900px"></table>
 		
-		<div id="edit" class="easyui-window" title="修改" style="padding: 10px;width: 500px;height: 250px;"
+		<div id="edit" class="easyui-window" title="修改" style="padding: 10px;width: 500px;height: 400px;"
 		iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="form1" method="post">
 				<div>
@@ -197,6 +203,24 @@
 								</select>
 							</td>
                         </tr>
+                        <tr>
+                            <td align="right">计量授权&nbsp;&nbsp;<br/>声&nbsp;&nbsp;&nbsp;&nbsp;明：</td>
+							<td align="left"><input id="AuthorizationStatement" name="AuthorizationStatement" class="easyui-validate"/></td>
+                            <td align="right">计量授权&nbsp;&nbsp;<br/>声明英文：</td>
+							<td align="left"><input id="AuthorizationStatementEn" name="AuthorizationStatementEn" class="easyui-validate"/></td>
+						</tr>
+                        <tr>
+                            <td align="right">实&nbsp;验&nbsp;室&nbsp;&nbsp;<br />认可声明：</td>
+							<td align="left"><input id="CNASStatement" name="CNASStatement" class="easyui-validate"/></td>
+                            <td align="right">实验室认可<br />声明英文：</td>
+							<td align="left"><input id="CNASStatementEn" name="CNASStatementEn" class="easyui-validate"/></td>
+						</tr>
+                        <tr>
+                            <td align="right">溯源声明：</td>
+							<td align="left"><input id="StandardStatement" name="StandardStatement" class="easyui-validate"/></td>
+                            <td align="right">溯源声明&nbsp;&nbsp;<br/>英&nbsp;&nbsp;&nbsp;&nbsp;文：</td>
+							<td align="left"><input id="StandardStatementEn" name="StandardStatementEn" class="easyui-validate"/></td>
+						</tr>
 						<tr height="50px">	
 							<td></td>
 							<td><a class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="Submit()">提交</a></td>

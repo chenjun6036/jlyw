@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>反馈信息管理</title>
+<title>客户关怀信息管理</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -246,7 +246,7 @@ $(function(){
 			<input class="easyui-datebox" name="Time" id="time" type="text"  required="true"/></td>
 			<td align="right">服务费用：</td>
 			<td>
-				<input class="easyui-numberbox" name="Fee" id="time"/>
+				<input required="true" precision="2" min="0"class="easyui-numberbox" name="Fee" id="time"/>
 			</td>
 		</tr>
 		<tr>

@@ -335,8 +335,8 @@ function doDenerate(){
 		   var result = eval("("+data+")");
 		  // alert(result.DetailListId);
 		  if(result.IsOK){
-		   	$('#DetailListId').val(result.DetailListId);
-			$('#DetailListId1').val(result.DetailListId);	
+		   	$('#DetailListId').val(result.DetailListID);
+			$('#DetailListId1').val(result.DetailListID);	
 			$('#DetailListId2').val(result.DetailListId);	
 		  }		
 		  $.messager.alert('ÌבÊ¾',result.msg,'info');
@@ -399,10 +399,12 @@ function doDenerate(){
 	<form id="formLook" method="post" action="/jlyw/DetailListComServlet.do?method=5" target="FeePrintFrame">
 			
 		<input id="DetailListId" name="DetailListId"  style="width:152px;" type="hidden" required="true"/>
+		<input id="DetailListType" name="DetailListType"  style="width:152px;" type="hidden" value="1"/>
 	</form>
 	<form id="formLook1" method="post" action="/jlyw/DetailListComServlet.do?method=6" target="FeePrintFrame1">
 		
 		<input id="DetailListId1" name="DetailListId"  style="width:152px;" type="hidden" required="true"/>
+		<input id="DetailListType" name="DetailListType"  style="width:152px;" type="hidden" value="1"/>
 	</form>
 	<iframe id="FeePrintFrame" name="FeePrintFrame" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>
 	<iframe id="FeePrintFrame1" name="FeePrintFrame1" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>

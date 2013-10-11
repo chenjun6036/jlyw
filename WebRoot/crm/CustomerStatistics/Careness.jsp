@@ -80,7 +80,7 @@ $(function(){
 	function query()
 	{
 		$('#table1').datagrid('options').url='/jlyw/CrmServlet.do?method=28';
-		$('#table1').datagrid('options').queryParams={'CustomerName':encodeURI($('#customerName').combobox('getValue')),'Status':$('#status').combobox('getValue'),'CustomerLevel':$('#customerLevel').combobox('getValue'),'CareContactor':encodeURI($('#careContactor').val()),'CareDutySysUser':encodeURI($('#careDutySysUser').combobox('getValue')),'StartTime':$('#startTime').datebox('getValue'),'EndTime':$('#endTime').datebox('getValue'),'Way':$('#way').combobox('getValue')};
+		$('#table1').datagrid('options').queryParams={'CustomerName':encodeURI($('#customerName').combobox('getValue')),/* 'Status':$('#status').combobox('getValue'), */'CustomerLevel':$('#customerLevel').combobox('getValue'),'CareContactor':encodeURI($('#careContactor').val()),'CareDutySysUser':encodeURI($('#careDutySysUser').combobox('getValue')),'StartTime':$('#startTime').datebox('getValue'),'EndTime':$('#endTime').datebox('getValue'),'Way':$('#way').combobox('getValue')};
 		$('#table1').datagrid('reload');
 	}
 		$(function(){
@@ -185,8 +185,9 @@ $(function(){
 						}
 					}
 					}, */
-					{field:'CreateTime',title:'创建时间',width:100,align:'center'},
+					
 					{field:'CreateSysUser',title:'创建者',width:80,align:'center'},
+					{field:'CreateTime',title:'创建时间',width:100,align:'center'},
 					{field:'Id',title:'ID',width:80,align:'center',hidden:true}
 				]],
 				pagination:true,
@@ -196,6 +197,8 @@ $(function(){
 						iconCls:'icon-save',
 						handler:function(){
 							ShowWaitingDlg("正在导出，请稍后......");
+							$('#table1').datagrid('options').queryParams={'CustomerName':encodeURI($('#customerName').combobox('getValue')),/* 'Status':$('#status').combobox('getValue'), */'CustomerLevel':$('#customerLevel').combobox('getValue'),'CareContactor':encodeURI($('#careContactor').val()),'CareDutySysUser':encodeURI($('#careDutySysUser').combobox('getValue')),'StartTime':$('#startTime').datebox('getValue'),'EndTime':$('#endTime').datebox('getValue'),'Way':$('#way').combobox('getValue')};
+							
 							$('#par').val(JSON.stringify($('#table1').datagrid('options').queryParams));
 							$('#frm_export').form('submit',{
 								success:function(data){
@@ -256,13 +259,13 @@ $(function(){
 			<input name="CustomerName" id="customerName" style="width:200px" class="easyui-combobox" ></input>
 			</td>
 			
-			<td align="center">单位地址：
+			<td align="right">单位地址：
 			</td>
 			<td><input id="address" class="easyui-validatebox"/>
 			</td>
 		</tr>
 		<tr>
-		<td align="right">状态：
+		<!-- <td align="right">状&nbsp;&nbsp;&nbsp;&nbsp;态：
 			</td>
 			<td><select id="status" Name="Status" class="easyui-combobox" panelHeight="auto">
 					<option value='0'>未处理/未开始</option>
@@ -270,7 +273,7 @@ $(function(){
 					<option value='2'>已处理/已结束</option>
 					<option value='3'>/废弃</option>
 			</select>
-			</td>
+			</td> -->
 			 <td align="right">关&nbsp;怀&nbsp;方&nbsp;式:</td>
 			<td align="left" >
 			<select id="way" name="Way" type="text" class="easyui-combobox" panelHeight="auto">
@@ -282,19 +285,7 @@ $(function(){
 					<option value='4'>其它</option>
 			</select>
 			</td>
-		</tr>
-				<tr >
-		<td align="right">关&nbsp;怀&nbsp;时&nbsp;间：</td>
-			<td  align="left">
-			<input class="easyui-datebox" name="StartTime" id="startTime" type="text" />
-			</td>
-			<td align="right">&nbsp;&nbsp;&nbsp;</td>
-			<td  align="left">
-			<input class="easyui-datebox" name="EndTime" id="endTime" type="text"  />
-			</td>
-		</tr>
-		<tr>
-		<td align="right">企业等级：</td>
+			<td align="right">企业分类：</td>
 		<td>
 		<select class="easyui-combobox" id="customerLevel" name="CustomerLevel">
 		<option value="" selected="true">全部</option>
@@ -306,10 +297,15 @@ $(function(){
 		</select>
 		
 		</td>
-		<td align="right">关怀联系人：<br />&nbsp;
+		</tr>
+				<tr >
+		<td align="right">关怀时间：</td>
+			<td  align="left">
+			<input class="easyui-datebox" name="StartTime" id="startTime" type="text" />
 			</td>
-			<td>
-			<input id="careContactor" name="CareContactor" class="easyui-validatebox" style="width:145px;"/>
+			<td align="right">--&nbsp;到&nbsp;--&nbsp;</td>
+			<td  align="left">
+			<input class="easyui-datebox" name="EndTime" id="endTime" type="text"  />
 			</td>
 		</tr>
 		<tr>
@@ -318,6 +314,11 @@ $(function(){
 		<td>
 		<input id="careDutySysUser" name="CareDutySysUser" class="easyui-combobox"/>
 		</td>
+		<td align="right">关怀联系人：<br />&nbsp;
+			</td>
+			<td>
+			<input id="careContactor" name="CareContactor" class="easyui-validatebox" style="width:145px;"/>
+			</td>
 		</tr>
 		<tr>
 			<td></td>

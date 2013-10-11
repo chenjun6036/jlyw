@@ -52,7 +52,7 @@
                 nowrap: false,
                 striped: true,
 //				collapsible:true,
-				url:'',
+				url:'/jlyw/CrmServlet.do?method=29',
 				//sortName: 'id',
 			  //sortOrder: 'desc',
 				remoteSort: false,

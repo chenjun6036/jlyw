@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
-<title>业务查询</title>
+<title>器具大类统计</title>
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -57,7 +57,7 @@
                 nowrap: false,
                 striped: true,
 //				collapsible:true,
-				url:'',
+				url:'/jlyw/CrmServlet.do?method=33',
 				//sortName: 'id',
 			  //sortOrder: 'desc',
 				remoteSort: false,
@@ -104,14 +104,14 @@
 								}
 							});
 					}
-				},'-',{
+				},'-'/* ,{
 					text:'打印',
 					iconCls:'icon-print',
 					handler:function(){
 						$('#PrintStr').val(JSON.stringify($('#table6').datagrid('options').queryParams));
 						$('#formLook').submit();
 					}
-				}]
+				} */]
 			});
 			});
 			
@@ -152,11 +152,11 @@
         </form>
    <br />
 <div style="+position:relative;">
-     <div id="p" class="easyui-panel" style="width:750px;padding:10px;"
+     <!-- <div id="p" class="easyui-panel" style="width:750px;padding:10px;"
 				title="查询条件" collapsible="false"  closable="false">
                 <form id="query">
 			<table width="700px" id="table1">
-				<!-- <tr >
+				<tr >
 					<td width="20%" align="right">委托单位：</td>
 					<td width="22%" align="left">
 						<input id="Customer" class="easyui-combobox" name="Customer" style="width:150px;"/>
@@ -167,8 +167,8 @@
 					</select>
 					
 					</td>
-				</tr > -->
-          <!--       <tr height="30px">
+				</tr >
+                <tr height="30px">
                 	
 					<td width="20%" align="right">企业分类：</td>
 					<td width="22%" align="left">
@@ -178,9 +178,9 @@
 				<td><select id="regionId" name="RegionId" class="easyui-combobox" valueField="id" textField="name" panelHeight="auto" mode="remote" url="/jlyw/RegionServlet.do?method=2"></select></td>
 					
                    
-				</tr> -->
+				</tr>
 
-                <!-- <tr height="30px">
+                <tr height="30px">
                 	<td align="right">结账时间：</td>
 				  	<td align="left">
 						<input name="CheckOutDateFrom" id="CheckOutDateFrom" style="width:152px;" class="easyui-datebox" />
@@ -188,7 +188,7 @@
                     <td align="left">----------------------------</td>
 					<td align="left">
 						<input name="CheckOutDateEnd" id="CheckOutDateEnd" style="width:152px;" class="easyui-datebox" />
-					</td> -->
+					</td>
                 </tr> 
                 <tr height="40px">
 				    <td colspan="2" align="center"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="query()">查询</a></td>
@@ -197,7 +197,7 @@
 				
 		</table>
         </form>
-		</div>
+		</div> -->
         <br />
       <div style="width:750px;height:400px;">
 	     <table id="table6" iconCls="icon-tip" width="1000px" height="500px" ></table>

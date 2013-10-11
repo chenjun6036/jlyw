@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>委托单位信息查询</title>
+<title>外部联系人管理</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -17,14 +17,8 @@
     <script type="text/javascript" src="../../JScript/json2.js"></script>
     <script type="text/javascript" src="../../JScript/upload.js"></script>
 	<script>
-	
-	
-
 		$(function(){
-		
 	
-		
-		
 		$('#customerName').combobox({
 			//	url:'/jlyw/CustomerServlet.do?method=6',
 				valueField:'name',
@@ -113,7 +107,7 @@
                 nowrap: false,
                 striped: true,
                 singleSelect:true, 
-				url:'',
+				url:'/jlyw/CustomerContactorServlet.do?method=4',
 				//sortName:'Id',
 				//sortOrder:'desc',
 				remoteSort: false,
@@ -129,12 +123,30 @@
 					{field:'Cellphone2',title:'联系电话2',width:100,align:'center'},
 					{field:'Birthday',title:'生日',width:100,align:'center'},
 					{field:'Email',title:'电子邮箱',width:80,align:'center'},
-					{field:'Status',title:'状态',width:80,align:'center'},
+					{field:'Status',title:'状态',width:80,align:'center',
+					formatter:function(value,rowData,rowIndex){
+							if(value == 0 || value == '0')
+							{
+								rowData['Status']=0;
+							    return "正常";
+							}
+							else if(value == 1 || value == '1')
+							{
+								rowData['Status']=1;
+								return '<span style="color:red">注销</span>';
+							}
+							else 
+							{
+								//rowData['Status']=0;
+							    return "未知";
+							}
+							
+						}},
 					{field:'FormerDep',title:'原单位',width:80,align:'center'},
 					{field:'FormerJob',title:'原职位',width:80,align:'center'},
 					{field:'CurDep',title:'现单位',width:80,align:'center'},
 					{field:'CustomerId',title:'现职位',width:80,align:'center',hidden:true},
-					{field:'Count',title:'使用次数',width:80,align:'center'},
+					//{field:'Count',title:'使用次数',width:80,align:'center'},
 					{field:'LastUse',title:'最后使用时间',width:80,align:'center'}
 				]],
 				pagination:true,
@@ -160,7 +172,7 @@
 							$('#frm_edit_con').show();
 							$('#frm_edit_con').form('clear');
 							$('#frm_edit_con').form('load',select);
-							$('#frm_edit_con').panel({title:"修改"});
+							//$('#frm_edit_con').panel({title:"修改"});
 							$('#frm_edit_con').form('validate');
 						}else{
 							$.messager.alert('提示','请选择一行数据','warning');
@@ -168,7 +180,7 @@
 						}
 				},'-',{
 						text:'注销',
-						iconCls:'icon-edit',
+						iconCls:'icon-remove',
 						handler:function(){
 							var select = $('#contactors').datagrid('getSelected');
 							if(select)
@@ -200,6 +212,13 @@
 			//$('#queryname').combobox('setValue',"");
 			//$('#queryInsideContactor').combobox('setValue',"");
 		}
+		function closed()
+		{
+			$('#log_off_con').dialog('close');
+			$('#edit_con').dialog('close');
+			$('#add_con').dialog('close');
+			//$('#table1').datagrid('reload');
+		}
 		
 			function AddContactor(){
 		$('#frm_add_con').form('submit',{
@@ -225,7 +244,7 @@
 		   		$.messager.alert('提示',result.msg,'info');
 		   		if(result.IsOK){
 		   			$('#contactors').datagrid('reload');
-		   			//cancel();
+		   			$("#edit_con").window('close');
 		   			}
 		   		}
 		});
@@ -239,8 +258,10 @@
 		   			var result = eval("("+data+")");
 		   			$.messager.alert('提示',result.msg,'info');
 		   			if(result.IsOK)
-		   				//closed();
-		   			$('#contactors').datagrid('reload');		
+		   			{
+		   				$("#log_off_con").window('close');
+		   			$('#contactors').datagrid('reload');	
+		   			}	
 		   		}
 			});
 		}
@@ -258,7 +279,7 @@
 <DIV class="JlywMainLayoutDiv">
 	<DIV class="JlywTopLayoutDIV">
 		<jsp:include page="/Common/Title.jsp" flush="true">
-			<jsp:param name="TitleName" value="委托单位信息查询管理" />
+			<jsp:param name="TitleName" value="外部联系人管理" />
 		</jsp:include>
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
@@ -300,7 +321,7 @@
                     								<input id="customerId" name="CustomerId" type="hidden"/></td>
 							<td align="left" ><input id="Name" name="Name" class="easyui-validatebox" required="true"/></td>
 							<td align="right">联系单位：</td>
-							<td align="left"><input id="customerName1" name="CustomerName1" class="easyui-combobox" required="true"/></td>
+							<td align="left"><input  id="customerName1" name="CustomerName1" class="easyui-combobox" style="width:155px;" required="true"/></td>
                         </tr>
                         <tr>
                         	<td align="right">联系电话1：</td>
@@ -314,7 +335,7 @@
 						</td>
 						<td><input id="curJob" name="CurJob" /></td>
 						<td align="right">生&nbsp;&nbsp;&nbsp;&nbsp;日：</td>
-							<td align="left"><input id="birthday" name="Birthday" class="easyui-datebox" editable="false"/></td>
+							<td align="left"><input style="width:155px;" id="birthday" name="Birthday" class="easyui-datebox" editable="false"/></td>
 						</tr>
 						 <tr>
 							
@@ -334,7 +355,7 @@
 			</form>
 		</div>
 		
-		<div id="edit_con" class="easyui-window" title="新增" style="padding: 10px;width: 500px;height: 300px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
+		<div id="edit_con" class="easyui-window" title="修改" style="padding: 10px;width: 500px;height: 270px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="frm_edit_con" method="post">
 				<div>
 					<table  iconCls="icon-edit" >
@@ -343,7 +364,7 @@
                     								<input id="customerId" name="CustomerId" type="hidden"/></td>
 							<td align="left" ><input id="Name" name="Name" class="easyui-validatebox" required="true"/></td>
 							<td align="right">联系单位：</td>
-							<td align="left"><input id="customerName2" name="CustomerName2" class="easyui-combobox" required="true"/></td>
+							<td align="left"><input id="customerName2" name="CustomerName2" class="easyui-combobox" style="width:155px;" required="true"/></td>
                         </tr>
                         <tr>
                         	<td align="right">联系电话1：</td>
@@ -355,7 +376,7 @@
 						<tr>
 						
 						<td align="right">生&nbsp;&nbsp;&nbsp;&nbsp;日：</td>
-							<td align="left"><input id="birthday" name="Birthday" class="easyui-datebox" editable="false"/></td>
+							<td align="left"><input style="width:155px;" id="birthday" name="Birthday" class="easyui-datebox" editable="false"/></td>
 							<td align="right">邮&nbsp;&nbsp;&nbsp;&nbsp;箱：</td>
 							<td align="left"><input id="Email" name="Email" class="easyui-validatebox"/></td>
 						</tr>
@@ -373,6 +394,11 @@
 							<td align="left"><input id="curJob2" name="CurJob" class="easyui-validatebox"/></td>
 							
 						</tr>
+						<td align="right">状&nbsp;&nbsp;&nbsp;&nbsp;态：</td>
+							<td align="left"><select id="status" name="Status" class="easyui-combobox">
+							<option value="0">正常</option>
+							<option value="1">已注销</option>
+							</select></td>
 						<td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
 							<td align="left"><input id="remark" name="Remark" class="easyui-validatebox"/></td>
 						<tr>
@@ -388,16 +414,16 @@
 			</form>
 		</div>
 		
-		 <div id="log_off_con" class="easyui-window" title="注销" style="padding: 10px;width: 500px;height: 200px;"
+		 <div id="log_off_con" class="easyui-window" title="注销" style="padding: 10px;width: 230px;height: 120px;"
 		iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			
 			<form id="frm_log_off_con" method="post">
 			<table id="table4" iconCls="icon-edit" >
 						<tr>
-							<td align="right">姓名：<input type="hidden" id="Id" name="Id" />
-                    								<input id="CustomerId1" name="CustomerId1" type="hidden"/></td>
-							<td align="left" ><input id="Name" name="Name" class="easyui-validatebox" required="true"/></td>
-							<td align="right">原单位：</td>
+							<!-- <td align="right">姓&nbsp;&nbsp;名： --><input type="hidden" id="Id" name="Id" />
+                    		<input id="CustomerId1" name="CustomerId1" type="hidden"/></td>
+							<td align="left" ><input type="hidden" id="Name" name="Name" class="easyui-validatebox" required="true"/></td>
+							<!-- <td align="right">原单位：</td>
 							<td align="left"><input id="formerDep" name="FormerDep" class="easyui-validatebox" /></td>
                         </tr>
                         <tr>
@@ -410,7 +436,7 @@
 						 <tr>
 							<td align="right">现职位：</td>
 							<td align="left"><input id="curJob2" name="CurJob" class="easyui-validatebox"/></td>
-						</tr>	
+						</tr> -->	
 						<tr height="50px">	
 							<td></td>
 							<td><a class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="LogOffContactor()">确定</a></td>

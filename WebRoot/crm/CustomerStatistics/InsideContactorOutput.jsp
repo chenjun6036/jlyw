@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>反馈信息管理</title>
+<title>内部联系人产值信息</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -22,7 +22,7 @@
 		textField:'name',
 		required:true,
 		onSelect:function(record){
-				//$("#jobNum1").val(record.jobNum);
+				$("#jobNum").val(record.jobNum);
 				$('#insideContactorId').val(record.id);
 		},
 		onChange:function(newValue, oldValue){

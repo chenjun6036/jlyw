@@ -6,6 +6,7 @@
 		<input type="hidden" id="CommissionId" name="CommissionId" value="" />
 		<input type="hidden" id="CommissionCode" name="CommissionCode" value="" />
 		<input type="hidden" id="CommissionPwd" name="CommissionPwd" value="" />
+		<input type="hidden" id="LocalMissionCode" name="LocalMissionCode" value="" />
 		<table width="1000px" id="table1">
 			<tr>
 
@@ -26,7 +27,7 @@
 				  <td width="64" align="right">委托单号：</td>
 			  <td width="168" align="left"><input name="CommissionCode" id="CommissionCode" type="text" /></td>
 	
-			  <td width="65" align="right">委托单状态：</td>
+			  <td width="65" align="right">委&nbsp;托&nbsp;单<br/>状&nbsp;&nbsp;&nbsp;&nbsp;态：</td>
 			  <td width="168" align="left">
 			  		<select name="CommissionStatus" style="width:152px">
 						<option value="0">已收件</option>
@@ -65,12 +66,16 @@
 			<td align="right">开票单位：</td>
 			<td align="left"><input name="BillingTo" id="BillingTo" type="text" /></td>
 		</tr>
+		<tr>
+			<td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
+			<td align="left" colspan="7"><input id="Remark" name="Remark" type="text" readonly="readonly" style="width:450px"/></td>
+		</tr>
 	</table><br/>
 	 <table id="table2" width="1000">
 
 		<tr>
 			<td width="77" align="right">器具名称：</td>
-			<td width="187" align="left"><input id="ApplianceName" name="ApplianceName" type="text" /></td>
+			<td width="187" align="left"><input id="ApplianceName" name="ApplianceName" type="text" /><input id="ApplianceSpeciesName" name="ApplianceSpeciesName" type="hidden" /><input id="SpeciesType" name="SpeciesType" type="hidden" /><input id="ApplianceSpeciesId" name="ApplianceSpeciesId" type="hidden" /></td>
 			<td width="64" align="right">型号规格：</td>
 		  <td width="171"  align="left"><input id="Model" name="Model" type="text" /></td>
 			<td width="64" align="right">出厂编号：</td>
@@ -94,7 +99,7 @@
 
 			</td>
 			<td align="left"><input id="Ness" name="Ness" type="checkbox" />加&nbsp;&nbsp;急</td>
-			<td align="left">&nbsp;</td>
+			<td align="right" colspan="2"></td>
 		</tr>
 		<tr>
 			<td align="right">外观附件：</td>
@@ -109,8 +114,12 @@
 						<option value="3">检测</option>
 						<option value="4">检验</option>
 					</select></td>
-			<td align="left"></td>
-			<td align="left">&nbsp;</td>
+			 <td align="right">现&nbsp;&nbsp;&nbsp;&nbsp;场<br/>负&nbsp;责&nbsp;人：</td>
+             <td align="left"><input id="LocaleCommissionStaff" name="LocaleCommissionStaff" type="text" readonly="readonly"/></td>
+		</tr>
+		<tr>
+			<td align="right">台头名称：</td>
+			<td align="left"><input id="HeadNameName" name="HeadNameName" type="text"/></td>
 		</tr>
 	 </table><br/>
 

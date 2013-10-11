@@ -25,8 +25,9 @@
 		   				$.messager.alert('提示',result.msg,'info');
 		   				if(result.IsOk)
 		   				{
-		   					//cancel();
+		   					$('#edit').window('close');
 		   					$('#table1').datagrid('reload');
+		   					//$('#table1').datagrid('reload');
 		   					}
 		   		 }
 			});
@@ -55,8 +56,8 @@
 								$('#customerName1').combobox('reload','/jlyw/CustomerServlet.do?method=6&CustomerName='+newValue);
 						}, 500);
 				}
-			})});
-		function cancel(){
+			});});
+		function cance(){
 			$('#query1').form('clear');
 		}
 		
@@ -75,7 +76,7 @@
                 striped: true,
                 singleSelect:true, 
 				url:'/jlyw/CrmServlet.do?method=1',
-				queryParams:{'Status':encodeURI('4')},
+				queryParams:{'Status':encodeURI('5'),'flag':1},
 				sortName:'Id',
 				sortOrder:'asc',
 				remoteSort: false,
@@ -147,6 +148,8 @@
 						handler:function(){
 								ShowWaitingDlg("正在导出，请稍后......");
 							$('#par').val(JSON.stringify($('#table1').datagrid('options').queryParams));
+							$('#table1').datagrid('options').queryParams={'Status':encodeURI('4'),'CustomerName':encodeURI($('#customerName1').combobox('getValue')),'StartDate':encodeURI($('#startDate').datebox('getValue')),'EndDate':encodeURI($('#endDate').datebox('getValue'))};
+							
 							$('#frm_export').form('submit',{
 								success:function(data){
 									var result = eval("("+ data +")");
@@ -216,7 +219,7 @@
 		<tr>
 			<td></td>
 			<td width="25%" align="right"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-search" onclick="search1()">查询</a></td>
-			<td width="25%" align="left"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-reload"  onclick="cancel()">重置</a></td>
+			<td width="25%" align="left"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-reload"  onclick="cance()">重置</a></td>
 			<td ></td>
 		</tr>
 	</table>

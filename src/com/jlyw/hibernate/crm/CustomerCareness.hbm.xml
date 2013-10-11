@@ -46,7 +46,7 @@
         <property name="remark" type="java.lang.String">
             <column name="Remark" length="100" />
         </property>
-        <property name="fee" type="float">
+        <property name="fee" type="java.lang.Double">
             <column name="Fee" />
         </property>
     </class>

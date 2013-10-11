@@ -25,8 +25,8 @@
 				'method'    :'GET',	//需要传参数必须改为GET，默认POST
 //				'folder'    : '../../UploadFile',
 				'buttonImg' : '../../uploadify/selectfiles.png',
-				'fileDesc'  : '支持格式:rar/zip/jpg/jpeg/png/bmp/gif/pdf.', //如果配置了以下的'fileExt'属性，那么这个属性是必须的 
-                'fileExt'   : '*.rar;*.zip;*.jpg;*.jpeg;*.gif;*.png;*.bmp;*.pdf;',   //允许的格式
+				//'fileDesc'  : '支持格式:rar/zip/jpg/jpeg/png/bmp/gif/pdf/.', //如果配置了以下的'fileExt'属性，那么这个属性是必须的 
+                //'fileExt'   : '*.rar;*.zip;*.jpg;*.jpeg;*.gif;*.png;*.bmp;*.pdf;',   //允许的格式
 				onComplete: function (event,ID,fileObj,response,data) {  
             		var retData = eval("("+response+")");
 					if(retData.IsOK == false){

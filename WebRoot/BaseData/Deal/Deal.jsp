@@ -184,7 +184,6 @@
 									index++;
 								}
 								var row = $('#uploaded_file_table1').datagrid('getSelected');
-								//请求删除文件
 								$.ajax({
 										type: "post",
 										url: "/jlyw/FileServlet.do?method=0",
@@ -280,6 +279,29 @@
 					}
 			});
 			
+			$('#Search_PopularName').combobox({
+				//url:'/jlyw/ApplianceStandardNameServlet.do?method=0',
+				valueField:'name',
+				textField:'name',
+				onSelect:function(record){
+					try{
+						$("#Search_Appli").combobox('reload','/jlyw/AppliancePopularNameServlet.do?method=9&PopularName='+encodeURI(record.name));
+					}catch(ex){}
+				},
+				onChange:function(newValue, oldValue){
+					var allData = $(this).combobox('getData');
+					if(allData != null && allData.length > 0){
+						for(var i=0; i<allData.length; i++)
+						{
+							if(newValue==allData[i].id){
+								return false;
+							}
+						}
+					}
+					$(this).combobox('reload','/jlyw/AppliancePopularNameServlet.do?method=8&AppliancePopularName='+newValue);
+					}
+			});
+			
 
 			$('#table_appli').datagrid({
 				title:'受检器具信息',
@@ -290,11 +312,12 @@
                 nowrap: true,
                 striped: true,
 				rownumbers:false,
+				loadMsg:'数据加载中......',
 				url:'/jlyw/QuotationServlet.do?method=0',
 				remoteSort: false,
 				frozenColumns:[[
 	                {field:'ck',checkbox:true},
-					{field:'TargetApplianceId',title:'受检器具编号',width:100,sortable:true,align:'center'}
+					{field:'TargetApplianceName',title:'受检器具',width:100,sortable:true,align:'center'}
 				]],
 				columns:[[
 					{field:'StandardNameName',title:'器具标准名称',width:120,align:'center'},
@@ -328,7 +351,7 @@
 					{field:'AppFactoryCode',title:'出厂编号',width:80,align:'center'},
 					{field:'AppManageCode',title:'管理编号',width:80,align:'center'},
 					{field:'Manufacturer',title:'制造厂',width:80,align:'center'},
-					{field:'DealPrice',title:'协议检测费',width:80,align:'center'},
+					{field:'DealPrice',title:'协议检测费',editor:'number',width:80,align:'center'},
 					{field:'Remark',title:'备注',width:80,editor:'text',align:'center'}
 				]],
 				rownumbers:false,
@@ -576,12 +599,14 @@
 					<td style="padding-left:2px">
 						<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="Add_QuotaItem()">加入协议条目</a>
 					</td>
+					<td align="right">常用名称:</td>
+				    <td width="18%"><input id="Search_PopularName" style="width:140px" name="Search_PopularName" type="text" /></td>
 				    <td align="right">受检器具标准名:</td>
 				    <td width="21%"><input id="Search_Appli" style="width:152px" name="Search_Appli" type="text" /></td>
 					<td width="9%"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="query()">查询</a></td>
 				</tr>
 			</table>
-		</div>	
+		</div>
 	<div id="upload" class="easyui-window" title="上传" style="padding: 10px;width: 600px;" 
     iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
     	<div id="eeee">

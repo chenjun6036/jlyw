@@ -123,6 +123,7 @@
 		}
 		
 		function query(){
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/UserQualServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'JobNum':encodeURI($('#jobnum').val()),'Name':encodeURI($('#name').combobox('getValue'))};
 			$('#table2').datagrid('reload');

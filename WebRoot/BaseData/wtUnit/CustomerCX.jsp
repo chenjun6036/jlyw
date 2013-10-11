@@ -375,6 +375,7 @@
 		
 		function query()
 		{
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/CustomerServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'queryname':encodeURI($('#queryname').combobox('getValue')),'queryZipCode':encodeURI($('#queryZipCode').val()),'queryAddress':encodeURI($('#queryAddress').val()),'queryTel':encodeURI($('#queryTel').val()),'queryInsideContactor':encodeURI($('#queryInsideContactor').combobox('getValue')),'queryClassi':encodeURI($('#queryClassi').combobox('getValues')),'queryCredit':encodeURI($('#queryCredit').val()),'queryContactor':encodeURI($('#queryContactor').val()),'queryContactorTel':encodeURI($('#queryContactorTel').val())};
 			$('#table2').datagrid('reload');
@@ -543,7 +544,7 @@
                         <tr height="30px">
                             <td align="right">企业分类：</td>
                             <td align="left">
-                                <input id="cla" name="Classification" class="easyui-combobox" style="width:152px" required="true" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=11"/>
+                                <input id="cla" name="Classification" class="easyui-combobox" style="width:152px" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=11"/>
                             </td>
                             <td align="right">单位状态：</td>
                             <td align="left">

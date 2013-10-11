@@ -23,6 +23,7 @@
 			setInterval("checkDongle('<%=SystemCfgUtil.getDonglePID()%>','<%=SystemCfgUtil.getDonglePIN()%>','<%=session.getAttribute("LOGIN_USER")==null?"":((SysUser)session.getAttribute("LOGIN_USER")).getUserName()%>')", 30000);
 			<% } %>
 		});
+		
 	</script>
 <style type="text/css">
 TD.TopLinkBott {
@@ -112,7 +113,7 @@ TD.ToolbarSeparator {
 
 </head>
 <body class="easyui-layout" style="background-color:#D2E0F2;" bgcolor="#FFFFFF">
-<object classid="clsid:e6bd6993-164f-4277-ae97-5eb4bab56443" id="ET299" style="left:0px; top:0px; width:20px; height:20px"></object>
+<!--<object classid="clsid:e6bd6993-164f-4277-ae97-5eb4bab56443" id="ET299" style="left:0px; top:0px; width:20px; height:20px"></object>-->
 <div id="loading">
 	<div class="loading-indicator">
 		<img src="/jlyw/images/loading32.gif" width="31" height="31" style="margin-right:8px;float:left;vertical-align:center;" />

@@ -220,6 +220,7 @@
 		
 		function query()
 		{
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/SpecificationServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'queryName':encodeURI($('#queryname').val()),'queryCode':encodeURI($('#querycode').val()),'queryStatus':encodeURI($('#queryStatus').combobox('getValue')),'queryInCharge':encodeURI($('#queryInCharge').combobox('getValue')),'queryType':encodeURI($('#queryType').combobox('getValue'))};
 			$('#table2').datagrid('reload');

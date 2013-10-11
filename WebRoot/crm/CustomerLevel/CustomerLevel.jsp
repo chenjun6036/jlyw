@@ -52,31 +52,50 @@
 				fit: true,
                 nowrap: false,
                 striped: true,
-//				collapsible:true,
-				url:'',
-				//sortName: 'id',
-			  //sortOrder: 'desc',
+				url:'/jlyw/CrmServlet.do?method=37',
 				remoteSort: false,
-				//idField:'id',
-				frozenColumns:[[
-	                {field:'ck',checkbox:true}
-				]],
+				//frozenColumns:[[{field:'ck',checkbox:true}]],
 				columns:[[
-				{field:'Id',title:'ID',width:80,align:'center',hidden:true},
+				{field:'Id',title:'ID',width:80,align:'center' ,hidden:true },
 				{field:'Name',title:'委托单位',width:200,align:'center'},
 					{field:'Total',title:'总产值',width:80,align:'center'},
-					{field:'Avg',title:'平均费用',width:100,align:'center',sortable:true},
+					{field:'Avg',title:'平均每次费用',width:100,align:'center',sortable:true},
+					{field:'Avg1',title:'平均每件费用',width:100,align:'center',sortable:true},
 					{field:'Counter',title:'业务次数',width:70,align:'center'},
 					{field:'Percentage',title:'占总产值的百分比',width:180,align:'center'},
-					{field:'Level',title:'价值等级',width:70,align:'center'}
+					{field:'ValueLevel',title:'价值等级',width:70,align:'center'},
+					{field:'Level',title:'客户分类',width:70,align:'center',
+					formatter:function(value,rowData,rowIndex){
+							if(value == 1 || value == '1')
+							{
+								rowData['Level']=1;
+							    return "VIP客户";
+							}
+							else if(value == 2 || value == '2')
+							{
+								rowData['Level']=2;
+							    return "重点客户";
+							}
+							else if(value == 3 || value == '3')
+							{
+								rowData['Level']=3;
+							    return "重要客户";
+							}
+							else if(value == 4 || value == '4')
+							{
+								rowData['Level']=4;
+							    return "一般客户";
+							}
+							
+						}}
 					
                 ]],
 				pagination:true,
 				rownumbers:true,
 				showFooter:true,
 				
-				toolbar:[/* {
-					text:'设置等级',
+				toolbar:[{
+					text:'设置客户分类',
 					iconCls:'icon-edit',
 					handler:function(){
 						var select = $('#table6').datagrid('getSelected');
@@ -84,6 +103,7 @@
 						$('#editLevel').window('open');
 						$('#form2').show();
 						//$('#Id').val(select.Id);
+						$('#form2').form('clear');
 						$('#form2').form('load',select);
 						$('#form2').form('validate');
 					}else{
@@ -91,7 +111,7 @@
 						}
 					}
 				}
-				,'-', */{
+				,'-',{
 					text:'导出',
 					iconCls:'icon-save',
 					handler:function(){
@@ -99,24 +119,8 @@
 						//$('#formLook').submit();
 						myExport();
 					}
-				}],
-				rowStyler:function(rowIndex, rowData){
-					if(rowData.Status == 10||rowData.Status == "10"){	//已注销
-						return 'color:#FF0000';
-					}else if(rowData.Status == 0||rowData.Status == "0"){	//已收件
-						return 'color:#0000FF';	
-					}else if(rowData.Status == 1||rowData.Status == "1"){	//已分配
-						return 'color:#0000FF';	
-					}else if(rowData.Status == 2||rowData.Status == "2"){	//转包中
-						return 'color:#CCFF00';	
-					}else if(rowData.Status == 3||rowData.Status == "3"){	//已完工
-						return 'color:#000000';	
-					}else if(rowData.Status == 4||rowData.Status == "4"){  //已结账
-						return 'color:#008000';
-					}else{
-						return 'color:#000000';
-					}
-				}
+				}]
+				
 			});
 			
 		});
@@ -222,7 +226,7 @@
 	<iframe id="PrintFrame" name="PrintFrame" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>
 
 </div>
-<div id="editLevel" class="easyui-window" title="设置等级" style="padding: 10px;width: 350px;height: 200px;"
+<div id="editLevel" class="easyui-window" title="设置客户分类" style="padding: 10px;width: 350px;height: 200px;"
 		iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="form2" method="post">
 				<div>
@@ -230,30 +234,22 @@
 					
 						<tr>
 							<td align="right">委托单位：</td>
-							<td align="left" colspan="3"><input id="customerName" name="Name" class="easyui-validatebox"  />
-							<input id="Id" name="Id" type="hidden"/>
-                    
+							<td align="left" colspan="3"><input style="width:200px;" id="customerName" name="Name" class="easyui-validatebox"  />
+							<input id="Id" name="Id" type="hidden"/>                    
                     </td>
-                   
                         </tr>
+                        <tr></br></tr>
                         <tr>
-                         <td>价值等级：
+                         <td>客户分类：
                     </td>
                     <td>
-                    <select id="Level" name="Level" class="easyui-combobox" required="true">
-		<option value="1">1级</option>
-		<option value="2">2级</option>
-		<option value="3">3级</option>
-		<option value="4">4级</option>
-		<option value="5">5级</option>
-		<option value="6">6级</option>
-		<option value="7">7级</option>
-		<option value="8">8级</option>
-		<option value="9">9级</option>
-		<option value="10">10级</option>
-		
-		</select></td>
-                        </tr>
+                    <select id="Level" name="Level" class="easyui-combobox" required="true" panelHeight="auto">
+					<option value="1">VIP客户</option>
+					<option value="2">重点客户</option>
+					<option value="3">重要客户</option>
+					<option value="4">一般客户</option>
+					</select></td>
+                       </tr>
 						
 						<tr height="50px">	
 							<td></td>

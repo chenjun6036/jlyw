@@ -134,6 +134,29 @@ private ApplianceManufacturerDAO m_dao = new ApplianceManufacturerDAO();
 		}
 	}
 	
+	/**
+	 * 批量注销生产厂商
+	 * @param appManufcturers
+	 * @return
+	 */
+	public boolean logOutByBatch(List<ApplianceManufacturer> appManufcturers){
+		Transaction tran = m_dao.getSession().beginTransaction();
+		try {
+			for(ApplianceManufacturer appManufacturer : appManufcturers){
+				appManufacturer.setStatus(1);
+				m_dao.update(appManufacturer);
+			}
+			tran.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			tran.rollback();
+			return false;
+		} finally {
+			m_dao.closeSession();
+		}
+	}
+	
 	public List<String> formatExcel(Object obj){
 		List<String> result = new ArrayList<String>();
 		result.add(((ApplianceManufacturer)obj).getId().toString());

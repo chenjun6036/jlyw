@@ -70,7 +70,7 @@ if(jQuery)(
 				data.uploadifyID = settings.id;
 				data.pagepath = pagePath;
 				if (settings.buttonImg) data.buttonImg = escape(settings.buttonImg);
-				if (settings.buttonText) data.buttonText = escape(settings.buttonText);
+				if (settings.buttonText) data.buttonText = encodeURI(settings.buttonText);
 				if (settings.rollover) data.rollover = true;
 				data.script = settings.script;
 				data.folder = escape(settings.folder);

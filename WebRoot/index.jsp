@@ -159,7 +159,7 @@
 
 																	<TR>
 																		<TD noWrap align=right style="padding-right:68px">
-																			<input type="button" id="loginbtn" iconCls="icon-ok" href="javascript:void(0)" onClick="login()" value="登陆"/>
+																			<input type="button" id="loginbtn" iconCls="icon-ok" href="javascript:void(0)" onClick="login()" value="登录"/>
 																		</TD>
 																	</TR>
 																</TBODY>
@@ -225,10 +225,10 @@
 				</TBODY>
 			</TABLE>
 		</CENTER>
-    <object CLASSID="clsid:2A3D0646-E5FD-4D18-9DD1-59FB5E9855E0"
+    <!--<object CLASSID="clsid:2A3D0646-E5FD-4D18-9DD1-59FB5E9855E0"
         CODEBASE="/jlyw/Dongle/files/ET299.cab#Version=1,00,0000"
         BORDER="0" VSPACE="0" HSPACE="0" ALIGN="TOP" HEIGHT="0" WIDTH="0">
-    </object>
+    </object>-->
 	</BODY>
 </HTML>
 

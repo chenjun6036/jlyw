@@ -13,13 +13,10 @@
     <script type="text/javascript" src="../Inc/JScript/jquery.easyui.min.js"></script>
     <script type="text/javascript" src="../Inc/JScript/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
     <script type="text/javascript" src="../JScript/StatusInfo.js"></script>
+    <script type="text/javascript" src="../JScript/upload.js"></script>
     <script type="text/javascript" src="../JScript/json2.js"></script>
 	<script>
-		$(function(){
-			nowDate = new Date();
-			$("#DateFrom").datebox('setValue', nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate()));
-			$("#DateEnd").datebox('setValue', nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate()));
-			
+		$(function(){			
 			$('#Customer').combobox({
 			//	url:'/jlyw/CustomerServlet.do?method=6',
 				valueField:'id',
@@ -54,7 +51,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			
@@ -73,7 +70,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			
@@ -92,7 +89,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 				
@@ -129,14 +126,13 @@
 								return ""
 							}else if(rowData.Status >= 3){	//已完工(包括已结账、已结束)
 								return ""
-							}else if(rowData.IsSubContract==true || rowData.FinishQuantity == rowData.EffectQuantity){	//可以完工的器具
+							}else if(rowData.IsSubContract==true ||(rowData.FinishQuantity!=null&&rowData.EffectQuantity!=null&&rowData.FinishQuantity == rowData.EffectQuantity)){	//可以完工的器具
 								return "待完工"
 							}else{
-							return "";
+								return "";
 							}
 						}
 					},
-			
 					{field:'ApplianceSpeciesName',title:'器具授权名',width:80,align:'center'},
 					{field:'ApplianceName',title:'器具名称',width:80,align:'center',sortable:true},
 					{field:'ApplianceCode',title:'出厂编号',width:80,align:'center'},
@@ -154,6 +150,8 @@
 					{field:'DebugFee',title:'调试费',width:70,align:'center'},
 					{field:'CarFee',title:'交通费',width:70,align:'center'},
 					{field:'OtherFee',title:'其他费用',width:70,align:'center'},
+					{field:'LocaleCommissionCode',title:'现场任务书号',width:80,align:'center'},
+					{field:'LocaleStaff',title:'现场负责人',width:80,align:'center'},
 					{field:'MandatoryInspection',title:'强制检验',width:80,align:'center',
 						formatter:function(value,rowData,rowIndex){
 							if(value == 0 || value == '0')
@@ -161,10 +159,14 @@
 								rowData['MandatoryInspection']=0;
 								return "强制检定";
 							}
-							else
+							else if(value == 1 || value == '1')
 							{
 								rowData['MandatoryInspection']=1;
 								return "非强制检定";
+							}
+							else
+							{
+								return "";
 							}
 						}},
 					{field:'Urgent',title:'是否加急',width:60,align:'center',
@@ -174,10 +176,14 @@
 								rowData['Urgent']=0;
 								return "是";
 							}
-							else
+							else if(value == 1 || value == '1')
 							{
 								rowData['Urgent']=1;
 								return "否";
+							}
+							else
+							{
+								return "";
 							}
 						}},
 					{field:'Trans',title:'是否转包',width:60,align:'center',
@@ -187,10 +193,14 @@
 								rowData['Trans']=0;
 								return "是";
 							}
-							else
+							else if(value == 1 || value == '1')
 							{
 								rowData['Trans']=1;
 								return "否";
+							}
+							else
+							{
+								return "";
 							}
 						}},
 					{field:'SubContractor',title:'转包方',width:80,align:'center'},
@@ -202,10 +212,14 @@
 								rowData['Repair']=0;
 								return "需要修理";
 							}
-							else
+							else if(value == 1 || value == '1')
 							{
 								rowData['Repair']=1;
 								return "无需修理";
+							}
+							else
+							{
+								return "";
 							}
 						}},
 					{field:'ReportType',title:'报告形式',width:80,align:'center',
@@ -215,19 +229,30 @@
 								rowData['ReportType']=1;
 								return "检定";
 							}
-							if(value == 2 || value == '2')
+							else if(value == 2 || value == '2')
 							{
 								rowData['ReportType']=2;
 								return "校准";
 							}
-							else
+							else if(value == 3 || value == '3')
 							{	rowData['ReportType']=3;
 								return "检验";
+							}
+							else
+							{
+								return "";
 							}
 						}},
 					{field:'OtherRequirements',title:'其他要求',width:80,align:'center'},
 					{field:'Location',title:'存放位置',width:80,align:'center'},
-					{field:'Allotee',title:'派定人',width:80,align:'center'}
+					{field:'FinishLocation',title:'完工存放位置',width:80,align:'center'},
+					{field:'Allotee',title:'派定人',width:80,align:'center'},
+					{field:'CustomerAddress',title:'委托单位地址',width:180,align:'center'},
+					{field:'CustomerTel',title:'委托单位电话',width:80,align:'center'},
+					{field:'CustomerZipCode',title:'邮编',width:50,align:'center'},
+					{field:'CustomerContactor',title:'联系人',width:50,align:'center'},
+					{field:'CustomerContactorTel',title:'联系人电话',width:80,align:'center'}
+					
                 ]],
 				pagination:true,
 				rownumbers:true,
@@ -265,6 +290,12 @@
 					handler:function(){
 						$('#PrintStr').val(JSON.stringify($('#table6').datagrid('options').queryParams));
 						$('#formLook').submit();
+					}
+				},'-',{
+					text:'导出',
+					iconCls:'icon-save',
+					handler:function(){
+						myExport();
 					}
 				}],
 				rowStyler:function(rowIndex, rowData){
@@ -319,7 +350,7 @@
 		});
 		function query(){
 			$('#table6').datagrid('options').url='/jlyw/StatisticServlet.do?method=4';
-			$('#table6').datagrid('options').queryParams={'Code':encodeURI($('#Code').val()),'CustomerId':encodeURI($('#Customer').combobox('getValue')),'Receiver':encodeURI($('#Receiver').combobox('getValue')),'CommissionDateFrom':encodeURI($('#CommissionDateFrom').datebox('getValue')),'CommissionDateEnd':encodeURI($('#CommissionDateEnd').datebox('getValue')),'Status':encodeURI($('#Status').val()),'CommissionType':encodeURI($('#CommissionType').val()),'ReportType':encodeURI($('#ReportType').val()),'SpeciesType':encodeURI($('#SpeciesType').val()),'ApplianceSpeciesId':encodeURI($('#ApplianceSpeciesId').val()),'FinishUser':encodeURI($('#FinishUser').combobox('getValue')),'FinishDateFrom':encodeURI($('#FinishDateFrom').datebox('getValue')),'FinishDateEnd':encodeURI($('#FinishDateEnd').datebox('getValue')),'CheckOutUser':encodeURI($('#CheckOutUser').combobox('getValue')),'CheckOutDateFrom':encodeURI($('#CheckOutDateFrom').datebox('getValue')),'CheckOutDateEnd':encodeURI($('#CheckOutDateEnd').datebox('getValue'))};
+			$('#table6').datagrid('options').queryParams={'Code':encodeURI($('#Code').val()),'CustomerId':encodeURI($('#Customer').combobox('getValue')),'Receiver':encodeURI($('#Receiver').combobox('getValue')),'CommissionDateFrom':encodeURI($('#CommissionDateFrom').datebox('getValue')),'CommissionDateEnd':encodeURI($('#CommissionDateEnd').datebox('getValue')),'Status':encodeURI($('#Status').val()),'CommissionType':encodeURI($('#CommissionType').val()),'ReportType':encodeURI($('#ReportType').val()),'SpeciesType':encodeURI($('#SpeciesType').val()),'ApplianceSpeciesId':encodeURI($('#ApplianceSpeciesId').val()),'FinishUser':encodeURI($('#FinishUser').combobox('getValue')),'FinishDateFrom':encodeURI($('#FinishDateFrom').datebox('getValue')),'FinishDateEnd':encodeURI($('#FinishDateEnd').datebox('getValue')),'CheckOutUser':encodeURI($('#CheckOutUser').combobox('getValue')),'CheckOutDateFrom':encodeURI($('#CheckOutDateFrom').datebox('getValue')),'CheckOutDateEnd':encodeURI($('#CheckOutDateEnd').datebox('getValue')),'HeadName':encodeURI($('#HeadName').combobox('getValue'))};
 			$('#table6').datagrid('reload');
 		}
 		function reset(){
@@ -328,7 +359,27 @@
 			document.getElementById("CommissionType").value="";
 			document.getElementById("Status").value="";
 		}
-		
+		function myExport(){
+			
+			ShowWaitingDlg("正在导出，请稍后......");
+			$('#paramsStr').val(JSON.stringify($('#table6').datagrid('options').queryParams));
+			$('#frm_export').form('submit',{
+				success:function(data){
+					var result = eval("("+ data +")");
+					if(result.IsOK)
+					{
+						$('#filePath').val(result.Path);
+						$('#frm_down').submit();
+						CloseWaitingDlg();
+					}
+					else
+					{
+						$.messager.alert('提示','导出失败，请重试！','warning');
+						CloseWaitingDlg();
+					}
+				}
+			});
+		}
 		</script>
 </head>
 
@@ -347,9 +398,16 @@
         <input id="SearchForm_Code2" type="hidden" name="Code"/>
         <input id="SearchForm_Pwd2" type="hidden" name="Pwd"/>
         </form>
+
+        <form id="frm_export" method="post" action="/jlyw/QueryServlet.do?method=10">
+		<input id="paramsStr" name="paramsStr" type="hidden" />
+		</form>
+		<form id="frm_down" method="post" action="/jlyw/Export.do?" target="_self">
+		<input id="filePath" name="filePath" type="hidden" />
+		</form>
    <br />
 <div style="+position:relative;">
-     <div id="p" class="easyui-panel" style="width:1000px;height:330px;padding:10px;"
+     <div id="p" class="easyui-panel" style="width:1000px;height:360px;padding:10px;"
 				title="查询条件" collapsible="false"  closable="false">
                 <form id="query">
 			<table width="950px" id="table1">
@@ -385,8 +443,11 @@
                             <option value="0" >已收件</option>
                             <option value="1" >已分配</option>
                             <option value="2" >转包中</option>
+                            <option value="<3">未完工</option>
                             <option value="3" >已完工</option>
+                            <option value="<4" >未结账</option>
                             <option value="4" >已结账</option>
+                            <option value="9" >已结束</option>
                             <option value="10" >已注销</option>
                             <option value="-1">预留中</option>
                         </select>
@@ -445,6 +506,12 @@
                     <td align="left">----------------------------</td>
 					<td align="left">
 						<input name="CheckOutDateEnd" id="CheckOutDateEnd" style="width:152px;" class="easyui-datebox" />
+					</td>
+                </tr> 
+                <tr height="30px">
+                	<td align="right">台头单位：</td>
+				  	<td align="left" colspan="3">
+						<select name="HeadName" id="HeadName" style="width:152px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" url="/jlyw/AddressServlet.do?method=1"></select>
 					</td>
                 </tr> 
                 <tr height="40px">

@@ -31,7 +31,7 @@
 								}
 							}
 						}
-						$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+						$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 					}
 				});
 				
@@ -154,6 +154,7 @@
 						{field:'Name',title:'姓名',width:80,align:'center'}
 					]],
 					onClickRow:function(rowIndex,rowData){
+						$('#table').treegrid('unselectAll');
 						$.ajax({
 							type:"POST",
 							url:"/jlyw/QualificationServlet.do?method=2&EmpId=" + rowData.Id,
@@ -340,26 +341,31 @@
 		</jsp:include>
 	</DIV>
 <DIV class="JlywCenterLayoutDIV">
-<DIV class="easyui-layout" fit="true" nohead="true" border="false">
-        <div region="north"  style="overflow:hidden"  border="false">
-          <table id="table1">
-			<tr>
-				 <td width="40" align="left">员工：</td>
-				 <td width="193" align="left"><input id="queryname" name="queryname" class="easyui-combobox"  url="" style="width:150px;" valueField="name" textField="name" panelHeight="150px" /></td>
-				 <td width="100"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="query()">查询</a></td>
-                 <td width="200"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="myExport()">导出所有资质信息</a></td>
-                 <td width="300"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="myExport1()">导出个人资质信息</a></td>
-			</tr>
-          </table>
-       </div>
-        <div region="west" align="left" style="overflow:hidden;width:200px"  border="false">
-            <table id="user" style="height:480px; width:250px"></table>
-        </div>
-        <div region="center" style="width:700px;overflow:hidden;"  border="false">
-			<table id="table" style="height:480px; width:700px;"></table>
+	<div style="width:900px" region="center">
+    	<div>
+			 <table id="table1">
+                <tr>
+                     <td width="40" align="left">员工：</td>
+                     <td width="193" align="left"><input id="queryname" name="queryname" class="easyui-combobox"  url="" style="width:150px;" valueField="name" textField="name" panelHeight="150px" /></td>
+                     <td width="100"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="query()">查询</a></td>
+                     <td width="200"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="myExport()">导出所有资质信息</a></td>
+                     <td width="300"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="myExport1()">导出个人资质信息</a></td>
+                </tr>
+              </table>
 		</div>
-        
-        <div region="south" style="overflow:hidden;height:50px"  border="false">
+        <div>
+            <table>
+                <tr>
+                    <td>
+                        <table id="user" style="height:480px; width:250px"></table>
+                    </td>
+                    <td>
+                        <table id="table" style="height:480px; width:700px;"></table>
+                    </td>
+                </tr>
+            </table>        
+        </div>
+        <div style="overflow:hidden;height:50px">
             <table width="900px" id="table2">
                 <tr height="50px">
                     <td align="right"><a class="easyui-linkbutton" iconCls="icon-edit2" href="javascript:void(0)" onClick="AddQualOrLogoutQual(11)">检定</a></td>
@@ -371,7 +377,7 @@
                 </tr >
             </table>
         </div>
-</DIV>
+     </div>
 </DIV>
 </DIV>
 </body>

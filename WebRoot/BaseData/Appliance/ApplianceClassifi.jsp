@@ -55,7 +55,6 @@
 					}
 				}],
 				onBeforeExpand: function(node){
-				//$.messager.alert();
 					 if(nodekeep.indexOf("," + node.id+",")==-1)
 	                 {
 						$.ajax({

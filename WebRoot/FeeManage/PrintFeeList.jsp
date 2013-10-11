@@ -88,7 +88,9 @@ $(function(){
 				}},
 			{field:'Customer',title:'委托单位',width:180,align:'center',sortable:true},
 			{field:'DetailListLastEditTime',title:'清单最后编辑时间',width:160,align:'center',sortable:true},
-			
+			{field:'TotalFee',title:'总检验费用',width:100,align:'left',formatter:function(val,rec){
+						return '<span style="color:red;">'+val+'</span>';
+				}},
 			{field:'TestFee',title:'检验费',width:100,align:'right',formatter:function(val,rec){
 						return '<span style="color:red;">'+val+'</span>';
 				}},
@@ -109,10 +111,8 @@ $(function(){
 			{field:'OtherFee',title:'其他费',width:100,align:'right',formatter:function(val,rec){
 					
 						return '<span style="color:red;">'+val+'</span>';
-				}},
-			{field:'TotalFee',title:'总检验费用',width:100,align:'left',formatter:function(val,rec){
-						return '<span style="color:red;">'+val+'</span>';
 				}}
+			
 			
 		]],
 		pagination:true,
@@ -127,10 +127,12 @@ $(function(){
 			var DetailListId=rowData.DetailListId;
 			var DetailListCode=rowData.DetailListCode;
 			clickname="对应清单号'"+DetailListCode+"' 的委托单信息";
-			$('#table6').datagrid({title:clickname});
+			//$('#table6').datagrid({title:clickname});
+
 			$('#table6').datagrid('options').url='/jlyw/DetailListComServlet.do?method=3';
 			$('#table6').datagrid('options').queryParams={'DetailListCode':DetailListCode};
-			$('#table6').datagrid('reload');
+			$('#table6').datagrid({title:clickname});
+			//$('#table6').datagrid('reload');
 			$('#DetailListId').val(DetailListId);
 			$('#DetailListId1').val(DetailListId);				
 		}
@@ -159,6 +161,9 @@ $(function(){
 					return getCommissionSheetStatusInfo(value);
 				}
 			},
+			{field:'TotalFee',title:'总检验费用',width:100,align:'right',formatter:function(val,rec){
+						return '<span style="color:red;">'+val+'</span>';
+				}},
 			{field:'TestFee',title:'检验费',width:100,align:'right',formatter:function(val,rec){
 						return '<span style="color:red;">'+val+'</span>';
 				}},
@@ -179,10 +184,8 @@ $(function(){
 			{field:'OtherFee',title:'其他费',width:100,align:'right',formatter:function(val,rec){
 					
 						return '<span style="color:red;">'+val+'</span>';
-				}},
-			{field:'TotalFee',title:'总检验费用',width:100,align:'right',formatter:function(val,rec){
-						return '<span style="color:red;">'+val+'</span>';
 				}}
+			
 			
 			
 		]],
@@ -279,10 +282,12 @@ function doLoadHistoryDeList()
 		<form id="formLook" method="post" action="/jlyw/DetailListComServlet.do?method=5" target="FeePrintFrame" >
 			
 			<input id="DetailListId" name="DetailListId"  style="width:152px;" type="hidden" required="true"/>
+			<input id="DetailListType" name="DetailListType"  style="width:152px;" type="hidden" value="1"/>
 		</form>
 		<form id="formLook1" method="post" action="/jlyw/DetailListComServlet.do?method=6" target="FeePrintFrame1">
 			
 			<input id="DetailListId1" name="DetailListId"  style="width:152px;" type="hidden" required="true"/>
+			<input id="DetailListType" name="DetailListType"  style="width:152px;" type="hidden" value="1"/>
 		</form>
 		<iframe id="FeePrintFrame" name="FeePrintFrame" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>
 		<iframe id="FeePrintFrame1" name="FeePrintFrame1" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>

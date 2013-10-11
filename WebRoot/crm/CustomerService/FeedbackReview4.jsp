@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>回访信息管理</title>
+<title>分析处理意见</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -56,8 +56,8 @@
 								$('#customerName1').combobox('reload','/jlyw/CustomerServlet.do?method=6&CustomerName='+newValue);
 						}, 500);
 				}
-			})});
-		function cancel(){
+			});});
+		function cancel2(){
 			$('#query1').form('clear');
 		}
 		
@@ -192,6 +192,7 @@
 						iconCls:'icon-save',
 						handler:function(){
 								ShowWaitingDlg("正在导出，请稍后......");
+								$('#table1').datagrid('options').queryParams={'Status':encodeURI('3'),'CustomerName':encodeURI($('#customerName1').combobox('getValue')),'StartDate':encodeURI($('#startDate').datebox('getValue')),'EndDate':encodeURI($('#endDate').datebox('getValue'))};
 							$('#par').val(JSON.stringify($('#table1').datagrid('options').queryParams));
 							$('#frm_export').form('submit',{
 								success:function(data){
@@ -262,7 +263,7 @@
 		<tr>
 			<td></td>
 			<td width="25%" align="right"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-search" onclick="search1()">查询</a></td>
-			<td width="25%" align="left"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-reload"  onclick="cancel()">重置</a></td>
+			<td width="25%" align="left"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-reload"  onclick="cancel2()">重置</a></td>
 			<td ></td>
 		</tr>
 	</table>
@@ -270,7 +271,7 @@
 	</div>
 <br/>
 <table id="table1"></table>
-<div id="edit" class="easyui-window" title="修改" style="padding: 10px;width: 755px;height: 500px;"
+<div id="edit" class="easyui-window" title="分析处理意见" style="padding: 10px;width: 755px;height: 500px;"
 		iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 <form id="frm_show" method="post">
 	<table  id="table2" style="width:700px; height:300px; padding-top:10px; padding-left:20px" class="easyui-panel" title=" ">
@@ -376,6 +377,13 @@
 			<td align="right" colspan="2">改进意见：</td>
 			<td align="left"  colspan="2"><textarea id="analysis" class="easyui-validatebox" name="Analysis" cols="55" rows="3" required="true"></textarea> 
 			<input id="feedbackId" type="hidden" name="FeedbackId" class="easyui-validatebox"/>
+			</td>
+			
+		</tr>
+		<tr >
+			<td align="right" colspan="2">是否需要回访：</td>
+			<td align="left"  colspan="2">
+				<input type="checkbox" name="isHf"/>
 			</td>
 			
 		</tr>

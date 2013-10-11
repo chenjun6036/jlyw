@@ -3,7 +3,6 @@ package com.jlyw.servlet;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,12 +22,13 @@ import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
+import com.jlyw.hibernate.AppliancePopularName;
 import com.jlyw.hibernate.ApplianceSpecies;
+import com.jlyw.hibernate.ApplianceStandardName;
+import com.jlyw.manager.AppliancePopularNameManager;
 import com.jlyw.manager.ApplianceSpeciesManager;
-import com.jlyw.manager.StandardApplianceManager;
-import com.jlyw.util.ExportUtil;
+import com.jlyw.manager.ApplianceStandardNameManager;
 import com.jlyw.util.KeyValueWithOperator;
-import com.jlyw.util.LetterUtil;
 import com.jlyw.util.UIDUtil;
 
 public class ApplianceSpeciesServlet extends HttpServlet {
@@ -199,6 +199,93 @@ public class ApplianceSpeciesServlet extends HttpServlet {
 			}finally{
 				resp.setContentType("text/html;charset=utf-8");
 				resp.getWriter().write(retObj5.toString());
+			}
+			break;
+		case 6://根据分类或标准名称或常用名称查询器具分类信息
+			JSONObject retObj6 = new JSONObject();
+			try{
+				JSONArray options = new JSONArray();
+				String SpeciesTypeStr = req.getParameter("SpeciesType");
+				String ApplianceSpeciesIdStr = req.getParameter("ApplianceSpeciesId");
+				String PopName = req.getParameter("PopName");
+				
+				int SpeciesType = Integer.valueOf(URLDecoder.decode(SpeciesTypeStr, "utf-8"));
+				int ApplianceSpeciesId = Integer.valueOf(URLDecoder.decode(ApplianceSpeciesIdStr, "utf-8"));
+				
+				int total = 0;
+				if(SpeciesType==1){
+					List<ApplianceSpecies> result = appSpeMgr.findByVarProperty(new KeyValueWithOperator("id", ApplianceSpeciesId, "="));
+					String parentStr = "";
+					for(ApplianceSpecies appSpec : result){
+						JSONObject option = new JSONObject();
+						ApplianceSpecies parentSpec = appSpec.getParentSpecies();
+						while(parentSpec!=null){
+							parentStr = parentSpec.getName().concat("-" + parentStr);
+							parentSpec = parentSpec.getParentSpecies();
+						}
+						option.put("parentStr", parentStr.length()==0?"":parentStr.substring(0, parentStr.length()-1));
+						option.put("SpecName", appSpec.getName());
+						
+						options.put(option);
+					}
+					total = result.size();
+				}
+				if(SpeciesType==0&&PopName.equals("")){
+					ApplianceStandardNameManager appStdNameMgr = new ApplianceStandardNameManager(); 
+					List<ApplianceStandardName> result = appStdNameMgr.findByVarProperty(new KeyValueWithOperator("id", ApplianceSpeciesId, "="));
+					String parentStr = "";
+					for(ApplianceStandardName appStdName : result){
+						JSONObject option = new JSONObject();
+						ApplianceSpecies parentSpec = appStdName.getApplianceSpecies().getParentSpecies();
+						while(parentSpec!=null){
+							parentStr = parentSpec.getName().concat("-" + parentStr);
+							parentSpec = parentSpec.getParentSpecies();
+						}
+						option.put("parentStr", parentStr.length()==0?"":parentStr.substring(0, parentStr.length()-1));
+						option.put("SpecName", appStdName.getApplianceSpecies().getName());
+						option.put("StdName", appStdName.getName());
+						
+						options.put(option);
+					}
+					total = result.size();
+				}
+				if(SpeciesType==0&&!PopName.equals("")){
+					AppliancePopularNameManager appPopNameMgr = new AppliancePopularNameManager(); 
+					List<AppliancePopularName> result = appPopNameMgr.findByVarProperty(new KeyValueWithOperator("popularName", URLDecoder.decode(PopName, "utf-8"), "="));
+					String parentStr = "";
+					for(AppliancePopularName appPopName : result){
+						JSONObject option = new JSONObject();
+						ApplianceStandardName appStdName = appPopName.getApplianceStandardName();
+						ApplianceSpecies parentSpec = appStdName.getApplianceSpecies().getParentSpecies();
+						while(parentSpec!=null){
+							parentStr = parentSpec.getName().concat("-" + parentStr);
+							parentSpec = parentSpec.getParentSpecies();
+						}
+						option.put("parentStr", parentStr.length()==0?"":parentStr.substring(0, parentStr.length()-1));
+						option.put("SpecName", appStdName.getApplianceSpecies().getName());
+						option.put("StdName", appStdName.getName());
+						option.put("PopName", appPopName.getPopularName());
+						
+						options.put(option);
+					}
+					total = result.size();
+				}
+				
+				retObj6.put("total", total);
+				retObj6.put("rows", options);
+			}catch(Exception e){
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in ApplianceSpecesServlet-->case 6", e);
+				}else{
+					log.error("error in ApplianceSpecesServlet-->case 6", e);
+				}
+				try {
+					retObj6.put("total", 0);
+					retObj6.put("rows", new JSONArray());
+				} catch (JSONException e1) {}
+			}finally{
+				resp.setContentType("text/json;charset=utf-8");
+				resp.getWriter().write(retObj6.toString());
 			}
 			break;
 		}

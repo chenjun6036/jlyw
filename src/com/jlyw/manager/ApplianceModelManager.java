@@ -86,6 +86,28 @@ public class ApplianceModelManager {
 	}	
 	
 	/**
+	 * 批量删除
+	 * @param models列表
+	 * @return 删除成功，返回true；否则返回false
+	 */
+	public boolean deleteByBatch(List<ApplianceModel> models){
+		Transaction tran = m_dao.getSession().beginTransaction();
+		try {			
+			for(ApplianceModel model : models){
+				m_dao.delete(model);
+			}
+			tran.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			tran.rollback();
+			return false;
+		} finally {
+			m_dao.closeSession();
+		}
+	}	
+	
+	/**
 	 * 分页函数
 	 * @param currentPage 当前页码
 	 * @param pageSize 每页的记录数

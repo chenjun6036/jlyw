@@ -314,6 +314,61 @@ private RolePrivilegeDAO m_dao = new RolePrivilegeDAO();
 		}
 	}
 	
+	/**导出用户权限(只包含父层)
+	 * 返回一个用户的所有权限信息，包括其角色的父角色的权限
+	 * @param userid
+	 * @return
+	 */
+	public List<JSONObject> ExportAlonePrivilegesByUserId(Integer userid){
+		try{
+			Map<Integer, UrlInfo> privilegeMap = new HashMap<Integer, UrlInfo>();	//已有的权限集合
+			List<JSONObject> result=new ArrayList<JSONObject>();
+			
+			UserRoleDAO urDao = new UserRoleDAO();
+			List<UserRole> urList=new ArrayList<UserRole>();
+			
+			if(userid==null){				
+				urList = urDao.findByVarProperty("UserRole",
+						new KeyValueWithOperator("status", 1, "<>"),
+						new KeyValueWithOperator("role.status", 1, "<>"));
+			}else{
+				
+				urList = urDao.findByVarProperty("UserRole",
+					new KeyValueWithOperator("sysUser.id", userid, "="),
+					new KeyValueWithOperator("status", 1, "<>"),
+					new KeyValueWithOperator("role.status", 1, "<>"));
+			}
+			Set<Integer> roleSet = new HashSet<Integer>();	//已查找的角色集合
+			KeyValueWithOperator k1 = new KeyValueWithOperator("privilege.status", 1, "<>");
+			KeyValueWithOperator k2 = new KeyValueWithOperator("status", 1, "<>");
+			KeyValueWithOperator k3 = new KeyValueWithOperator("role.status", 1, "<>");
+			SysUser user=new SysUser();
+			for(UserRole ur :urList){
+				
+				Role role = ur.getRole();
+				user=ur.getSysUser();				
+				if(roleSet.contains(role.getId())){
+					continue;
+				}
+			
+			
+				JSONObject record=new JSONObject();
+				record.put("UserName", user.getUserName());
+				record.put("JobNum", user.getJobNum());
+				record.put("Name", user.getName());
+				record.put("RoleName", role.getName());
+				//record.put("PrivilegeName", rp.getPrivilege().getName());
+				result.add(record);
+					
+				
+			}
+			
+			return result;
+		}catch(Exception e){
+			return null;
+		}
+	}
+	
 	public List<String> formatExcel(Object obj) throws JSONException{
 		List<String> result = new ArrayList<String>();
 		JSONObject jsonObj = (JSONObject)obj;

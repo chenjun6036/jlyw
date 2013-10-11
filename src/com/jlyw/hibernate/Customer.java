@@ -61,16 +61,26 @@ public class Customer implements java.io.Serializable {
 
 	/** minimal constructor */
 	public Customer(Region region, SysUser sysUserByModificatorId, String name,
-			Integer customerType, String address, String tel, String zipCode,
-			Timestamp modifyDate) {
+			String brief, Integer customerType, String code, String address,
+			String tel, String zipCode, Integer status, Double balance,
+			String account, String classification, Double creditAmount,
+			Timestamp modifyDate, String accountBank) {
 		this.region = region;
 		this.sysUserByModificatorId = sysUserByModificatorId;
 		this.name = name;
+		this.brief = brief;
 		this.customerType = customerType;
+		this.code = code;
 		this.address = address;
 		this.tel = tel;
 		this.zipCode = zipCode;
+		this.status = status;
+		this.balance = balance;
+		this.account = account;
+		this.classification = classification;
+		this.creditAmount = creditAmount;
 		this.modifyDate = modifyDate;
+		this.accountBank = accountBank;
 	}
 
 	/** full constructor */
@@ -128,15 +138,15 @@ public class Customer implements java.io.Serializable {
 	}
 
 	// Property accessors
+
 	public Set getContactors() {
-		return this.contactors;
+		return contactors;
 	}
-	
+
 	public void setContactors(Set contactors) {
-		this.contactors=contactors;
-		
+		this.contactors = contactors;
 	}
-	
+
 	public Integer getId() {
 		return this.id;
 	}

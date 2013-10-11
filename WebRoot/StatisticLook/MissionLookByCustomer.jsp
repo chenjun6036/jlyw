@@ -14,6 +14,7 @@
     <script type="text/javascript" src="../Inc/JScript/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
     <script type="text/javascript" src="../JScript/StatusInfo.js"></script>
     <script type="text/javascript" src="../JScript/ExportToExcel.js"></script>
+	<script type="text/javascript" src="../JScript/upload.js"></script>
     <script type="text/javascript" src="../JScript/json2.js"></script>
 	<script>
 	
@@ -50,7 +51,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			
@@ -83,9 +84,23 @@
 				columns:[[
 					{field:'Code',title:'委托单号',width:100,align:'center',sortable:true},
 					{field:'CommissionDate',title:'委托日期',width:80,align:'center'},
+					
 					{field:'Status',title:'委托单状态',width:80,align:'center',
 						formatter:function(value,rowData,rowIndex){
 							return getCommissionSheetStatusInfo(value);
+						}
+					},
+					{field:'sdsd',title:'是否待完工',width:80,align:'center',
+						formatter:function(value,rowData,rowIndex){
+							if(rowData.Status == 10){	//已注销
+								return ""
+							}else if(rowData.Status >= 3){	//已完工(包括已结账、已结束)
+								return ""
+							}else if(rowData.IsSubContract==true ||(rowData.FinishQuantity!=null&&rowData.EffectQuantity!=null&&rowData.FinishQuantity == rowData.EffectQuantity)){	//可以完工的器具
+								return "待完工"
+							}else{
+								return "";
+							}
 						}
 					},
 					{field:'ApplianceSpeciesName',title:'器具授权名',width:80,align:'center'},
@@ -104,6 +119,8 @@
 					{field:'DebugFee',title:'调试费',width:70,align:'center'},
 					{field:'CarFee',title:'交通费',width:70,align:'center'},
 					{field:'OtherFee',title:'其他费用',width:70,align:'center'},
+					{field:'LocaleCommissionCode',title:'现场任务书号',width:80,align:'center'},
+					{field:'LocaleStaff',title:'现场负责人',width:80,align:'center'},
 					{field:'ReportType',title:'报告形式',width:80,align:'center',
 						formatter:function(value,rowData,rowIndex){
 							if(value == 1 || value == '1')
@@ -121,7 +138,12 @@
 								return "检验";
 							}
 						}},
-					{field:'Allotee',title:'派定人',width:80,align:'center'}
+					{field:'Allotee',title:'派定人',width:80,align:'center'},
+					{field:'CustomerAddress',title:'委托单位地址',width:180,align:'center'},
+					{field:'CustomerTel',title:'委托单位电话',width:80,align:'center'},
+					{field:'CustomerZipCode',title:'邮编',width:50,align:'center'},
+					{field:'CustomerContactor',title:'联系人',width:50,align:'center'},
+					{field:'CustomerContactorTel',title:'联系人电话',width:80,align:'center'}
                 ]],
 				toolbar:[{
 					text:'查看委托单明细',
@@ -141,9 +163,20 @@
 					iconCls:'icon-print',
 					handler:function(){
 						$('#PrintStr').val(JSON.stringify($('#result').datagrid('options').queryParams));
-						alert($('#PrintStr').val());
 						
 						$('#formLook').submit();
+						$.messager.show({			
+							title: "提示",			
+							msg: "请耐心等待打印结果，数据多打印有点慢哦！",		
+							showType: 'slide',			
+							timeout: 5000			
+						});
+					}
+				},'-',{
+					text:'导出',
+					iconCls:'icon-save',
+					handler:function(){
+						myExport();
 					}
 				}],
 				rowStyler:function(rowIndex, rowData){
@@ -179,7 +212,27 @@
 			$('#query').form('clear');
 			document.getElementById("Status").value="";
 		}
-
+		function myExport(){
+			
+			ShowWaitingDlg("正在导出，请稍后......");
+			$('#paramsStr').val(JSON.stringify($('#result').datagrid('options').queryParams));
+			$('#frm_export').form('submit',{
+				success:function(data){
+					var result = eval("("+ data +")");
+					if(result.IsOK)
+					{
+						$('#filePath').val(result.Path);
+						$('#frm_down').submit();
+						CloseWaitingDlg();
+					}
+					else
+					{
+						$.messager.alert('提示','导出失败，请重试！','warning');
+						CloseWaitingDlg();
+					}
+				}
+			});
+		}
 	</script>
 </head>
 <form id="SearchForm" method="post" action="/jlyw/StatisticLook/MissionLookByCommissionSheetCode.jsp" target="_blank">
@@ -193,6 +246,13 @@
 		</jsp:include>
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
+	
+	  <form id="frm_export" method="post" action="/jlyw/QueryServlet.do?method=10">
+		<input id="paramsStr" name="paramsStr" type="hidden" />
+		</form>
+		<form id="frm_down" method="post" action="/jlyw/Export.do?" target="_self">
+		<input id="filePath" name="filePath" type="hidden" />
+		</form>
    <br />
 <div style="+position:relative;">
      <div id="p" class="easyui-panel" style="width:1000px;height:250px;padding:10px;"
@@ -258,19 +318,23 @@
 					<td align="right">状态：</td>
 					<td align="left">
 						<select name="Status" id="Status" style="width:152px;">
-                            <option value="" selected="selected">全部</option>
+                           <option value="" selected="selected">全部</option>
                             <option value="0" >已收件</option>
                             <option value="1" >已分配</option>
                             <option value="2" >转包中</option>
+                            <option value="<3">未完工</option>
                             <option value="3" >已完工</option>
+                            <option value="<4" >未结账</option>
                             <option value="4" >已结账</option>
+                            <option value="9" >已结束</option>
                             <option value="10" >已注销</option>
                             <option value="-1">预留中</option>
                         </select>
 					</td>
-                    <td align="left">
                     	<td align="right">内部联系人：</td>
+                    	<td align="left">
 						<input name="InsideContactor" id="InsideContactor" style="width:152px;"  class="easyui-combobox" />
+                        </td>
 					</td>
 				</tr >
 				<tr height="50px">

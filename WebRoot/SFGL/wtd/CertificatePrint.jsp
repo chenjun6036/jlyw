@@ -14,17 +14,25 @@
 </head>
 
 <body>
-<% for(int i = 0; i < jsonArray.length(); i++){ 
-	if(i%9 == 0){
-%>
-<br />
 <%
+ int m=0;
+ for(int i = 0; i <= jsonArray.length()/25; i++){ 
+ 	JSONArray aArray = new JSONArray();
+	for(int j=0;j<25&&m<jsonArray.length();j++){
+		
+		JSONObject obj = new JSONObject();
+		obj.put("FileId",jsonArray.getJSONObject(m).getString("FileId"));
+		aArray.put(obj);
+		m++;
 	}
+	if(aArray!=null&&aArray.length()>0){
 %>
+
 <object  classid="clsid:CA8A9780-280D-11CF-A24D-444553540000" width="100px"  height="100px"  border="0">
-<param  name="SRC"  value="/jlyw/FileServlet.do?method=1&FileType=102&FileId=<%=jsonArray.getJSONObject(i).getString("FileId")%>"/> 
+<param  name="SRC"  value='/jlyw/FileServlet.do?method=1&FileType=102&FileIds=<%=aArray.toString()%>'/> 
 </object>
 <%
+	}
   }
 %>
 </body>

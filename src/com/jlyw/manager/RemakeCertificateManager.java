@@ -1,8 +1,11 @@
 package com.jlyw.manager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Transaction;
+import org.json.me.JSONException;
+import org.json.me.JSONObject;
 
 import com.jlyw.hibernate.RemakeCertificate;
 import com.jlyw.hibernate.RemakeCertificateDAO;
@@ -229,10 +232,68 @@ public class RemakeCertificateManager {
 	/**
 	 * 按任意条件对查找，可指定排序字段
 	 * @param TableName:从哪个表里查询
+	 * @param orderby：按照哪个字段排序
+	 * @param asc：true 增序 false 减序
+	 * @param arr ：条件与值对
+	 */
+	public List<RemakeCertificate> findByPropertyBySort(String orderby, boolean asc, List<KeyValueWithOperator> arr){
+		try{
+			return m_dao.findByPropertyBySort("RemakeCertificate", orderby, asc, arr);
+		}
+		catch(Exception e){
+			return null;
+		}
+	}
+	
+	/**
+	 * 按任意条件对查找，可指定排序字段
+	 * @param TableName:从哪个表里查询
 
 	 * @param arr ：条件与值对
 	 */
 	public List<RemakeCertificate> findByVarProperty(KeyValueWithOperator...arr){
 		return m_dao.findByVarProperty("RemakeCertificate", arr);
+	}
+	
+	
+	public List<String> formatExcel(Object obj) throws JSONException{
+		List<String> result = new ArrayList<String>();
+		JSONObject jsonObj = (JSONObject)obj;
+		result.add(jsonObj.has("CommissionCode")?jsonObj.getString("CommissionCode"):"");
+		result.add(jsonObj.has("ApplianceName")?jsonObj.getString("ApplianceName"):"");
+		result.add(jsonObj.has("CustomerName")?jsonObj.getString("CustomerName"):"");
+		result.add(jsonObj.has("CustomerContactor")?jsonObj.getString("CustomerContactor"):"");
+		result.add(jsonObj.has("CustomerContactorTel")?jsonObj.getString("CustomerContactorTel"):"");
+		result.add(jsonObj.has("CommissionDate")?jsonObj.getString("CommissionDate"):"");
+		result.add(jsonObj.has("CertificateCode")?jsonObj.getString("CertificateCode"):"");
+		result.add(jsonObj.has("CreatorName")?jsonObj.getString("CreatorName"):"");
+		result.add(jsonObj.has("CreateTime")?jsonObj.getString("CreateTime"):"");
+		result.add(jsonObj.has("CreateRemark")?jsonObj.getString("CreateRemark"):"");
+		result.add(jsonObj.has("ReceiverName")?jsonObj.getString("ReceiverName"):"");
+		result.add(jsonObj.has("FinishTime")?jsonObj.getString("FinishTime"):"");
+		result.add(jsonObj.has("FinishRemark")?jsonObj.getString("FinishRemark"):"");
+		result.add(jsonObj.has("PassedTime")?jsonObj.getString("PassedTime"):"");
+		
+		return result;
+	}
+
+	public List<String> formatTitle(){
+		List<String> result = new ArrayList<String>();
+		result.add("委托单号");
+		result.add("器具名称");
+		result.add("委托单位");
+		result.add("联系人");
+		result.add("联系人电话");
+		result.add("委托日期");
+		result.add("原证书编号");
+		result.add("创建人");
+		result.add("创建时间");
+		result.add("备注");
+		result.add("编制人");
+		result.add("完成时间");
+		result.add("备注");
+		result.add("通过时间");
+		
+		return result;
 	}
 }

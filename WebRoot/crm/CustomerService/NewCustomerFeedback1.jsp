@@ -58,7 +58,7 @@
 		   		success:function(data){
 		   			var result = eval("("+data+")");
 		   				$.messager.alert('ÌבÊ¾',result.msg,'info');
-		   				if(result.IsOK)
+		   				if(result.IsOk)
 		   					cancel();
 		   		 }
 			});

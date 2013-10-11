@@ -142,7 +142,7 @@ public class TestLogServlet extends HttpServlet {
 					queryStr = queryStr + " and model.certificateId like ?";
 					keys.add("%" + CertificateId + "%");
 				}
-				if(queryStatus != null&&!queryStatus.equals(""))
+				if(queryStatus!= null&&!queryStatus.equals(""))
 				{
 					String stanStatusStr = URLDecoder.decode(queryStatus, "UTF-8");
 					keys.add(LetterUtil.isNumeric(stanStatusStr)?Integer.valueOf(stanStatusStr):0);
@@ -193,7 +193,7 @@ public class TestLogServlet extends HttpServlet {
 			} catch (Exception e) {
 				try {
 					retObj2.put("total", 0);
-					retObj2.put("rows", retObj2);
+					retObj2.put("rows", new JSONArray());
 				} catch (JSONException e1) {
 					e1.printStackTrace();
 				}
@@ -276,14 +276,14 @@ public class TestLogServlet extends HttpServlet {
 				List<Object> keys = new ArrayList<Object>();
 				if(params.length()!=0)
 				{
-					String StdAppId = req.getParameter("StdAppId"); //标准器具名称
-					String queryValidDateFrom = req.getParameter("queryValidDateFrom");
-					String queryValidDateEnd = req.getParameter("queryValidDateEnd");
-					String queryTestDateFrom = req.getParameter("queryTestDateFrom");
-					String queryTestDateEnd = req.getParameter("queryTestDateEnd");
-					String queryTester = req.getParameter("queryTester");
-					String queryCertificateId = req.getParameter("queryCertificateId");
-					String queryStatus = req.getParameter("queryStatus");					
+					String StdAppId = params.has("StdAppId")?params.getString("StdAppId"):""; //标准器具名称
+					String queryValidDateFrom = params.has("queryValidDateFrom")?params.getString("queryValidDateFrom"):"";
+					String queryValidDateEnd = params.has("queryValidDateEnd")?params.getString("queryValidDateEnd"):"";
+					String queryTestDateFrom = params.has("queryTestDateFrom")?params.getString("queryTestDateFrom"):"";
+					String queryTestDateEnd = params.has("queryTestDateEnd")?params.getString("queryTestDateEnd"):"";
+					String queryTester = params.has("queryTester")?params.getString("queryTester"):"";
+					String queryCertificateId = params.has("queryCertificateId")?params.getString("queryCertificateId"):"";
+					String queryStatus = params.has("queryStatus")?params.getString("queryStatus"):"";					
 					
 					if(StdAppId!=null&&!StdAppId.equals(""))
 					{

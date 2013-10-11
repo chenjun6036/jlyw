@@ -80,6 +80,10 @@
 					<node text="新建委托单">
 						<attributes url="/jlyw/SFGL/wtd/CommissionSheet.jsp"/>
 					</node>
+					
+					<node text="修改委托单">
+						<attributes url="/jlyw/SFGL/wtd/UpdateCommissionSheet.jsp"/>
+					</node>
 					<node text="预留委托单">
 						<attributes url="/jlyw/SFGL/wtd/YLCommissionSheet.jsp"/>
 					</node>
@@ -198,6 +202,15 @@
 							<node text="我未完成的任务列表">
 								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateTask.jsp"/>
 							</node>
+							<node text="我未完成的核验列表">
+								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateVerifyTask.jsp"/>
+							</node>
+							<node text="我未完成的签字列表">
+								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateAuthorizeTask.jsp"/>
+							</node>
+							<node text="重新编制证书记录统计">
+								<attributes url="/jlyw/TaskManage/RemakeCertificate/RemakeCertificateRecords.jsp"/>
+							</node>
 							
 						</children>
 					</node>
@@ -241,7 +254,7 @@
 			<node text="模板文件管理" state="closed">
 				<children>
 					<node text="原始记录模板文件管理">
-						<attributes url="/jlyw/BaseData/Appliance/StandardName.jsp"/>
+						<attributes url="/jlyw/BaseData/Template/OriginalRecordTemplate.jsp"/>
 					</node>
 					<node text="证书模板文件管理">
 						<attributes url="/jlyw/BaseData/Template/CertificateTemplate.jsp"/>
@@ -283,7 +296,9 @@
 					<node text="打印费用清单">
 						<attributes url="/jlyw/FeeManage/PrintFeeList.jsp"/>
 					</node>
-					
+					<node text="注销费用清单">
+						<attributes url="/jlyw/FeeManage/LogoutFeeList.jsp"/>
+					</node>
 					<node text="结账管理">
 						<attributes url="/jlyw/FeeManage/Checkout2.jsp"/>
 					</node>
@@ -328,6 +343,9 @@
 							<node text="委托单位信息管理">
 								<attributes url="/jlyw/BaseData/wtUnit/CustomerCX.jsp"/>
 							</node>
+							<node text="委托单位合并">
+								<attributes url="/jlyw/BaseData/wtUnit/CustomerMerge.jsp"/>
+							</node>
 						</children>
 					</node>	
 					
@@ -352,6 +370,9 @@
 							</node>
 							<node text="器具标准名信息管理">
 								<attributes url="/jlyw/BaseData/Appliance/StandardName.jsp"/>
+							</node>
+							<node text="受检器具分类、标准名称、常用名称查询">
+								<attributes url="/jlyw/BaseData/Appliance/SearchSpeciesStandardNamePopularName.jsp"/>
 							</node>
 							<node text="新建受检器具">
 								<attributes url="/jlyw/BaseData/Appliance/Appliance.jsp"/>
@@ -459,6 +480,9 @@
 					<node text="证书查询" iconCls="icon-search">
 						<attributes url="/jlyw/StatisticLook/CertificateLook.jsp"/>
 					</node>
+					<node text="现场任务书号查询委托单" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/MissionLookByLocaleMissionCode.jsp"/>
+					</node>
 					<node text="根据委托单号查询业务" iconCls="icon-search">
 						<attributes url="/jlyw/StatisticLook/MissionLookByCommissionSheetCode.jsp"/>
 					</node>
@@ -468,8 +492,17 @@
 					<node text="按委托单位查询业务" iconCls="icon-search">
 						<attributes url="/jlyw/StatisticLook/MissionLookByCustomer.jsp"/>
 					</node>
+					<node text="转包业务查询" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/SubContractLook.jsp"/>
+					</node>
 					<node text="查询未使用预留委托单号" iconCls="icon-search">
 						<attributes url="/jlyw/StatisticLook/MissionLookByYLCode.jsp"/>
+					</node>
+					<node text="超期信息查询" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/OverdueLook.jsp"/>
+					</node>
+					<node text="证书安全码查询" iconCls="icon-search">
+						<attributes url="/jlyw/StatisticLook/SecurityCodeLook.jsp"/>
 					</node>
 					<node text="基础数据查询" state="closed">
 						<children>
@@ -508,11 +541,17 @@
 							<node text="按科室查" iconCls="icon-search">
 								<attributes url="/jlyw/StatisticLook/TransactionLook/Dept.jsp"/>
 							</node>
+							<node text="查询所在科室业务量" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/TransactionLook/DeptByPerson.jsp"/>
+							</node>
 							<node text="按全所查" iconCls="icon-search">
 								<attributes url="/jlyw/StatisticLook/TransactionLook/Company.jsp"/>
 							</node>
 							<node text="按委托单位查" iconCls="icon-search">
 								<attributes url="/jlyw/StatisticLook/TransactionLook/Customer.jsp"/>
+							</node>
+							<node text="按委托单位汇总" iconCls="icon-search">
+								<attributes url="/jlyw/StatisticLook/TransactionLook/CustomerSUM.jsp"/>
 							</node>
 						</children>
 					</node>	
@@ -557,7 +596,8 @@
 			</node>
 		</children>
 	</node>
-	<node text="客户关系管理" state="open">
+	
+<node text="客户关系管理" state="open">
 		<children>
 			<node text="客户基本信息管理" state="closed">
 				<children>

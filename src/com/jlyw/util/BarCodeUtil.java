@@ -77,7 +77,9 @@ public class BarCodeUtil {
 	}
 	
 	public static void main(String[]args) throws Exception{
-		BarCodeUtil.GenerateBarcode("20122000002002-001", new File("C:/test2.jpg"));
+		//BarCodeUtil.GenerateBarcode("2012200000", new File("C:/test2.jpg"));
+		Boolean c= true;
+		System.out.println(((Object)c).toString());
 	}
 	
 	public static boolean GenerateBarcode(String codeStr, File outFile) throws Exception {

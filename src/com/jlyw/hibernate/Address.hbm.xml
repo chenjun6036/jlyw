@@ -46,5 +46,23 @@
         <property name="webSite" type="java.lang.String">
             <column name="WebSite" length="100" />
         </property>
+        <property name="authorizationStatement" type="java.lang.String">
+            <column name="AuthorizationStatement" length="500" />
+        </property>
+        <property name="authorizationStatementEn" type="java.lang.String">
+            <column name="AuthorizationStatementEn" length="500" />
+        </property>
+        <property name="cnasstatement" type="java.lang.String">
+            <column name="CNASStatement" length="500" />
+        </property>
+        <property name="cnasstatementEn" type="java.lang.String">
+            <column name="CNASStatementEn" length="500" />
+        </property>
+        <property name="standardStatement" type="java.lang.String">
+            <column name="StandardStatement" length="500" />
+        </property>
+        <property name="standardStatementEn" type="java.lang.String">
+            <column name="StandardStatementEn" length="500" />
+        </property>
     </class>
 </hibernate-mapping>

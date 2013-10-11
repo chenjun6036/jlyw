@@ -42,6 +42,7 @@
 					
 				],[
 					{field:'CreateDate',title:'发布时间',width:80,align:'center',sortable:true},
+					{field:'Code',title:'委托书号',width:80,align:'center',sortable:true},
 					{field:'CreatorName',title:'发布人',width:60,align:'center',sortable:true},
 					{field:'Customer',title:'客户名称',width:180,align:'center'},
 					{field:'Address',title:'客户地址',width:180,align:'center'},
@@ -49,7 +50,6 @@
 					{field:'Tel',title:'联系电话',width:120,align:'center'},
 					{field:'ContactorTel',title:'联系人电话',width:120,align:'center'},
 					
-					{field:'Code',title:'委托书号',width:80,align:'center',sortable:true},
 					{field:'MissionDesc',title:'现场检测项目及台件数',width:150,align:'center'},
 					{field:'SiteManagerId',title:'现场检测负责人',width:100,align:'center'},
 					{field:'Department',title:'业务部门',width:80,align:'center'},
@@ -106,13 +106,64 @@
 				}]
 			
 			});
+			$('#CustomerName').combobox({
+			//	url:'/jlyw/CustomerServlet.do?method=6',
+				valueField:'name',
+				textField:'name',
+				onSelect:function(){},
+				onChange:function(newValue, oldValue){
+					var allData = $(this).combobox('getData');
+					if(allData != null && allData.length > 0){
+						for(var i=0; i<allData.length; i++)
+						{
+							if(newValue==allData[i].name){
+								return false;
+							}
+						}
+					}
+					 try{
+							window.clearTimeout(this.reloadObj);
+						}catch(ex){}
+						this.reloadObj = window.setTimeout(function(){   
+								var newValue = $('#CustomerName').combobox('getText');
+								$('#CustomerName').combobox('reload','/jlyw/CustomerServlet.do?method=6&CustomerName='+newValue);
+						}, 700);
+
+					//$(this).combobox('reload','/jlyw/CustomerServlet.do?method=6&CustomerName='+newValue);
+				}
+			});
+
+			$("#LocaleCode").combobox({//现场委托书号
+			//	url:'/jlyw/CustomerServlet.do?method=5',
+				valueField:'code',
+				textField:'code',
+				onChange:function(newValue, oldValue){
+					var allData = $(this).combobox('getData');
+					if(allData != null && allData.length > 0){
+						for(var i=0; i<allData.length; i++)
+						{
+							if(newValue==allData[i].name){
+								return false;
+							}
+						}
+					}
+					try{
+						window.clearTimeout(this.reloadObj);
+					}catch(ex){}
+					this.reloadObj = window.setTimeout(function(){   
+							var newValue = $('#LocaleCode').combobox('getText');
+							$('#LocaleCode').combobox('reload','/jlyw/LocaleMissionServlet.do?method=15&QueryName='+encodeURI(newValue));
+					}, 700);
+					
+				}
+			});
 			
 		});
 		function query(){
 			
 			 $('#task-table').datagrid('options').url='/jlyw/VehicleMissionServlet.do?method=0';
 			 
-			 $('#task-table').datagrid('options').queryParams={'StartTime':encodeURI($('#dateTimeFrom').datebox('getText')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getText')),'MissionStatus':encodeURI($('#MissionStatus').val()),'Department':encodeURI($("#Department").val()),'Licence':encodeURI($('#Licence').val())};
+			 $('#task-table').datagrid('options').queryParams={'StartTime':encodeURI($('#dateTimeFrom').datebox('getText')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getText')),'MissionStatus':encodeURI($('#MissionStatus').val()),'Department':encodeURI($("#Department").val()),'Licence':encodeURI($('#Licence').val()),'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'LocaleCode':encodeURI($('#LocaleCode').combobox('getValue'))};
 			 $('#task-table').datagrid('reload');
 		}
 </script>
@@ -139,6 +190,12 @@
 					起始时间<input name="date1" id="dateTimeFrom" type="text" style="width:120px;"  class="easyui-datebox" >&nbsp;					
 					结束时间：<input name="date2" id="dateTimeEnd" type="text" style="width:120px;"  class="easyui-datebox" >&nbsp;
 					<a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="query()">查询</a>
+					</td>
+				</tr >
+				<tr >		
+					<td align="left">
+					<label>委托单位：</label><input name="CustomerName" id="CustomerName" style="width:80px"/>&nbsp;
+					<label>现场委托书号：</label><input name="LocaleCode" id="LocaleCode" style="width:80px"/>
 					</td>
 				</tr >
 				

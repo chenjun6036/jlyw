@@ -20,180 +20,67 @@
 <script type="text/javascript" src="../JScript/StatusInfo.js"></script>
 
 <script type="text/javascript" src="../WebPrint/LodopFuncs.js"></script>
-<script type="text/javascript" src="../WebPrint/printCommisionSheet.js"></script>
 
-		
-<object id="LODOP_OB" classid="clsid:2105C259-1E0C-4534-8141-A753534CB4CA" width=0 height=0> 
-	<embed id="LODOP_EM" type="application/x-print-lodop" width=0 height=0 pluginspage="/jlyw/WebPrint/install_lodop.exe"></embed>
-</object> 
 <script>
-$(function(){
-	$("#CustomerName").combobox({
-		valueField:'name',
-		textField:'name',
-		onSelect:function(record){
-			$("#CustomerTel").val(record.tel);
-			$("#CustomerAddress").val(record.address);
-			$("#CustomerZipCode").val(record.zipCode);
-			$("#ContactPerson").val(record.contactor);
-			$("#ContactorTel").val(record.contactorTel);
-		},
-		onChange:function(newValue, oldValue){
-			var allData = $(this).combobox('getData');
-			if(allData != null && allData.length > 0){
-				for(var i=0; i<allData.length; i++)
-				{
-					if(newValue==allData[i].name){
-						return false;
-					}
-				}
-			}
-			$(this).combobox('reload','/jlyw/CustomerServlet.do?method=5&CustomerName='+newValue);
-		}
-	});
-	var products = [
-		{id:0,name:'强制检定'},
-		{id:1,name:'非强制检定'}
-	];
-	var products1 = [
-		{id:0,name:'是'},
-		{id:1,name:'否'}
-	];
-	var products2 = [
-		{id:0,name:'需要修理'},
-		{id:1,name:'无需修理'}
-	];
-	var products3 = [
-		{id:1,name:'检定'},
-		{id:2,name:'校准'},
-		{id:3,name:'检验'}
-	];
-	var lastIndex;
-	
-	
-	$('#table6').datagrid({
-		width:1000,
-		height:500,
-		title:'委托单信息',
-		singleSelect:true, 
-		nowrap: false,
-		striped: true,
-//				collapsible:true,
-		url:'/jlyw/CommissionSheetServlet.do?method=8',
-		remoteSort: false,
-		//idField:'id',
-		frozenColumns:[[
-			{field:'ck',checkbox:true}
-		]],
-		columns:[[
-			{field:'Code',title:'委托单号',width:100,align:'center',sortable:true},
-			{field:'CustomerName',title:'委托单位',width:180,align:'center',sortable:true},
-			{field:'CommissionDate',title:'委托日期',width:80,align:'center'},
-			{field:'Status',title:'委托单状态',width:80,align:'center',
-				formatter:function(value,rowData,rowIndex){
-					return getCommissionSheetStatusInfo(value);
-				}
+	$(function(){
+		$("#CustomerName").combobox({
+			valueField:'name',
+			textField:'name',
+			onSelect:function(record){
 			},
-			{field:'ApplianceSpeciesName',title:'器具授权名',width:80,align:'center'},
-			{field:'ApplianceName',title:'器具名称',width:80,align:'center',sortable:true},
-			{field:'ApplianceCode',title:'出厂编号',width:80,align:'center'},
-			{field:'AppManageCode',title:'管理编号',width:80,align:'center'},
-			{field:'Model',title:'型号规格',width:80,align:'center'},
-			{field:'Range',title:'测量范围',width:80,align:'center'},
-			{field:'Accuracy',title:'精度等级',width:80,align:'center'},
-			{field:'Manufacturer',title:'制造厂商',width:80,align:'center'},
-			{field:'Quantity',title:'台/件数',width:70,align:'center'},
-			{field:'MandatoryInspection',title:'强制检验',width:80,align:'center',
-				formatter:function(value,rowData,rowIndex){
-					if(value == 0 || value == '0')
+			onChange:function(newValue, oldValue){
+				var allData = $(this).combobox('getData');
+				if(allData != null && allData.length > 0){
+					for(var i=0; i<allData.length; i++)
 					{
-						rowData['MandatoryInspection']=0;
-						return "强制检定";
+						if(newValue==allData[i].name){
+							return false;
+						}
 					}
-					else
-					{
-						rowData['MandatoryInspection']=1;
-						return "非强制检定";
-					}
-					
-				}},
-			{field:'Urgent',title:'是否加急',width:60,align:'center',
-				formatter:function(value,rowData,rowIndex){
-					if(value == 0 || value == '0')
-					{
-						rowData['Urgent']=0;
-						return "是";
-					}
-					else
-					{
-						rowData['Urgent']=1;
-						return "否";
-					}
-					
-				}},
-			{field:'Trans',title:'是否转包',width:60,align:'center',
-				formatter:function(value,rowData,rowIndex){
-					if(value == 0 || value == '0')
-					{
-						rowData['Trans']=0;
-						return "是";
-					}
-					else
-					{
-						rowData['Trans']=1;
-						return "否";
-					}
-					
-				}},
-			{field:'SubContractor',title:'转包方',width:80,align:'center'},
-			{field:'Appearance',title:'外观附件',width:80,align:'center'},
-			{field:'Repair',title:'需修理否',width:60,align:'center',
-				formatter:function(value,rowData,rowIndex){
-					if(value == 0 || value == '0')
-					{
-						rowData['Repair']=0;
-						return "需要修理";
-					}
-					else
-					{
-						rowData['Repair']=1;
-						return "无需修理";
-					}
-					
-				}},
-			{field:'ReportType',title:'报告形式',width:80,align:'center',
-				formatter:function(value,rowData,rowIndex){
-					if(value == 1 || value == '1')
-					{
-						rowData['ReportType']=1;
-						return "检定";
-					}
-					if(value == 2 || value == '2')
-					{
-						rowData['ReportType']=2;
-						return "校准";
-					}
-					else
-					{	rowData['ReportType']=3;
-						return "检验";
-					}
-				}},
-			{field:'OtherRequirements',title:'其他要求',width:80,align:'center'},
-			{field:'Location',title:'存放位置',width:80,align:'center'},
-			{field:'Allotee',title:'派定人',width:80,align:'center'}
-		]],
-		pagination:true,
-		rownumbers:true,
-		toolbar:"#table6-search-toolbar"
-	});
+				}
+				$(this).combobox('reload','/jlyw/CustomerServlet.do?method=5&CustomerName='+newValue);
+			}
+		});
 	
-});
+		$('#table6').datagrid({
+			width:1000,
+			height:500,
+			title:'转包业务查询',
+			singleSelect:true, 
+			nowrap: false,
+			striped: true,
+	//				collapsible:true,
+			url:'/jlyw/SubContractServlet.do?method=4',
+			remoteSort: false,
+			//idField:'id',
+			frozenColumns:[[
+				{field:'ck',checkbox:true}
+			]],
+			columns:[[
+				{field:'Code',title:'委托单号',width:100,align:'center'},
+				{field:'SubContractorName',title:'转包方单位名称',width:180,align:'center'},
+				{field:'SubContractorContactor',title:'转包方联系人',width:80,align:'center'},
+				{field:'SubContractorContactorTel',title:'联系人电话',width:80,align:'center'},
+				{field:'SubContractDate',title:'转包时间',width:80,align:'center'},
+				{field:'Handler',title:'转包人',width:80,align:'center'},
+				{field:'TotalFee',title:'转包费用',width:80,align:'center'},
+				{field:'ReceiveDate',title:'接收时间',width:80,align:'center'},
+				{field:'Receiver',title:'接收人',width:80,align:'center'},
+				{field:'Remark',title:'备注',width:80,align:'center'},
+				{field:'Attachment',title:'附件',width:80,align:'center'}
+			]],
+			pagination:true,
+			rownumbers:true,
+			toolbar:"#table6-search-toolbar"
+		});
+	
+	});
 
 function doLoadHistoryCommission()
 {
 	
-	$('#table6').datagrid('options').url='/jlyw/CommissionSheetServlet.do?method=8';
-	$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#Code').val(),'ApplianceName':encodeURI($('#History_ApplianceName').val()),'BeginDate':$('#History_BeginDate').datebox('getValue'),'EndDate':$('#History_EndDate').datebox('getValue')};
+	$('#table6').datagrid('options').url='/jlyw/SubContractServlet.do?method=4';
+	$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#Code').val(),'ApplianceName':encodeURI($('#History_ApplianceName').val()),'DateFrom':$('#History_BeginDate').datebox('getValue'),'DateEnd':$('#History_EndDate').datebox('getValue')};
 	$('#table6').datagrid('reload');
 }
 function doLook(){

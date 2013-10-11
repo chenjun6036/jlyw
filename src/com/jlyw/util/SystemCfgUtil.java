@@ -34,8 +34,8 @@ public class SystemCfgUtil {
 	public static final String LoginInfoFilePath = "META-INF/logininfo.xml";	//存放系统用户登录信息的文件
 	
 	
-	public static Integer OverdueThreSholdShort;	//超期预警阈值（短）：默认15天
-	public static Integer OverdueThresholdLong;	//超期预警阈值（常）：默认30天
+	public static Integer OverdueThreSholdShort;	//超期预警阈值（短）：默认1天
+	public static Integer OverdueThresholdLong;	//超期预警阈值（常）：默认2天
 	
 	public static Integer PdfConvertServerPort;	//pdf转换服务端口：默认8100
 	
@@ -118,8 +118,8 @@ public class SystemCfgUtil {
 		try {
 			parser.parse(SysConfigFilePath);
 			
-			OverdueThreSholdShort = Integer.parseInt(parser.getProperty("OverdueThreSholdShort", "15"));
-			OverdueThresholdLong = Integer.parseInt(parser.getProperty("OverdueThresholdLong", "30"));
+			OverdueThreSholdShort = Integer.parseInt(parser.getProperty("OverdueThreSholdShort", "1"));
+			OverdueThresholdLong = Integer.parseInt(parser.getProperty("OverdueThresholdLong", "2"));
 			
 			PdfConvertServerPort = Integer.parseInt(parser.getProperty("pdfconverter-server-port", "8100"));
 			

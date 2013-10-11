@@ -238,7 +238,7 @@
 				remoteSort: false,
 				frozenColumns:[[
 					{field:'ck',checkbox:true},
-					{field:'TargetApplianceId',title:'受检器具编号',width:100,sortable:true,align:'center'}
+					{field:'TargetApplianceName',title:'受检器具',width:100,sortable:true,align:'center'}
 				]],
 				columns:[[
 					{field:'StandardNameName',title:'器具标准名称',width:100,align:'center'},
@@ -674,9 +674,11 @@
 						<td style="padding-left:2px">
 							<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="Add_QuotaItem()">加入协议条目</a>
 						</td>
-						<td align="right">受检器具标准名:</td>
-						<td width="21%"><input id="Search_Appli" name="Search_Appli" type="text" style="width:152px" /></td>
-						<td width="9%"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="query_appli()">查询</a></td>
+						<td align="right">常用名称:</td>
+                        <td width="18%"><input id="Search_PopularName" style="width:140px" name="Search_PopularName" type="text" /></td>
+                        <td align="right">受检器具标准名:</td>
+                        <td width="21%"><input id="Search_Appli" style="width:152px" name="Search_Appli" type="text" /></td>
+                        <td width="9%"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="query()">查询</a></td>
 					</tr>
 				</table>
 			</form>

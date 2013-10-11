@@ -2,7 +2,6 @@ package com.jlyw.servlet.statistic;
 
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,24 +20,25 @@ import org.json.me.JSONObject;
 
 import com.jlyw.hibernate.ApplianceSpecies;
 import com.jlyw.hibernate.ApplianceStandardName;
-import com.jlyw.hibernate.Certificate;
 import com.jlyw.hibernate.CertificateFeeAssign;
 import com.jlyw.hibernate.CommissionSheet;
 import com.jlyw.hibernate.Department;
 import com.jlyw.hibernate.OriginalRecord;
 import com.jlyw.hibernate.SubContract;
 import com.jlyw.hibernate.SysUser;
+import com.jlyw.hibernate.view.ViewCommissionSheetFee;
+import com.jlyw.hibernate.view.ViewTransaction;
 import com.jlyw.manager.ApplianceSpeciesManager;
 import com.jlyw.manager.ApplianceStandardNameManager;
 import com.jlyw.manager.CertificateFeeAssignManager;
 import com.jlyw.manager.CommissionSheetManager;
 import com.jlyw.manager.DepartmentManager;
 import com.jlyw.manager.OriginalRecordManager;
-import com.jlyw.manager.StandardManager;
 import com.jlyw.manager.SubContractManager;
 import com.jlyw.manager.TaskAssignManager;
 import com.jlyw.manager.UserManager;
 import com.jlyw.manager.statistic.ExportManager;
+import com.jlyw.manager.view.ViewCommissionSheetFeeManager;
 import com.jlyw.util.DateTimeFormatUtil;
 import com.jlyw.util.ExportUtil;
 import com.jlyw.util.FlagUtil;
@@ -64,16 +64,17 @@ public class StatisticServlet extends HttpServlet {
 				String CustomerId = req.getParameter("CustomerId");
 				String DepartmentId = req.getParameter("DepartmentId");
 				String EmployeeId = req.getParameter("EmployeeId");
+				String HeadName = req.getParameter("HeadName");
+				String Status = req.getParameter("Status");
 				
-				String queryStr = "select distinct model.commissionSheet.code, model.commissionSheet.customerName, model.commissionSheet.applianceName, model.commissionSheet.quantity, " +
-						"model.commissionSheet.commissionDate, model.commissionSheet.status from TaskAssign as model where (model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ?) ";
-				String TotalqueryStr = "select count(distinct model.commissionSheet.code) from TaskAssign as model where (model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ?) ";
-				String doneTotalqueryStr = "select count(distinct model.commissionSheet.code) from TaskAssign as model where (model.commissionSheet.status = ? or model.commissionSheet.status = ? or model.commissionSheet.status = ?) " +
-						"and (model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ?)";				
+				String queryStr = "select model from ViewTransaction as model where model.commissionDate >= ? and model.commissionDate <= ? and model.tstatus = 0 ";
+				String TotalqueryStr = "select count(*) from ViewTransaction as model where model.commissionDate >= ? and model.commissionDate <= ? and model.tstatus = 0 ";
+				String doneTotalqueryStr = "select count(distinct model.code) from ViewTransaction as model where model.tstatus = 0 and (model.cstatus = 3 or model.cstatus = 4 or model.cstatus = 9) " +
+						"and (model.commissionDate >= ? and model.commissionDate <= ?)";				
 				
 				int total = 0;
 				int doneTotal = 0;
-				List<Object[]> statistic;
+				List<ViewTransaction> statistic;
 				JSONArray options = new JSONArray();
 				
 				int page = 1;
@@ -83,57 +84,103 @@ public class StatisticServlet extends HttpServlet {
 				if (req.getParameter("rows") != null)
 					rows = Integer.parseInt(req.getParameter("rows").toString());
 				
+				List<Object> keys = new ArrayList<Object>();
+				
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
 				
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
-				
-					if(CustomerId!=null)
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
+					keys.add(Start);
+					keys.add(End);
+					
+					if(CustomerId!=null&&!CustomerId.equals(""))
 					{
-						queryStr = queryStr + " and model.commissionSheet.customerId = ? order by model.commissionSheet.code asc,model.commissionSheet.id desc";
-						TotalqueryStr = TotalqueryStr + " and model.commissionSheet.customerId = ?";
-						doneTotalqueryStr = doneTotalqueryStr + " and model.commissionSheet.customerId = ?";
-						statistic  = taskMgr.findPageAllByHQL(queryStr, page, rows, Start, End, Integer.valueOf(CustomerId));
-						total = taskMgr.getTotalCountByHQL(TotalqueryStr, Start, End, Integer.valueOf(CustomerId));
-						doneTotal = taskMgr.getTotalCountByHQL(doneTotalqueryStr, new Integer(3), new Integer(4), new Integer(9), Start, End, Integer.valueOf(CustomerId));
+						queryStr = queryStr + " and model.customerId = ? ";
+						TotalqueryStr = TotalqueryStr + " and model.customerId = ?";
+						doneTotalqueryStr = doneTotalqueryStr + " and model.customerId = ?";
+						keys.add(Integer.valueOf(CustomerId));
 					}
-					else if(DepartmentId!=null)
+					if(DepartmentId!=null&&!DepartmentId.equals(""))
 					{
-						queryStr = queryStr + " and model.appStdNameProTeam.projectTeam.department.id = ? order by model.commissionSheet.code asc,model.commissionSheet.id desc";
-						TotalqueryStr = TotalqueryStr + " and model.appStdNameProTeam.projectTeam.department.id = ?";
-						doneTotalqueryStr = doneTotalqueryStr + " and model.appStdNameProTeam.projectTeam.department.id = ?";
-						statistic = taskMgr.findPageAllByHQL(queryStr, page, rows, Start, End, Integer.valueOf(DepartmentId));
-						total = taskMgr.getTotalCountByHQL(TotalqueryStr, Start, End, Integer.valueOf(DepartmentId));
-						doneTotal = taskMgr.getTotalCountByHQL(doneTotalqueryStr, new Integer(3), new Integer(4), new Integer(9), Start, End, Integer.valueOf(DepartmentId));
+						queryStr = queryStr + " and model.allotee in (select s.id from SysUser as s, ProjectTeam as p where p.department.id = ? and s.projectTeamId = p.id)";
+						TotalqueryStr = TotalqueryStr + " and model.allotee in (select s.id from SysUser as s, ProjectTeam as p where p.department.id = ? and s.projectTeamId = p.id)";
+						doneTotalqueryStr = doneTotalqueryStr + " and model.allotee in (select s.id from SysUser as s, ProjectTeam as p where p.department.id = ? and s.projectTeamId = p.id)";
+						keys.add(Integer.valueOf(DepartmentId));
 					}
-					else if(EmployeeId!=null)
+					if(EmployeeId!=null&&!EmployeeId.equals(""))
 					{
-						queryStr = queryStr + " and model.sysUserByAlloteeId.id = ? order by model.commissionSheet.code asc,model.commissionSheet.id desc";
-						TotalqueryStr = TotalqueryStr + " and model.sysUserByAlloteeId.id = ?";
-						doneTotalqueryStr = doneTotalqueryStr + " and model.sysUserByAlloteeId.id = ?";
-						statistic = taskMgr.findPageAllByHQL(queryStr, page, rows, Start, End, Integer.valueOf(EmployeeId));
-						total = taskMgr.getTotalCountByHQL(TotalqueryStr, Start, End, Integer.valueOf(EmployeeId));
-						doneTotal = taskMgr.getTotalCountByHQL(doneTotalqueryStr, new Integer(3), new Integer(4), new Integer(9), Start, End, Integer.valueOf(EmployeeId));
+						queryStr = queryStr + " and model.allotee = ? ";
+						TotalqueryStr = TotalqueryStr + " and model.allotee = ?";
+						doneTotalqueryStr = doneTotalqueryStr + " and model.allotee = ?";
+						keys.add(Integer.valueOf(EmployeeId));
 					}
-					else{
-						statistic = taskMgr.findPageAllByHQL(queryStr + "order by model.commissionSheet.code asc", page, rows, Start, End);
-						total = taskMgr.getTotalCountByHQL(TotalqueryStr, Start, End);
-						doneTotal = taskMgr.getTotalCountByHQL(doneTotalqueryStr, new Integer(3), new Integer(4), new Integer(9), Start, End);
+					if(HeadName!=null&&!HeadName.equals(""))
+					{
+						queryStr = queryStr + " and model.headName = ? ";
+						TotalqueryStr = TotalqueryStr + " and model.headName = ?";
+						doneTotalqueryStr = doneTotalqueryStr + " and model.headName = ?";
+						keys.add(HeadName);
 					}
+					if(Status!=null&&!Status.equals(""))
+					{
+						String statusStr = URLDecoder.decode(Status, "UTF-8");
+						if(statusStr.equals("<3")){
+							queryStr = queryStr + " and model.cstatus < ?";
+							TotalqueryStr = TotalqueryStr + " and model.cstatus = ?";
+							doneTotalqueryStr = doneTotalqueryStr + " and model.cstatus = ?";
+							keys.add(Integer.valueOf(3));
+						}else if(statusStr.equals("<4")){
+							queryStr = queryStr + " and model.cstatus < ?";
+							TotalqueryStr = TotalqueryStr + " and model.cstatus = ?";
+							doneTotalqueryStr = doneTotalqueryStr + " and model.cstatus = ?";
+							keys.add(Integer.valueOf(4));
+						}else{
+							queryStr = queryStr + " and model.cstatus = ?";
+							TotalqueryStr = TotalqueryStr + " and model.cstatus = ?";
+							doneTotalqueryStr = doneTotalqueryStr + " and model.cstatus = ?";
+							keys.add(Integer.valueOf(statusStr));
+						}						
+					}
+					
+					statistic = taskMgr.findPageAllByHQL(queryStr + " order by model.code asc, model.id.cid desc", page, rows, keys);
+					total = taskMgr.getTotalCountByHQL(TotalqueryStr, keys);
+					doneTotal = taskMgr.getTotalCountByHQL(doneTotalqueryStr, keys);
+					
 					
 					if(statistic!=null&&statistic.size()>0)
 					{
-						for(Object[] obj : statistic)
+						for(ViewTransaction obj : statistic)
 						{
 							JSONObject option = new JSONObject();
-							option.put("CustomerName", obj[1].toString());
-							option.put("ApplianceName",obj[2].toString());
-							option.put("Quantity", Integer.valueOf(obj[3].toString()));
-							option.put("CommissionDate", DateTimeFormatUtil.DateFormat.format(obj[4]));
-							option.put("Status", Integer.valueOf(obj[5].toString()));
-							//option.put("Id", task.getCommissionSheet().getId());
-							option.put("Code", obj[0].toString());
+							option.put("Allotee", (new UserManager()).findById(obj.getAllotee()).getName());
+							option.put("Code", obj.getCode());
+							option.put("CommissionDate", obj.getCommissionDate());
+							option.put("CStatus", obj.getCstatus());
+							option.put("ApplianceName", obj.getApplianceName());
+							option.put("CustomerId", obj.getCustomerId());
+							option.put("CustomerName", obj.getCustomerName());
+							
+							String FQueryStr = "select sum(model.totalFee), sum(model.testFee), sum(model.materialFee), sum(model.repairFee), sum(model.debugFee), sum(model.carFee), sum(model.otherFee) from OriginalRecord as model where model.taskAssign.id = ? and model.sysUserByStaffId.id = ?";
+							List<Object[]> FList = taskMgr.findByHQL(FQueryStr, obj.getId().getTid(), obj.getAllotee());
+							if(FList==null||FList.isEmpty()){
+						    	option.put("TestFee", 0.0);
+						    	option.put("RepairFee", 0.0);
+						    	option.put("MaterialFee", 0.0);
+						    	option.put("CarFee", 0.0);
+						    	option.put("DebugFee", 0.0);
+						    	option.put("OtherFee", 0.0);
+						    	option.put("TotalFee", 0.0);
+						    }else{
+						    	Object[] fee = FList.get(0);					   						    	
+						    	option.put("TotalFee", (Double)fee[0]==null?0.0:(Double)fee[0]);
+						    	option.put("TestFee", (Double)fee[1]==null?0.0:(Double)fee[1]);
+						    	option.put("MaterialFee", (Double)fee[2]==null?0.0:(Double)fee[2]);
+						    	option.put("RepairFee", (Double)fee[3]==null?0.0:(Double)fee[3]);
+						    	option.put("DebugFee", (Double)fee[4]==null?0.0:(Double)fee[4]);
+						    	option.put("CarFee", (Double)fee[5]==null?0.0:(Double)fee[5]);
+						    	option.put("OtherFee", (Double)fee[6]==null?0.0:(Double)fee[6]);			   
+						    }
 							
 							options.put(option);
 						}
@@ -168,33 +215,40 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				//String CustomerId = req.getParameter("CustomerId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int total = 0;
 				JSONArray options = new JSONArray();
 				JSONArray foot = new JSONArray();
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					
 					String queryStr = "select dept.DeptCode,dept.Name as deptName,model.Name as UserName,model.JobNum,temp.*,model.id as userId,dept.id as deptId from " + SystemCfgUtil.DBPrexName + "SysUser as model left join (select cer.FeeAlloteeId as feeAlloteeId, SUM(cer.totalFee) as totalfee, SUM(cer.testFee) as testfee, SUM(cer.repairFee) as repairfee, SUM(cer.materialFee) as materialfee, SUM(cer.carFee) as carfee, SUM(cer.debugFee) as debugfee, SUM(cer.otherFee) as otherfee from" + SystemCfgUtil.DBPrexName + "CertificateFeeAssign as cer, " + SystemCfgUtil.DBPrexName + "CommissionSheet as c " +
 									  " where cer.CommissionSheetId = c.Id" +
 									  " and (c.status = ? or c.status = ?) and (c.checkOutDate >= ? and c.checkOutDate <= ?)";
 					String DeptqueryStr1 = "select sum(model.quantity) from OriginalRecord as model where " +
 									" model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";
 					
 					String DeptqueryStr2 = "select sum(model.number) from Withdraw as model where "+
 					 				" model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
 					
 					String DeptqueryStr3 = "select count(o.certificate.id) from OriginalRecord as o where" +
 									   " o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1 ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr = queryStr + " and c.commissionType = " + CommissionType;
 						DeptqueryStr1 = DeptqueryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 						DeptqueryStr2 = DeptqueryStr2 + " and model.commissionSheet.commissionType = " + CommissionType;
 						DeptqueryStr3 = DeptqueryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
+					}
+					if(HeadName!=null&&!HeadName.equals("")){
+						queryStr = queryStr + " and c.headNameId = " + HeadName;
+						DeptqueryStr1 = DeptqueryStr1 + " and model.commissionSheet.headNameId = " + HeadName;
+						DeptqueryStr2 = DeptqueryStr2 + " and model.commissionSheet.headNameId = " + HeadName;
+						DeptqueryStr3 = DeptqueryStr3 + " and o.commissionSheet.headNameId = " + HeadName;
 					}
 					queryStr = queryStr + " and ( " +
 									  "   (cer.originalRecordid is null and cer.certificateid is null) or " +
@@ -245,11 +299,11 @@ public class StatisticServlet extends HttpServlet {
 							}
 							if(tempCode!=null&&!tempCode.equals(temp[0].toString())){
 								
-								List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" , Start, End, true, tempDeptId);
+								List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" , Start, End, tempDeptId);
 								quantityByDept = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
 								List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2 + " and model.sysUserByRequesterId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, tempDeptId);
 								withdrawByDept = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
-								List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End,true, tempDeptId);
+								List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, tempDeptId);
 								certificateByDept =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
 								
 								JSONObject jsonObj = new JSONObject();
@@ -285,11 +339,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("OtherFee", temp[11]==null?0:(Double)temp[11]);
 							option.put("UserId", temp[12]==null?0:(Integer)temp[12]);
 							
-							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End, true);
+							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End);
 							option.put("Quantity", quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 							
 							String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -300,11 +354,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("Withdraw", withdraws==null||withdraws.size()==0?0:withdraws.get(0)==null?0:withdraws.get(0).intValue());
 							
 							String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
-											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr3 = queryStr3 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End, true);
+							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End);
 							option.put("Certificate", certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 														
 							totalFeeByDept += (Double)option.get("TotalFee");
@@ -332,12 +386,12 @@ public class StatisticServlet extends HttpServlet {
 							tempDeptId = (Integer)temp[13];
 						}
 						
-						List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1, Start, End, true);
-						quantityByDept = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
+						List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1, Start, End);
+						quantity = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
 						List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2, Start, End);
-						withdrawByDept = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
-						List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3, Start, End,true);
-						certificateByDept =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
+						withdraw = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
+						List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3, Start, End);
+						certificate =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
 						
 						JSONObject jsonObj = new JSONObject();
 						jsonObj.put("DeptCode", tempCode);
@@ -415,6 +469,7 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				String EmployeeId = req.getParameter("EmployeeId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int total = 0;
 				double TotalFee = 0;
@@ -432,8 +487,8 @@ public class StatisticServlet extends HttpServlet {
 				String tempCode="";
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String TotalqueryStr="";
 					String queryStr4="";
@@ -510,11 +565,21 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
-					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.commissionSheet.id desc", page, rows, keys);
+					if(HeadName!=null&&!HeadName.equals("")){
+						 queryStr = queryStr + " and model.commissionSheet.headNameId = ?";
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 TotalqueryStr = TotalqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
+					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.id desc", page, rows, keys);
 					 FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					 total = cerFeeMgr.getTotalCountByHQL(TotalqueryStr, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -539,7 +604,7 @@ public class StatisticServlet extends HttpServlet {
 								option.put("DetailListCode","");	
 							}
 							if(cerfee.getCertificate()==null){
-								option.put("ApplianceName", "");	//器具名称（常用名称）
+								option.put("ApplianceName", cerfee.getCommissionSheet().getApplianceName());	//器具名称（常用名称）
 								option.put("Model", "");	//型号规格
 								option.put("Range", "");		//测量范围
 								option.put("Accuracy", "");	//精度等级
@@ -549,7 +614,6 @@ public class StatisticServlet extends HttpServlet {
 								option.put("CertificatePdf", "");	//证书文件的PDF文件ID
 								option.put("CertificateFileName", "");	//证书文件Doc文件的文件名
 								option.put("CertificateCode","");	//证书编号
-								
 							}else{
 								option.put("ApplianceName", cerfee.getOriginalRecord().getApplianceName()==null?"":cerfee.getOriginalRecord().getApplianceName());	//器具名称（常用名称）
 								option.put("Model", cerfee.getOriginalRecord().getApplianceName()==null?"":cerfee.getOriginalRecord().getModel()==null?"":cerfee.getOriginalRecord().getModel());	//型号规格
@@ -566,7 +630,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -602,11 +666,11 @@ public class StatisticServlet extends HttpServlet {
 					/***统计产值****/
 					String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? " + 
 									" and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, Integer.valueOf(EmployeeId), Start, End,true);
+					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, Integer.valueOf(EmployeeId), Start, End);
 					QuantityNum = (quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 					
 					String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -618,11 +682,11 @@ public class StatisticServlet extends HttpServlet {
 					
 					String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
 									   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1 ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Integer.valueOf(EmployeeId), Start, End,true);
+					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Integer.valueOf(EmployeeId), Start, End);
 					CertificateNum =( certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 					
 					if(FList==null||FList.isEmpty()){
@@ -714,6 +778,7 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				String DepartmentId = req.getParameter("DepartmentId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int deptId = Integer.valueOf(DepartmentId);
 				int total = 0;
@@ -721,15 +786,15 @@ public class StatisticServlet extends HttpServlet {
 				JSONArray foot = new JSONArray();
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					
 					String queryStr = "select model.Id,dept.Name as deptName,model.Name as UserName,model.JobNum,temp.*,model.id from " + SystemCfgUtil.DBPrexName + "SysUser as model left join (select cer.FeeAlloteeId as feeAlloteeId, SUM(cer.totalFee) as totalfee, SUM(cer.testFee) as testfee, SUM(cer.repairFee) as repairfee, SUM(cer.materialFee) as materialfee, SUM(cer.carFee) as carfee, SUM(cer.debugFee) as debugfee, SUM(cer.otherFee) as otherfee from" + SystemCfgUtil.DBPrexName + "CertificateFeeAssign as cer, " + SystemCfgUtil.DBPrexName + "CommissionSheet as c " +
 									  " where cer.CommissionSheetId = c.Id" +
 									  " and (c.status = ? or c.status = ?) and (c.checkOutDate >= ? and c.checkOutDate <= ?)";
 					String DeptqueryStr1 = "select sum(model.quantity) from OriginalRecord as model where " +
 									" model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null " + 
+									" and model.status<>1 " + 
 									" and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" ;//签字通过的原始记录(签字已通过且不是正在后台执行)
 					String DeptqueryStr2 = "select sum(model.number) from Withdraw as model where "+
 					 				" model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" + 
@@ -737,13 +802,19 @@ public class StatisticServlet extends HttpServlet {
 					
 					String DeptqueryStr3 = "select count(o.certificate.id) from OriginalRecord as o where" +
 									   " o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null " + 
+									   " and o.status<>1 " + 
 										" and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" ;
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr = queryStr + " and c.commissionType = " + CommissionType;
 						DeptqueryStr1 = DeptqueryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 						DeptqueryStr2 = DeptqueryStr2 + " and model.commissionSheet.commissionType = " + CommissionType;
 						DeptqueryStr3 = DeptqueryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
+					}
+					if(HeadName!=null&&!HeadName.equals("")){
+						queryStr = queryStr + " and c.headNameId = " + HeadName;
+						DeptqueryStr1 = DeptqueryStr1 + " and model.commissionSheet.headNameId = " + HeadName;
+						DeptqueryStr2 = DeptqueryStr2 + " and model.commissionSheet.headNameId = " + HeadName;
+						DeptqueryStr3 = DeptqueryStr3 + " and o.commissionSheet.headNameId = " + HeadName;
 					}
 					queryStr = queryStr + " and ( " +
 									  "   (cer.originalRecordid is null and cer.certificateid is null) or " +
@@ -787,11 +858,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("DebugFee", temp[10]==null?0:(Double)temp[10]);
 							option.put("OtherFee", temp[11]==null?0:(Double)temp[11]);
 							
-							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End, true);
+							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End);
 							option.put("Quantity", quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 							
 							String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -802,11 +873,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("Withdraw", withdraws==null||withdraws.size()==0?0:withdraws.get(0)==null?0:withdraws.get(0).intValue());
 							
 							String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
-											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End, true);
+							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End);
 							option.put("Certificate", certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 							
 							totalFee += (Double)option.get("TotalFee");
@@ -819,11 +890,11 @@ public class StatisticServlet extends HttpServlet {
 							
 							options.put(option);
 						}
-						List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1, Start, End, true, deptId);
+						List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1, Start, End, deptId);
 						quantity = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
 						List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2, Start, End, deptId);
 						withdraw = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
-						List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3, Start, End, true, deptId);
+						List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3, Start, End, deptId);
 						certificate =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
 					}
 					
@@ -881,11 +952,13 @@ public class StatisticServlet extends HttpServlet {
 		case 4://业务查询
 			JSONObject retObj4 = new JSONObject();
 			try{
+				ViewCommissionSheetFeeManager viewCSheetFeeMgr = new ViewCommissionSheetFeeManager();
 				String Code = req.getParameter("Code");
 				String CommissionType = req.getParameter("CommissionType");
 				String ReportType = req.getParameter("ReportType");
 				String CustomerId = req.getParameter("CustomerId");
 				String ZipCode = req.getParameter("ZipCode");
+				String LocaleMissionCode = req.getParameter("LocaleMissionCode");
 				String RegionId = req.getParameter("RegionId");
 				String Classi = req.getParameter("Classi");
 				String CommissionDateFrom = req.getParameter("CommissionDateFrom");
@@ -901,122 +974,123 @@ public class StatisticServlet extends HttpServlet {
 				String SpeciesType = req.getParameter("SpeciesType");
 				String ApplianceSpeciesId = req.getParameter("ApplianceSpeciesId");
 				String InsideContactor = req.getParameter("InsideContactor");
+				String HeadName = req.getParameter("HeadName");
 				
 				
 				String queryStr = "from CommissionSheet as model,Customer as c where model.customerId = c.id and 1=1 ";
-				String queryStringAllFee = " select SUM(a.testFee),SUM(a.repairFee),SUM(a.materialFee),SUM(a.carFee),SUM(a.debugFee),SUM(a.otherFee),SUM(a.totalFee) " +
-											" from CertificateFeeAssign as a, CommissionSheet as model, Customer as c " +
-											" where model.customerId = c.id and a.commissionSheet.id = model.id and ( " +
-											" 	(a.originalRecord is null and a.certificate is null) or " +
-											"	(a.originalRecord in (from OriginalRecord as o where o.status<>1 and o.taskAssign.status<>1 and o.certificate = a.certificate)) " +
-											" ) ";
+				String queryStringAllFee = " select SUM(view.testFee),SUM(view.repairFee),SUM(view.materialFee),SUM(view.carFee),SUM(view.debugFee),SUM(view.otherFee),SUM(view.totalFee) from ViewCommissionSheetFee as view, CommissionSheet as model, Customer as c " +
+											" where model.customerId = c.id and view.id.commissionSheetId = model.id ";
+				String queryStringCount = "select SUM(model.quantity) from CommissionSheet as model, Customer as c where model.customerId = c.id and 1=1 ";
+				String withDrawString = "select SUM(w.number) from CommissionSheet as model, Withdraw as w, Customer as c where w.commissionSheet.id = model.id and w.executeResult=1 and model.customerId = c.id and 1=1 ";
+				String paramString = "";
 				
 				List<Object> keys = new ArrayList<Object>();
 				if(Code!=null&&!Code.equals("")){
 					String CodeStr = URLDecoder.decode(Code, "UTF-8");
-					queryStr = queryStr + " and model.code = ?";
-					queryStringAllFee = queryStringAllFee + " and model.code = ?";
+					paramString = paramString + " and model.code = ?";
 					keys.add(CodeStr);
 				}
 				if(CommissionType!=null&&!CommissionType.equals("")){
-					queryStr = queryStr + " and model.commissionType = ?";
-					queryStringAllFee = queryStringAllFee + " and model.commissionType = ?";
+					paramString = paramString + " and model.commissionType = ?";
 					keys.add(Integer.valueOf(CommissionType));
 				}
 				if(ReportType!=null&&!ReportType.equals("")){
-					queryStr = queryStr + " and model.reportType = ?";
-					queryStringAllFee = queryStringAllFee + " and model.reportType = ?";
+					paramString = paramString + " and model.reportType = ?";
 					keys.add(Integer.valueOf(ReportType));
 				}
 				if(CustomerId!=null&&!CustomerId.equals("")){
 					String cusIdStr = URLDecoder.decode(CustomerId, "UTF-8");
-					queryStr = queryStr + " and model.customerId = ?";
-					queryStringAllFee = queryStringAllFee + " and model.customerId = ?";
+					paramString = paramString + " and model.customerId = ?";
 					keys.add(Integer.valueOf(cusIdStr));
+				}
+				if(LocaleMissionCode!=null&&!LocaleMissionCode.equals("")){
+					paramString = paramString + " and model.localeCommissionCode = ?";
+					keys.add(LocaleMissionCode);
 				}
 				if(Receiver!=null&&!Receiver.equals("")){
 					String receiverStr = URLDecoder.decode(Receiver, "UTF-8");
-					queryStr = queryStr + " and model.receiverId = ?";
-					queryStringAllFee = queryStringAllFee + " and model.receiverId = ?";
+					paramString = paramString + " and model.receiverId = ?";
 					keys.add(Integer.valueOf(receiverStr));
 				}
 				if(FinishUser!=null&&!FinishUser.equals("")){
 					String finUserStr = URLDecoder.decode(FinishUser, "UTF-8");
-					queryStr = queryStr + " and model.finishStaffId = ?";
-					queryStringAllFee = queryStringAllFee + " and model.finishStaffId = ?";
+					paramString = paramString + " and model.finishStaffId = ?";
 					keys.add(Integer.valueOf(finUserStr));
 				}
 				if(CheckOutUser!=null&&!CheckOutUser.equals("")){
 					String checkUserStr = URLDecoder.decode(CheckOutUser, "UTF-8");
-					queryStr = queryStr + " and model.checkOutStaffId = ?";
-					queryStringAllFee = queryStringAllFee + " and model.checkOutStaffId = ?";
+					paramString = paramString + " and model.checkOutStaffId = ?";
 					keys.add(Integer.valueOf(checkUserStr));
 				}
 				if(ZipCode!=null&&!ZipCode.equals("")){
 					String zipCodeStr = URLDecoder.decode(ZipCode, "UTF-8");
-					queryStr = queryStr + " and c.zipCode = ?";
-					queryStringAllFee = queryStringAllFee + " and c.zipCode = ?";
+					paramString = paramString + " and c.zipCode = ?";
 					keys.add(zipCodeStr);
 				}
 				if(RegionId!=null&&!RegionId.equals("")){
 					String RegionIdStr = URLDecoder.decode(RegionId, "UTF-8");
-					queryStr = queryStr + " and c.regionId = ?";
-					queryStringAllFee = queryStringAllFee + " and c.region.id = ?";
+					paramString = paramString + " and c.regionId = ?";
 					keys.add(Integer.valueOf(RegionIdStr));
 				}
 				if(Classi!=null&&!Classi.equals(""))
 				{
 					String cusClassiStr = URLDecoder.decode(Classi, "UTF-8");
-					queryStr = queryStr + " and c.classification like ?";
-					queryStringAllFee = queryStringAllFee + " and c.classification like ?";
+					paramString = paramString + " and c.classification like ?";
 					keys.add("%" + cusClassiStr + "%");
 				}
 				if(CommissionDateFrom!=null&&!CommissionDateFrom.equals("")&&CommissionDateEnd!=null&&!CommissionDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(CommissionDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(CommissionDateEnd + " 23:59:59");
 					
-					queryStr = queryStr + " and (model.commissionDate >= ? and model.commissionDate <= ? )";
-					queryStringAllFee = queryStringAllFee + " and (model.commissionDate >= ? and model.commissionDate <= ? )";
+					paramString = paramString + " and (model.commissionDate >= ? and model.commissionDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(FinishDateFrom!=null&&!FinishDateFrom.equals("")&&FinishDateEnd!=null&&!FinishDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(FinishDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(FinishDateEnd + " 23:59:59");
 					
-					queryStr = queryStr + " and (model.finishDate >= ? and model.finishDate <= ? )";
-					queryStringAllFee = queryStringAllFee + " and (model.finishDate >= ? and model.finishDate <= ? )";
+					paramString = paramString + " and (model.finishDate >= ? and model.finishDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(CheckOutDateFrom!=null&&!CheckOutDateFrom.equals("")&&CheckOutDateEnd!=null&&!CheckOutDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(CheckOutDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(CheckOutDateEnd + " 23:59:59");
 					
-					queryStr = queryStr + " and (model.checkOutDate >= ? and model.checkOutDate <= ? )";
-					queryStringAllFee = queryStringAllFee + " and (model.checkOutDate >= ? and model.checkOutDate <= ? )";
+					paramString = paramString + " and (model.checkOutDate >= ? and model.checkOutDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(Status!=null&&!Status.equals("")){
 					String statusStr = URLDecoder.decode(Status, "UTF-8");
-					queryStr = queryStr + " and model.status = ?";
-					queryStringAllFee = queryStringAllFee + " and model.status = ?";
-					keys.add(Integer.valueOf(statusStr));
+					if(statusStr.equals("<3")){
+						paramString = paramString + " and model.status < ?";
+						keys.add(Integer.valueOf(3));
+					}else if(statusStr.equals("<4")){
+						paramString = paramString + " and (model.status < ?)";
+						keys.add(Integer.valueOf(4));
+					}else{
+						paramString = paramString + " and model.status = ?";
+						keys.add(Integer.valueOf(statusStr));
+					}
 				}
 				if(SpeciesType!=null&&!SpeciesType.equals("")&&ApplianceSpeciesId!=null&&!ApplianceSpeciesId.equals("")){
 					String speciesTypeStr = URLDecoder.decode(SpeciesType, "UTF-8");
 					String applianceSpeciesIdStr = URLDecoder.decode(ApplianceSpeciesId, "UTF-8");
-					queryStr = queryStr + " and (model.speciesType = ? and model.applianceSpeciesId = ?)";
-					queryStringAllFee = queryStringAllFee + " and (model.speciesType = ? and model.applianceSpeciesId = ?)";
+					paramString = paramString + " and (model.speciesType = ? and model.applianceSpeciesId = ?)";
 					keys.add(Integer.valueOf(speciesTypeStr)==1?true:false);
 					keys.add(Integer.valueOf(applianceSpeciesIdStr));
 				}
 				if(InsideContactor!=null&&!InsideContactor.equals("")){
 					String InsideContactorStr = URLDecoder.decode(InsideContactor, "UTF-8");
-					queryStr = queryStr + " and model.status = ?";
-					queryStringAllFee = queryStringAllFee + " and c.sysUserByInsideContactorId.id = ?";
+					paramString = paramString + " and c.sysUserByInsideContactorId.id = ?";
 					keys.add(Integer.valueOf(InsideContactorStr));
+				}
+				if(HeadName!=null&&!HeadName.equals("")){
+					String HeadNameStr = URLDecoder.decode(HeadName, "UTF-8");
+					paramString = paramString + " and model.headNameId = ?";
+					keys.add(Integer.valueOf(HeadNameStr));
 				}
 				
 				int page = 1;
@@ -1032,15 +1106,19 @@ public class StatisticServlet extends HttpServlet {
 				JSONArray options = new JSONArray();
 				JSONArray foot = new JSONArray();
 				
-				List<CommissionSheet> result = cSheetMgr.findPageAllByHQL("select model " + queryStr + " order by model.commissionDate desc, model.id desc", page, rows, keys);
-				total = cSheetMgr.getTotalCountByHQL("select count(model) " + queryStr, keys);
-
+				List<CommissionSheet> result = cSheetMgr.findPageAllByHQL("select model " + queryStr + paramString + " order by model.commissionDate desc, model.id desc", page, rows, keys);
+				total = cSheetMgr.getTotalCountByHQL("select count(model) " + queryStr + paramString, keys);
 				if(result!=null&&result.size()>0){
 					for(CommissionSheet cSheet : result){
 						JSONObject option = new JSONObject();
 						option.put("Code", cSheet.getCode());
 						option.put("Pwd", cSheet.getPwd());
 						option.put("CustomerName", cSheet.getCustomerName());
+						option.put("CustomerTel", cSheet.getCustomerTel());
+						option.put("CustomerAddress", cSheet.getCustomerAddress()==null?"":cSheet.getCustomerAddress());
+						option.put("CustomerZipCode", cSheet.getCustomerZipCode()==null?"":cSheet.getCustomerZipCode());
+						option.put("CustomerContactor", cSheet.getCustomerContactor()==null?"":cSheet.getCustomerContactor());
+						option.put("CustomerContactorTel", cSheet.getCustomerContactorTel()==null?"":cSheet.getCustomerContactorTel());
 						option.put("CommissionDate", cSheet.getCommissionDate());
 						option.put("ApplianceName", cSheet.getApplianceName());
 						option.put("ApplianceModel", cSheet.getApplianceModel());
@@ -1049,7 +1127,6 @@ public class StatisticServlet extends HttpServlet {
 							ApplianceSpecies spe = (new ApplianceSpeciesManager()).findById(cSheet.getApplianceSpeciesId());
 							if(spe != null){
 								option.put("ApplianceSpeciesName", spe.getName());
-								option.put("ApplianceSpeciesNameStatus", spe.getStatus());
 							}else{
 								continue;
 							}
@@ -1058,7 +1135,6 @@ public class StatisticServlet extends HttpServlet {
 							ApplianceStandardName stName = (new ApplianceStandardNameManager()).findById(cSheet.getApplianceSpeciesId());
 							if(stName != null){
 								option.put("ApplianceSpeciesName", stName.getName());
-								option.put("ApplianceSpeciesNameStatus", stName.getStatus());
 							}else{
 								continue;
 							}
@@ -1087,8 +1163,18 @@ public class StatisticServlet extends HttpServlet {
 						option.put("Appearance", cSheet.getAppearance()==null?"":cSheet.getAppearance());	//外观附件
 						option.put("Repair", cSheet.getRepair()?1:0);	//修理
 						option.put("ReportType", cSheet.getReportType());	//报告形式
+						if(cSheet.getLocaleCommissionCode()!=null){
+							option.put("LocaleCommissionCode", cSheet.getLocaleCommissionCode());//现场委托单号
+							if(cSheet.getLocaleStaffId()!=null){
+								SysUser localeStaff = (new UserManager()).findById(cSheet.getLocaleStaffId());
+								option.put("LocaleStaff", localeStaff.getName());
+							}else{
+								option.put("LocaleStaff", "");
+							}
+						}
 						option.put("OtherRequirements", cSheet.getOtherRequirements()==null?"":cSheet.getOtherRequirements());	//其它要求
 						option.put("Location", cSheet.getLocation()==null?"":cSheet.getLocation());	//存放位置
+						option.put("FinishLocation", cSheet.getFinishLocation()==null?"":cSheet.getFinishLocation());	//存放位置
 						option.put("Allotee", cSheet.getAllotee()==null?"":cSheet.getAllotee());	//派定人
 						SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 						option.put("CommissionDate", sf.format(cSheet.getCommissionDate()));		//委托日期
@@ -1096,8 +1182,10 @@ public class StatisticServlet extends HttpServlet {
 						
 						/***********在CertificateFeeAssign(原始记录证书费用分配)中查找委托单的费用详情***********/
 						
-						List<Object[]> FList=feeMgr.findByHQL(CertificateFeeAssignManager.queryStringAllAllFeeByCommissionSheetId, cSheet.getId());		
-																
+						//List<Object[]> FList=feeMgr.findByHQL(CertificateFeeAssignManager.queryStringAllFeeByCommissionSheetId, cSheet.getId());
+						List<ViewCommissionSheetFee> FList = viewCSheetFeeMgr.findByVarProperty(new KeyValueWithOperator("id.commissionSheetId", cSheet.getId(), "="));
+						
+						
 						if(FList.isEmpty()){
 							option.put("TestFee", 0.0);
 					    	option.put("RepairFee", 0.0);
@@ -1107,53 +1195,52 @@ public class StatisticServlet extends HttpServlet {
 							option.put("OtherFee", 0.0);
 							option.put("TotalFee", 0.0);
 					    }else{
-						    for(Object[] fee:FList){							    	
-						    	option.put("TestFee", (Double)fee[0]==null?0.0:(Double)fee[0]);
-								option.put("RepairFee", (Double)fee[1]==null?0.0:(Double)fee[1]);
-								option.put("MaterialFee", (Double)fee[2]==null?0.0:(Double)fee[2]);
-								option.put("CarFee", (Double)fee[3]==null?0.0:(Double)fee[3]);
-								option.put("DebugFee", (Double)fee[4]==null?0.0:(Double)fee[4]);
-								option.put("OtherFee", (Double)fee[5]==null?0.0:(Double)fee[5]);
-								option.put("TotalFee", (Double)fee[6]==null?0.0:(Double)fee[6]);
+						    for(ViewCommissionSheetFee fee:FList){							    	
+						    	option.put("TestFee", fee.getTestFee()==null?0.0:(Double)fee.getTestFee());
+								option.put("RepairFee", fee.getRepairFee()==null?0.0:(Double)fee.getRepairFee());
+								option.put("MaterialFee", fee.getMaterialFee()==null?0.0:(Double)fee.getMaterialFee());
+								option.put("CarFee", fee.getCarFee()==null?0.0:(Double)fee.getCarFee());
+								option.put("DebugFee", fee.getDebugFee()==null?0.0:(Double)fee.getDebugFee());
+								option.put("OtherFee", fee.getOtherFee()==null?0.0:(Double)fee.getOtherFee());
+								option.put("TotalFee", fee.getTotalFee()==null?0.0:(Double)fee.getTotalFee());
+								
 						   }
 					    }
+						//查询完工器具数量和退样器具数量
 						String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 						List<Long> wQuantityList = cSheetMgr.findByHQL(hqlQueryString_WithdrawQuantity, cSheet.getId(), true);	//退样器具数量
 						if(wQuantityList != null && wQuantityList.size() > 0 && wQuantityList.get(0) != null){
 							option.put("WithdrawQuantity", ((Long)wQuantityList.get(0)).intValue());	//有效器具数量
+							option.put("EffectQuantity", cSheet.getQuantity() - ((Long)wQuantityList.get(0)).intValue());	//有效器具数量
 						}else{
 							option.put("WithdrawQuantity", 0);
+							option.put("EffectQuantity", cSheet.getQuantity());
 						}
 						
 						String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
-						String hqlQueryString_WithdrawQuantity1 = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
-						//查询完工器具数量和退样器具数量，以及是否转包
+						//String hqlQueryString_WithdrawQuantity1 = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
+						
 						List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
 						if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 							option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 						}else{
 							option.put("FinishQuantity", 0);
 						}
-						List<Long> wQuantityList1 = cSheetMgr.findByHQL(hqlQueryString_WithdrawQuantity1, cSheet.getId(), true);	//退样器具数量
-						if(wQuantityList1 != null && wQuantityList1.size() > 0 && wQuantityList1.get(0) != null){
-							option.put("EffectQuantity", cSheet.getQuantity() - ((Long)wQuantityList1.get(0)).intValue());	//有效器具数量
-						}else{
-							option.put("EffectQuantity", cSheet.getQuantity());
-						}
-						String hqlQueryString_SubContract = "select count(*) from SubContract as model where model.commissionSheet.id=? and model.status<>1 and model.receiveDate is not null";
-						int iSubContract = cSheetMgr.getTotalCountByHQL(hqlQueryString_SubContract, cSheet.getId());
-						if(iSubContract > 0 || cSheet.getCommissionType() == 5){	//该委托单有转包(或该委托单为其他业务)，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
-							option.put("IsSubContract", true);
-						}else{
-							option.put("IsSubContract", false);
-						}
-												
+						//List<Long> wQuantityList1 = cSheetMgr.findByHQL(hqlQueryString_WithdrawQuantity1, cSheet.getId(), true);	//退样器具数量
+//						String hqlQueryString_SubContract = "select count(*) from SubContract as model where model.commissionSheet.id=? and model.status<>1 and model.receiveDate is not null";
+//						int iSubContract = cSheetMgr.getTotalCountByHQL(hqlQueryString_SubContract, cSheet.getId());
+//						if(iSubContract > 0 || cSheet.getCommissionType() == 5){	//该委托单有转包(或该委托单为其他业务)，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
+//							option.put("IsSubContract", true);
+//						}else{
+//							option.put("IsSubContract", false);
+//						}
 						options.put(option);
 					}
 				}
-				List<Object[]> feeList = feeMgr.findByHQL(queryStringAllFee, keys);
 				JSONObject jsonObj = new JSONObject();
-				
+				List<Object[]> feeList = viewCSheetFeeMgr.findByHQL(queryStringAllFee + paramString, keys);
+				List<Long> quantityList = feeMgr.findByHQL(queryStringCount + paramString, keys);
+				List<Long> withdrawList = feeMgr.findByHQL(withDrawString + paramString, keys);
 				if(feeList.isEmpty()){
 					jsonObj.put("CustomerName", "总计");
 					jsonObj.put("TestFee", 0.0);
@@ -1163,16 +1250,20 @@ public class StatisticServlet extends HttpServlet {
 					jsonObj.put("DebugFee", 0.0);
 					jsonObj.put("OtherFee", 0.0);
 					jsonObj.put("TotalFee", 0.0);
+			    	jsonObj.put("Quantity", 0.0);
+			    	jsonObj.put("WithdrawQuantity", 0.0);
 			    }else{
 				    for(Object[] fee:feeList){
 						jsonObj.put("CustomerName", "总计");
-				    	jsonObj.put("TestFee", (Double)fee[0]==null?0.0:(Double)fee[0]);
-				    	jsonObj.put("RepairFee", (Double)fee[1]==null?0.0:(Double)fee[1]);
-				    	jsonObj.put("MaterialFee", (Double)fee[2]==null?0.0:(Double)fee[2]);
-				    	jsonObj.put("CarFee", (Double)fee[3]==null?0.0:(Double)fee[3]);
-				    	jsonObj.put("DebugFee", (Double)fee[4]==null?0.0:(Double)fee[4]);
-				    	jsonObj.put("OtherFee", (Double)fee[5]==null?0.0:(Double)fee[5]);
-				    	jsonObj.put("TotalFee", (Double)fee[6]==null?0.0:(Double)fee[6]);
+				    	jsonObj.put("TestFee", fee[0]==null?0.0:(Double)fee[0]);
+				    	jsonObj.put("RepairFee", fee[1]==null?0.0:(Double)fee[1]);
+				    	jsonObj.put("MaterialFee", fee[2]==null?0.0:(Double)fee[2]);
+				    	jsonObj.put("CarFee", fee[3]==null?0.0:(Double)fee[3]);
+				    	jsonObj.put("DebugFee", fee[4]==null?0.0:(Double)fee[4]);
+				    	jsonObj.put("OtherFee", fee[5]==null?0.0:(Double)fee[5]);
+				    	jsonObj.put("TotalFee", fee[6]==null?0.0:(Double)fee[6]);
+				    	jsonObj.put("Quantity", quantityList.get(0)==null?0.0:(Long)quantityList.get(0));
+				    	jsonObj.put("WithdrawQuantity", withdrawList.get(0)==null?0.0:(Long)withdrawList.get(0));
 				   }
 			    }
 				foot.put(jsonObj);
@@ -1193,6 +1284,8 @@ public class StatisticServlet extends HttpServlet {
 					jsonObj.put("DebugFee", 0.0);
 					jsonObj.put("OtherFee", 0.0);
 					jsonObj.put("TotalFee", 0.0);
+			    	jsonObj.put("Quantity", 0.0);
+			    	jsonObj.put("WithdrawQuantity", 0.0);
 					foot.put(jsonObj);
 					retObj4.put("footer", foot);
 				} catch(Exception e1){
@@ -1214,6 +1307,7 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				String EmployeeId = req.getParameter("EmployeeId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int total = 0;
 				double TotalFee = 0;
@@ -1230,8 +1324,8 @@ public class StatisticServlet extends HttpServlet {
 				String tempCode="";
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String TotalqueryStr="";
 					String queryStr4="";
@@ -1308,11 +1402,23 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
-					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.commissionSheet.id desc", page, rows, keys);
+					if(HeadName!=null&&HeadName.length()>0){
+						
+						 queryStr = queryStr+" and model.commissionSheet.headNameId = ?";
+						 
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 TotalqueryStr = TotalqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
+					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.id desc", page, rows, keys);
 					 FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					 total = cerFeeMgr.getTotalCountByHQL(TotalqueryStr, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -1364,7 +1470,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -1400,11 +1506,11 @@ public class StatisticServlet extends HttpServlet {
 					/***统计产值****/
 					String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? " + 
 									" and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1";//签字通过的原始记录(签字已通过且不是正在后台执行)
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, Integer.valueOf(EmployeeId), Start, End,true);
+					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, Integer.valueOf(EmployeeId), Start, End);
 					QuantityNum = (quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 					
 					String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -1416,11 +1522,11 @@ public class StatisticServlet extends HttpServlet {
 					
 					String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
 									   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1  ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Integer.valueOf(EmployeeId), Start, End,true);
+					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Integer.valueOf(EmployeeId), Start, End);
 					CertificateNum =( certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 					
 					if(FList==null||FList.isEmpty()){
@@ -1511,6 +1617,7 @@ public class StatisticServlet extends HttpServlet {
 				String StartTime = req.getParameter("StartTime");
 				String EndTime = req.getParameter("EndTime");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int total = 0;
 				double TotalFee = 0;
@@ -1528,8 +1635,8 @@ public class StatisticServlet extends HttpServlet {
 				String tempCode="";
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String TotalqueryStr="";
 					String queryStr4="";
@@ -1604,11 +1711,23 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
-					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.commissionSheet.id desc", page, rows, keys);
+					if(HeadName!=null&&HeadName.length()>0&&!HeadName.equals("null")){
+						
+						 queryStr = queryStr+" and model.commissionSheet.headNameId = ?";
+						 
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 TotalqueryStr = TotalqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
+					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.id desc", page, rows, keys);
 					 FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					 total = cerFeeMgr.getTotalCountByHQL(TotalqueryStr, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -1660,7 +1779,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -1696,8 +1815,8 @@ public class StatisticServlet extends HttpServlet {
 					/***统计产值****/
 					String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where " + 
 									" model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
-					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1,  Start, End, true);
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1,  Start, End);
 					QuantityNum = (quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 					
 					String queryStr2 = "select sum(model.number) from Withdraw as model where model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -1706,8 +1825,8 @@ public class StatisticServlet extends HttpServlet {
 					
 					String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where " +
 									   " o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
-					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Start, End,true);
+									   " and o.status<>1 ";
+					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Start, End);
 					CertificateNum =( certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 					
 					if(FList==null||FList.isEmpty()){
@@ -1800,6 +1919,7 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				String DepartmentId = req.getParameter("DepartmentId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int deptId = Integer.valueOf(DepartmentId);
 				int total = 0;
@@ -1818,8 +1938,8 @@ public class StatisticServlet extends HttpServlet {
 				String tempCode="";
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String TotalqueryStr="";
 					String queryStr4="";
@@ -1896,11 +2016,23 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
+					if(HeadName!=null&&HeadName.length()>0){
+						
+						 queryStr = queryStr+" and model.commissionSheet.headNameId = ?";
+						 
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 TotalqueryStr = TotalqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
 					statistic = cerFeeMgr.findPageAllByHQL(queryStr +"order by model.commissionSheet.code desc,model.commissionSheet.id desc", page, rows, keys);
 					 FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					 total = cerFeeMgr.getTotalCountByHQL(TotalqueryStr, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -1953,7 +2085,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -1990,11 +2122,11 @@ public class StatisticServlet extends HttpServlet {
 					String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where " +
 									" model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" + 
 									" and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, deptId, Start, End,true);
+					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, deptId, Start, End);
 					QuantityNum = (quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 					
 					String queryStr2 = "select sum(model.number) from Withdraw as model where "+
@@ -2008,11 +2140,11 @@ public class StatisticServlet extends HttpServlet {
 					
 					String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" +
 									   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1 ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, deptId, Start, End,true);
+					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, deptId, Start, End);
 					CertificateNum =( certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 					
 					if(FList==null||FList.isEmpty()){
@@ -2110,6 +2242,7 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				String DepartmentId = req.getParameter("DepartmentId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int deptId = Integer.valueOf(DepartmentId);
 				//System.out.println(DepartmentId+Integer.parseInt(DepartmentId));
@@ -2129,8 +2262,8 @@ public class StatisticServlet extends HttpServlet {
 				String tempCode="";
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String TotalqueryStr="";
 					String queryStr4="";
@@ -2207,11 +2340,23 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
+					if(HeadName!=null&&HeadName.length()>0){
+						
+						 queryStr = queryStr+" and model.commissionSheet.headNameId = ?";
+						 
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 TotalqueryStr = TotalqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
 					 statistic = cerFeeMgr.findByHQL(queryStr +"order by model.commissionSheet.code desc,model.commissionSheet.id desc", keys);
 					 FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					 total = cerFeeMgr.getTotalCountByHQL(TotalqueryStr, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -2264,7 +2409,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -2301,11 +2446,11 @@ public class StatisticServlet extends HttpServlet {
 					String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where " +
 									" model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" + 
 									" and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, deptId, Start, End,true);
+					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, deptId, Start, End);
 					QuantityNum = (quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 					
 					String queryStr2 = "select sum(model.number) from Withdraw as model where "+
@@ -2319,11 +2464,11 @@ public class StatisticServlet extends HttpServlet {
 					
 					String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" +
 									   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1 ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, deptId, Start, End,true);
+					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, deptId, Start, End);
 					CertificateNum =( certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 					
 					if(FList==null||FList.isEmpty()){
@@ -2446,20 +2591,24 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				//String CustomerId = req.getParameter("CustomerId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int total = 0;
 				JSONArray options = new JSONArray();
 				JSONArray foot = new JSONArray();
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					
 					String queryStr = "select dept.DeptCode,dept.Name as deptName,model.Name as UserName,model.JobNum,temp.*,model.id from " + SystemCfgUtil.DBPrexName + "SysUser as model left join (select cer.FeeAlloteeId as feeAlloteeId, SUM(cer.totalFee) as totalfee, SUM(cer.testFee) as testfee, SUM(cer.repairFee) as repairfee, SUM(cer.materialFee) as materialfee, SUM(cer.carFee) as carfee, SUM(cer.debugFee) as debugfee, SUM(cer.otherFee) as otherfee from" + SystemCfgUtil.DBPrexName + "CertificateFeeAssign as cer, " + SystemCfgUtil.DBPrexName + "CommissionSheet as c " +
 									  " where cer.CommissionSheetId = c.Id" +
 									  " and (c.status = ? or c.status = ?) and (c.checkOutDate >= ? and c.checkOutDate <= ?)";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr = queryStr + " and c.commissionType = " + CommissionType;
+					}
+					if(HeadName!=null&&HeadName.length()>0){
+						 queryStr = queryStr+" and c.headNameId = " + HeadName;
 					}
 					queryStr = queryStr + " and ( " +
 									  "   (cer.originalRecordid is null and cer.certificateid is null) or " +
@@ -2546,11 +2695,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("Withdraw", "");
 							option.put("Certificate", "");
 							
-							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End, true);
+							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End);
 							option.put("Quantity", quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 							
 							String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -2561,11 +2710,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("Withdraw", withdraws==null||withdraws.size()==0?0:withdraws.get(0)==null?0:withdraws.get(0).intValue());
 							
 							String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
-											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1  ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr3 = queryStr3 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End, true);
+							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End);
 							option.put("Certificate", certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 														
 							totalFeeByDept += (Double)option.get("TotalFee");
@@ -2671,6 +2820,7 @@ public class StatisticServlet extends HttpServlet {
 				String StartTime = req.getParameter("StartTime");
 				String EndTime = req.getParameter("EndTime");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int total = 0;
 				double TotalFee = 0;
@@ -2688,8 +2838,8 @@ public class StatisticServlet extends HttpServlet {
 				String tempCode="";
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String TotalqueryStr="";
 					String queryStr4="";
@@ -2764,11 +2914,23 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
+					if(HeadName!=null&&HeadName.length()>0){
+						
+						 queryStr = queryStr+" and model.commissionSheet.headNameId = ?";
+						 
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 TotalqueryStr = TotalqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
 					statistic = cerFeeMgr.findByHQL(queryStr +"order by model.commissionSheet.code desc, model.commissionSheet.id desc", keys);
 					 FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					 total = cerFeeMgr.getTotalCountByHQL(TotalqueryStr, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -2820,7 +2982,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -2856,11 +3018,11 @@ public class StatisticServlet extends HttpServlet {
 					/***统计产值****/
 					String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where  " + 
 									" model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1,  Start, End,true);
+					List<Long> quantitys = cSheetMgr.findByHQL(queryStr1,  Start, End);
 					QuantityNum = (quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 					
 					String queryStr2 = "select sum(model.number) from Withdraw as model where  model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -2872,11 +3034,11 @@ public class StatisticServlet extends HttpServlet {
 					
 					String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where " +
 									   " o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1 ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 					}
-					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Start, End,true);
+					List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, Start, End);
 					CertificateNum =( certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 					
 					if(FList==null||FList.isEmpty()){
@@ -2995,33 +3157,38 @@ public class StatisticServlet extends HttpServlet {
 					String EndTime =  params.getString("EndTime");
 					String CommissionType =  params.getString("CommissionType");
 					String DepartmentId = params.has("DepartmentId")?params.getString("DepartmentId"):"";
+					String HeadName = params.getString("HeadName");
 
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					
 					List<Object> keys = new ArrayList<Object>();
-					keys.add(new Integer(4));
-					keys.add(new Integer(9));
 					keys.add(Start);
 					keys.add(End);
 					String queryStr = "select dept.DeptCode,dept.Name as deptName,model.Name as UserName,model.JobNum,temp.*,model.id as userId,dept.id as deptId from " + SystemCfgUtil.DBPrexName + "SysUser as model left join (select cer.FeeAlloteeId as feeAlloteeId, SUM(cer.totalFee) as totalfee, SUM(cer.testFee) as testfee, SUM(cer.repairFee) as repairfee, SUM(cer.materialFee) as materialfee, SUM(cer.carFee) as carfee, SUM(cer.debugFee) as debugfee, SUM(cer.otherFee) as otherfee from" + SystemCfgUtil.DBPrexName + "CertificateFeeAssign as cer, " + SystemCfgUtil.DBPrexName + "CommissionSheet as c " +
 									  " where cer.CommissionSheetId = c.Id" +
-									  " and (c.status = ? or c.status = ?) and (c.checkOutDate >= ? and c.checkOutDate <= ?)";
+									  " and (c.checkOutDate >= ? and c.checkOutDate <= ?)";
 					String DeptqueryStr1 = "select sum(model.quantity) from OriginalRecord as model where " +
 									" model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
 					
 					String DeptqueryStr2 = "select sum(model.number) from Withdraw as model where "+
 					 				" model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
 					
 					String DeptqueryStr3 = "select count(o.certificate.id) from OriginalRecord as o where" +
 									   " o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-									   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+									   " and o.status<>1 ";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr = queryStr + " and c.commissionType = " + CommissionType;
 						DeptqueryStr1 = DeptqueryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 						DeptqueryStr2 = DeptqueryStr2 + " and model.commissionSheet.commissionType = " + CommissionType;
 						DeptqueryStr3 = DeptqueryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
+					}
+					if(HeadName!=null&&!HeadName.equals("")){
+						queryStr = queryStr + " and c.headNameId = " + HeadName;
+						DeptqueryStr1 = DeptqueryStr1 + " and model.commissionSheet.headNameId = " + HeadName;
+						DeptqueryStr2 = DeptqueryStr2 + " and model.commissionSheet.headNameId = " + HeadName;
+						DeptqueryStr3 = DeptqueryStr3 + " and o.commissionSheet.headNameId = " + HeadName;
 					}
 					queryStr = queryStr + " and ( " +
 									  "   (cer.originalRecordid is null and cer.certificateid is null) or " +
@@ -3073,11 +3240,11 @@ public class StatisticServlet extends HttpServlet {
 						{
 							if(tempCode!=null&&!tempCode.equals(temp[0].toString())){
 								
-								List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" , Start, End, true, tempDeptId);
+								List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)" , Start, End, tempDeptId);
 								quantityByDept = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
 								List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2 + " and model.sysUserByRequesterId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, tempDeptId);
 								withdrawByDept = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
-								List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End,true, tempDeptId);
+								List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, tempDeptId);
 								certificateByDept =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
 								
 								JSONObject jsonObj = new JSONObject();
@@ -3116,11 +3283,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("OtherFee", temp[11]==null?0:(Double)temp[11]);
 							option.put("UserId", temp[12]==null?0:(Integer)temp[12]);
 							
-							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End, true);
+							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End);
 							option.put("Quantity", quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 							
 							String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -3131,11 +3298,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("Withdraw", withdraws==null||withdraws.size()==0?0:withdraws.get(0)==null?0:withdraws.get(0).intValue());
 							
 							String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
-											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr3 = queryStr3 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End, true);
+							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End);
 							option.put("Certificate", certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 														
 							totalFeeByDept += (Double)option.get("TotalFee");
@@ -3181,13 +3348,21 @@ public class StatisticServlet extends HttpServlet {
 						
 						retList.add(retList.size()-len,jsonObj);
 					}
-					
-					List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1 , Start, End, true);
-					quantity = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
-					List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2, Start, End);
-					withdraw = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
-					List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3, Start, End, true);
-					certificate =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
+					if(DepartmentId!=null&&!DepartmentId.equals("")){
+						List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, Integer.valueOf(DepartmentId));
+						quantity = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
+						List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2 + " and model.sysUserByRequesterId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, Integer.valueOf(DepartmentId));
+						withdraw = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
+						List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3 + " and model.sysUserByStaffId.projectTeamId in (select p.id from ProjectTeam as p where p.department.id = ?)", Start, End, Integer.valueOf(DepartmentId));
+						certificate =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
+					}else{
+						List<Long> quantitysByDept = cSheetMgr.findByHQL(DeptqueryStr1, Start, End);
+						quantity = (quantitysByDept==null||quantitysByDept.size()==0?0:quantitysByDept.get(0)==null?0:quantitysByDept.get(0).intValue());
+						List<Long> withdrawsByDept = cSheetMgr.findByHQL(DeptqueryStr2, Start, End);
+						withdraw = (withdrawsByDept==null||withdrawsByDept.size()==0?0:withdrawsByDept.get(0)==null?0:withdrawsByDept.get(0).intValue());
+						List<Long> certificatesByDept = (new OriginalRecordManager()).findByHQL(DeptqueryStr3, Start, End);
+						certificate =(certificatesByDept==null||certificatesByDept.size()==0?0:certificatesByDept.get(0)==null?0:certificatesByDept.get(0).intValue());
+					}
 					
 					JSONObject jsonObj = new JSONObject();
 					jsonObj.put("DeptCode", "总产值");
@@ -3249,9 +3424,10 @@ public class StatisticServlet extends HttpServlet {
 					String EmployeeId = params.has("EmployeeId")?params.getString("EmployeeId"):"";
 					String DepartmentId = params.has("DepartmentId")?params.getString("DepartmentId"):"";
 					String CommissionType = params.has("CommissionType")?params.getString("CommissionType"):"";
+					String HeadName = params.has("HeadName")?params.getString("HeadName"):"";
 					
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					String queryStr="";
 					String queryStr4="";
 					String JDqueryStr="",JZqueryStr="",JYqueryStr="",JCqueryStr="";
@@ -3277,17 +3453,16 @@ public class StatisticServlet extends HttpServlet {
 				    JYqueryStr = "select SUM(model.testFee) from CertificateFeeAssign as model where (model.commissionSheet.status = ? or model.commissionSheet.status = ?) " +
 								"and (model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?)";
 				    String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?" +
-									" and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";//签字通过的原始记录(签字已通过且不是正在后台执行)
+									" and model.status<>1 ";//签字通过的原始记录(签字已通过且不是正在后台执行)
 				    String queryStr2 = "select sum(model.number) from Withdraw as model where model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
 				    String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ?"+
-								   " and o.status<>1 and o.verifyAndAuthorize.authorizeResult=? and o.verifyAndAuthorize.isAuthBgRuning is null ";
+								   " and o.status<>1 ";
 					keys.add(new Integer(4));
 				    keys.add(new Integer(9));
 				    keys.add(Start);
 				    keys.add(End);
 				    keys1.add(Start);
 				    keys1.add(End);
-				    keys1.add(true);
 				    keys2.add(Start);
 				    keys2.add(End);
 					if(EmployeeId!=null&&!EmployeeId.equals("")){
@@ -3328,6 +3503,16 @@ public class StatisticServlet extends HttpServlet {
 						 JYqueryStr = JYqueryStr + " and model.commissionSheet.commissionType = ?";
 						 keys.add(Integer.valueOf(CommissionType));
 					}
+					if(HeadName!=null&&HeadName.length()>0){
+						
+						 queryStr = queryStr+" and model.commissionSheet.headNameId = ?";
+						 queryStr4 = queryStr4+" and model.commissionSheet.headNameId = ?";
+						 JDqueryStr = JDqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JZqueryStr = JZqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JCqueryStr = JCqueryStr + " and model.commissionSheet.headNameId = ?";
+						 JYqueryStr = JYqueryStr + " and model.commissionSheet.headNameId = ?";
+						 keys.add(Integer.valueOf(HeadName));
+					}
 					queryStr = queryStr + " and ( " +
 										" 	(model.originalRecord is null and model.certificate is null) or " +
 										"	(model.originalRecord in (from OriginalRecord as o where o.status<>1 and o.taskAssign.status<>1 and o.certificate = model.certificate)) " +
@@ -3357,7 +3542,7 @@ public class StatisticServlet extends HttpServlet {
 					statistic = cerFeeMgr.findByHQL(queryStr +" order by model.commissionSheet.code desc, model.commissionSheet.id desc", keys);
 					FList=cerFeeMgr.findByHQL(queryStr4, keys);
 					
-					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+					String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
 					String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
 					
 					UserManager userMgr=new UserManager();
@@ -3410,7 +3595,7 @@ public class StatisticServlet extends HttpServlet {
 							if(option.getString("Code")!=tempCode){//新委托单要统计退样数量
 								tempCode=option.getString("Code");
 								//查询完工器具数量和退样器具数量，以及是否转包
-								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+								List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId());	//完工器具数量
 								if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
 									option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
 								}else{
@@ -3551,6 +3736,7 @@ public class StatisticServlet extends HttpServlet {
 				String EndTime = req.getParameter("EndTime");
 				String DepartmentId = req.getParameter("DepartmentId");
 				String CommissionType = req.getParameter("CommissionType");
+				String HeadName = req.getParameter("HeadName");
 				
 				int deptId = Integer.valueOf(DepartmentId);
 				int total = 0;
@@ -3558,14 +3744,17 @@ public class StatisticServlet extends HttpServlet {
 				JSONArray foot = new JSONArray();
 				if(StartTime!=null&&StartTime!=""&&EndTime!=null&&EndTime!="")
 				{
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(StartTime, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(EndTime, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
 					
 					String queryStr = "select model.Id,dept.Name as deptName,model.Name as UserName,model.JobNum,temp.*,model.id from " + SystemCfgUtil.DBPrexName + "SysUser as model left join (select cer.FeeAlloteeId as feeAlloteeId, SUM(cer.totalFee) as totalfee, SUM(cer.testFee) as testfee, SUM(cer.repairFee) as repairfee, SUM(cer.materialFee) as materialfee, SUM(cer.carFee) as carfee, SUM(cer.debugFee) as debugfee, SUM(cer.otherFee) as otherfee from" + SystemCfgUtil.DBPrexName + "CertificateFeeAssign as cer, " + SystemCfgUtil.DBPrexName + "CommissionSheet as c " +
 									  " where cer.CommissionSheetId = c.Id" +
 									  " and (c.status = ? or c.status = ?) and (c.checkOutDate >= ? and c.checkOutDate <= ?)";
 					if(CommissionType!=null&&!CommissionType.equals("")){
 						queryStr = queryStr + " and c.commissionType = " + CommissionType;
+					}
+					if(HeadName!=null&&!HeadName.equals("")){
+						queryStr = queryStr + " and c.headNameId = " + HeadName;
 					}
 					queryStr = queryStr + " and ( " +
 										  "   (cer.originalRecordid is null and cer.certificateid is null) or " +
@@ -3623,11 +3812,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("DebugFee", temp[10]==null?0:(Double)temp[10]);
 							option.put("OtherFee", temp[11]==null?0:(Double)temp[11]);
 							
-							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+							String queryStr1 = "select sum(model.quantity) from OriginalRecord as model where model.sysUserByStaffId.id = ? and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? and  model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr1 = queryStr1 + " and model.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End, true);
+							List<Long> quantitys = cSheetMgr.findByHQL(queryStr1, (Integer)temp[12], Start, End);
 							option.put("Quantity", quantitys==null||quantitys.size()==0?0:quantitys.get(0)==null?0:quantitys.get(0).intValue());
 							
 							String queryStr2 = "select sum(model.number) from Withdraw as model where model.sysUserByRequesterId.id = ? and model.executeResult = 1 and model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ?";
@@ -3638,11 +3827,11 @@ public class StatisticServlet extends HttpServlet {
 							option.put("Withdraw", withdraws==null||withdraws.size()==0?0:withdraws.get(0)==null?0:withdraws.get(0).intValue());
 							
 							String queryStr3 = "select count(o.certificate.id) from OriginalRecord as o where o.sysUserByStaffId.id = ?" +
-											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";
+											   " and o.commissionSheet.checkOutDate >= ? and o.commissionSheet.checkOutDate <= ? and model.status<>1 ";
 							if(CommissionType!=null&&!CommissionType.equals("")){
 								queryStr3 = queryStr3 + " and o.commissionSheet.commissionType = " + CommissionType;
 							}
-							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End, true);
+							List<Long> certificates = (new OriginalRecordManager()).findByHQL(queryStr3, (Integer)temp[12], Start, End);
 							option.put("Certificate", certificates==null||certificates.size()==0?0:certificates.get(0)==null?0:certificates.get(0).intValue());
 														
 							totalFeeByDept += (Double)option.get("TotalFee");
@@ -3731,6 +3920,7 @@ public class StatisticServlet extends HttpServlet {
 			String PrintStr = req.getParameter("PrintStr");
 			JSONObject retObj14 = new JSONObject();
 			try{
+				ViewCommissionSheetFeeManager viewCSheetFeeMgr = new ViewCommissionSheetFeeManager();
 				JSONObject printParams = new JSONObject(PrintStr);
 				String Code = printParams.has("Code")?printParams.getString("Code"):"";
 				String CommissionType = printParams.has("CommissionType")?printParams.getString("CommissionType"):"";
@@ -3751,108 +3941,139 @@ public class StatisticServlet extends HttpServlet {
 				String CheckOutUser = printParams.has("CheckOutUser")?printParams.getString("CheckOutUser"):"";
 				String SpeciesType = printParams.has("SpeciesType")?printParams.getString("SpeciesType"):"";
 				String ApplianceSpeciesId = printParams.has("ApplianceSpeciesId")?printParams.getString("ApplianceSpeciesId"):"";
+				String InsideContactor = printParams.has("InsideContactor")?printParams.getString("InsideContactor"):"";
+				String HeadName = printParams.has("HeadName")?printParams.getString("HeadName"):"";
 				
 				String queryStr = "from CommissionSheet as model,Customer as c where model.customerId = c.id and 1=1 ";
+				String queryStringAllFee = " select SUM(view.testFee),SUM(view.repairFee),SUM(view.materialFee),SUM(view.carFee),SUM(view.debugFee),SUM(view.otherFee),SUM(view.totalFee) from ViewCommissionSheetFee as view, CommissionSheet as model, Customer as c " +
+											" where model.customerId = c.id and view.id.commissionSheetId = model.id ";
+				String queryStringCount = "select SUM(model.quantity) from CommissionSheet as model, Customer as c where model.customerId = c.id and 1=1 ";
+				String withDrawString = "select SUM(w.number) from CommissionSheet as model, Withdraw as w, Customer as c where w.commissionSheet.id = model.id and w.executeResult=1 and model.customerId = c.id and 1=1 ";
+				String paramString = "";
+				
 				List<Object> keys = new ArrayList<Object>();
 				if(Code!=null&&!Code.equals("")){
 					String CodeStr = URLDecoder.decode(Code, "UTF-8");
-					queryStr = queryStr + " and model.code = ?";
+					paramString = paramString + " and model.code = ?";
 					keys.add(CodeStr);
 				}
 				if(CommissionType!=null&&!CommissionType.equals("")){
-					queryStr = queryStr + " and model.commissionType = ?";
+					paramString = paramString + " and model.commissionType = ?";
 					keys.add(Integer.valueOf(CommissionType));
 				}
 				if(ReportType!=null&&!ReportType.equals("")){
-					queryStr = queryStr + " and model.reportType = ?";
+					paramString = paramString + " and model.reportType = ?";
 					keys.add(Integer.valueOf(ReportType));
 				}
 				if(CustomerId!=null&&!CustomerId.equals("")){
 					String cusIdStr = URLDecoder.decode(CustomerId, "UTF-8");
-					queryStr = queryStr + " and model.customerId = ?";
+					paramString = paramString + " and model.customerId = ?";
 					keys.add(Integer.valueOf(cusIdStr));
 				}
 				if(Receiver!=null&&!Receiver.equals("")){
 					String receiverStr = URLDecoder.decode(Receiver, "UTF-8");
-					queryStr = queryStr + " and model.receiverId = ?";
+					paramString = paramString + " and model.receiverId = ?";
 					keys.add(Integer.valueOf(receiverStr));
 				}
 				if(FinishUser!=null&&!FinishUser.equals("")){
 					String finUserStr = URLDecoder.decode(FinishUser, "UTF-8");
-					queryStr = queryStr + " and model.finishStaffId = ?";
+					paramString = paramString + " and model.finishStaffId = ?";
 					keys.add(Integer.valueOf(finUserStr));
 				}
 				if(CheckOutUser!=null&&!CheckOutUser.equals("")){
 					String checkUserStr = URLDecoder.decode(CheckOutUser, "UTF-8");
-					queryStr = queryStr + " and model.checkOutStaffId = ?";
+					paramString = paramString + " and model.checkOutStaffId = ?";
 					keys.add(Integer.valueOf(checkUserStr));
 				}
 				if(ZipCode!=null&&!ZipCode.equals("")){
 					String zipCodeStr = URLDecoder.decode(ZipCode, "UTF-8");
-					queryStr = queryStr + " and c.zipCode = ?";
+					paramString = paramString + " and c.zipCode = ?";
 					keys.add(zipCodeStr);
 				}
 				if(RegionId!=null&&!RegionId.equals("")){
 					String RegionIdStr = URLDecoder.decode(RegionId, "UTF-8");
-					queryStr = queryStr + " and c.regionId = ?";
+					paramString = paramString + " and c.regionId = ?";
 					keys.add(Integer.valueOf(RegionIdStr));
 				}
 				if(Classi!=null&&!Classi.equals(""))
 				{
 					String cusClassiStr = URLDecoder.decode(Classi, "UTF-8");
-					queryStr = queryStr + " and c.classification like ?";
+					paramString = paramString + " and c.classification like ?";
 					keys.add("%" + cusClassiStr + "%");
 				}
 				if(CommissionDateFrom!=null&&!CommissionDateFrom.equals("")&&CommissionDateEnd!=null&&!CommissionDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(CommissionDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(CommissionDateEnd + " 23:59:59");
 					
-					queryStr = queryStr + " and (model.commissionDate >= ? and model.commissionDate <= ? )";
+					paramString = paramString + " and (model.commissionDate >= ? and model.commissionDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(FinishDateFrom!=null&&!FinishDateFrom.equals("")&&FinishDateEnd!=null&&!FinishDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(FinishDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(FinishDateFrom + " 23:59:59");
 					
-					queryStr = queryStr + " and (model.finishDate >= ? and model.finishDate <= ? )";
+					paramString = paramString + " and (model.finishDate >= ? and model.finishDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(CheckOutDateFrom!=null&&!CheckOutDateFrom.equals("")&&CheckOutDateEnd!=null&&!CheckOutDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(CheckOutDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(CheckOutDateEnd + " 23:59:59");
 					
-					queryStr = queryStr + " and (model.checkOutDate >= ? and model.checkOutDate <= ? )";
+					paramString = paramString + " and (model.checkOutDate >= ? and model.checkOutDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(Status!=null&&!Status.equals("")){
 					String statusStr = URLDecoder.decode(Status, "UTF-8");
-					queryStr = queryStr + " and model.status = ?";
-					keys.add(Integer.valueOf(statusStr));
+					if(statusStr.equals("<3")){
+						paramString = paramString + " and model.status < ?";
+						keys.add(Integer.valueOf(3));
+					}else if(statusStr.equals("<4")){
+						paramString = paramString + " and model.status < ?";
+						keys.add(Integer.valueOf(4));
+					}else{
+						paramString = paramString + " and model.status = ?";
+						keys.add(Integer.valueOf(statusStr));
+					}
 				}
 				if(SpeciesType!=null&&!SpeciesType.equals("")&&ApplianceSpeciesId!=null&&!ApplianceSpeciesId.equals("")){
 					String speciesTypeStr = URLDecoder.decode(SpeciesType, "UTF-8");
 					String applianceSpeciesIdStr = URLDecoder.decode(ApplianceSpeciesId, "UTF-8");
-					queryStr = queryStr + " and (model.speciesType = ? and model.applianceSpeciesId = ?)";
+					paramString = paramString + " and (model.speciesType = ? and model.applianceSpeciesId = ?)";
 					keys.add(Integer.valueOf(speciesTypeStr)==1?true:false);
 					keys.add(Integer.valueOf(applianceSpeciesIdStr));
+				}
+				if(InsideContactor!=null&&!InsideContactor.equals("")){
+					String InsideContactorStr = URLDecoder.decode(InsideContactor, "UTF-8");
+					paramString = paramString + " and c.sysUserByInsideContactorId.id = ?";
+					keys.add(Integer.valueOf(InsideContactorStr));
+				}
+				if(HeadName!=null&&!HeadName.equals("")){
+					String HeadNameStr = URLDecoder.decode(HeadName, "UTF-8");
+					paramString = paramString + " and model.headNameId = ?";
+					keys.add(Integer.valueOf(HeadNameStr));
 				}
 				
 				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
 				CertificateFeeAssignManager feeMgr=new CertificateFeeAssignManager();
 				int total = 0;
 				JSONArray options = new JSONArray();
+				JSONArray foot = new JSONArray();
 				
-				List<CommissionSheet> result = cSheetMgr.findByHQL("select model " + queryStr ,keys);
-				total = cSheetMgr.getTotalCountByHQL("select count(model) " + queryStr, keys);
-				
+				List<CommissionSheet> result = cSheetMgr.findByHQL("select model " + queryStr + paramString + " order by model.commissionDate desc, model.id desc", keys);
+				total = cSheetMgr.getTotalCountByHQL("select count(model) " + queryStr + paramString, keys);
 				if(result!=null&&result.size()>0){
 					for(CommissionSheet cSheet : result){
 						JSONObject option = new JSONObject();
 						option.put("Code", cSheet.getCode());
+						option.put("Pwd", cSheet.getPwd());
 						option.put("CustomerName", cSheet.getCustomerName());
+						option.put("CustomerAddress", cSheet.getCustomerAddress()==null?"":cSheet.getCustomerAddress());
+						option.put("CustomerZipCode", cSheet.getCustomerZipCode()==null?"":cSheet.getCustomerZipCode());
+						option.put("CustomerContactor", cSheet.getCustomerContactor()==null?"":cSheet.getCustomerContactor());
+						option.put("CustomerContactorTel", cSheet.getCustomerContactorTel()==null?"":cSheet.getCustomerContactorTel());
 						option.put("CommissionDate", cSheet.getCommissionDate());
 						option.put("ApplianceName", cSheet.getApplianceName());
 						option.put("ApplianceModel", cSheet.getApplianceModel());
@@ -3861,7 +4082,6 @@ public class StatisticServlet extends HttpServlet {
 							ApplianceSpecies spe = (new ApplianceSpeciesManager()).findById(cSheet.getApplianceSpeciesId());
 							if(spe != null){
 								option.put("ApplianceSpeciesName", spe.getName());
-								option.put("ApplianceSpeciesNameStatus", spe.getStatus());
 							}else{
 								continue;
 							}
@@ -3870,7 +4090,6 @@ public class StatisticServlet extends HttpServlet {
 							ApplianceStandardName stName = (new ApplianceStandardNameManager()).findById(cSheet.getApplianceSpeciesId());
 							if(stName != null){
 								option.put("ApplianceSpeciesName", stName.getName());
-								option.put("ApplianceSpeciesNameStatus", stName.getStatus());
 							}else{
 								continue;
 							}
@@ -3901,17 +4120,18 @@ public class StatisticServlet extends HttpServlet {
 						option.put("ReportType", cSheet.getReportType());	//报告形式
 						option.put("OtherRequirements", cSheet.getOtherRequirements()==null?"":cSheet.getOtherRequirements());	//其它要求
 						option.put("Location", cSheet.getLocation()==null?"":cSheet.getLocation());	//存放位置
+						option.put("FinishLocation", cSheet.getFinishLocation()==null?"":cSheet.getFinishLocation());	//存放位置
 						option.put("Allotee", cSheet.getAllotee()==null?"":cSheet.getAllotee());	//派定人
 						SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 						option.put("CommissionDate", sf.format(cSheet.getCommissionDate()));		//委托日期
+						option.put("Status", FlagUtil.CommissionSheetStatus.getStatusString(cSheet.getStatus()));	//委托单状态
 						
-						String status=FlagUtil.CommissionSheetStatus.getStatusString(cSheet.getStatus());
-						
-						option.put("Status",status);	//委托单状态
 						/***********在CertificateFeeAssign(原始记录证书费用分配)中查找委托单的费用详情***********/
 						
-						List<Object[]> FList=feeMgr.findByHQL(CertificateFeeAssignManager.queryStringAllAllFeeByCommissionSheetId, cSheet.getId());		
-																
+						//List<Object[]> FList=feeMgr.findByHQL(CertificateFeeAssignManager.queryStringAllFeeByCommissionSheetId, cSheet.getId());
+						List<ViewCommissionSheetFee> FList = viewCSheetFeeMgr.findByVarProperty(new KeyValueWithOperator("id.commissionSheetId", cSheet.getId(), "="));
+						
+						
 						if(FList.isEmpty()){
 							option.put("TestFee", 0.0);
 					    	option.put("RepairFee", 0.0);
@@ -3921,14 +4141,14 @@ public class StatisticServlet extends HttpServlet {
 							option.put("OtherFee", 0.0);
 							option.put("TotalFee", 0.0);
 					    }else{
-						    for(Object[] fee:FList){							    	
-						    	option.put("TestFee", (Double)fee[0]==null?0.0:(Double)fee[0]);
-								option.put("RepairFee", (Double)fee[1]==null?0.0:(Double)fee[1]);
-								option.put("MaterialFee", (Double)fee[2]==null?0.0:(Double)fee[2]);
-								option.put("CarFee", (Double)fee[3]==null?0.0:(Double)fee[3]);
-								option.put("DebugFee", (Double)fee[4]==null?0.0:(Double)fee[4]);
-								option.put("OtherFee", (Double)fee[5]==null?0.0:(Double)fee[5]);
-								option.put("TotalFee", (Double)fee[6]==null?0.0:(Double)fee[6]);
+						    for(ViewCommissionSheetFee fee:FList){							    	
+						    	option.put("TestFee", fee.getTestFee()==null?0.0:(Double)fee.getTestFee());
+								option.put("RepairFee", fee.getRepairFee()==null?0.0:(Double)fee.getRepairFee());
+								option.put("MaterialFee", fee.getMaterialFee()==null?0.0:(Double)fee.getMaterialFee());
+								option.put("CarFee", fee.getCarFee()==null?0.0:(Double)fee.getCarFee());
+								option.put("DebugFee", fee.getDebugFee()==null?0.0:(Double)fee.getDebugFee());
+								option.put("OtherFee", fee.getOtherFee()==null?0.0:(Double)fee.getOtherFee());
+								option.put("TotalFee", fee.getTotalFee()==null?0.0:(Double)fee.getTotalFee());
 						   }
 					    }
 						String hqlQueryString_WithdrawQuantity = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
@@ -3939,9 +4159,92 @@ public class StatisticServlet extends HttpServlet {
 							option.put("WithdrawQuantity", 0);
 						}
 						
+						String hqlQueryString_FinishQuantity = "select sum(model.quantity) from OriginalRecord as model where model.commissionSheet.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录的器具总数(签字已通过且不是正在后台执行)
+						String hqlQueryString_WithdrawQuantity1 = "select sum(model.number) from Withdraw as model where model.commissionSheet.id=? and model.executeResult=?";	//已批准的退样器具数量
+						//查询完工器具数量和退样器具数量，以及是否转包
+						List<Long> fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, cSheet.getId(), true);	//完工器具数量
+						if(fQuantityList != null && fQuantityList.size() > 0 && fQuantityList.get(0) != null){
+							option.put("FinishQuantity", fQuantityList.get(0));	//完工器具数量
+						}else{
+							option.put("FinishQuantity", 0);
+						}
+						List<Long> wQuantityList1 = cSheetMgr.findByHQL(hqlQueryString_WithdrawQuantity1, cSheet.getId(), true);	//退样器具数量
+						if(wQuantityList1 != null && wQuantityList1.size() > 0 && wQuantityList1.get(0) != null){
+							option.put("EffectQuantity", cSheet.getQuantity() - ((Long)wQuantityList1.get(0)).intValue());	//有效器具数量
+						}else{
+							option.put("EffectQuantity", cSheet.getQuantity());
+						}
+						String hqlQueryString_SubContract = "select count(*) from SubContract as model where model.commissionSheet.id=? and model.status<>1 and model.receiveDate is not null";
+						int iSubContract = cSheetMgr.getTotalCountByHQL(hqlQueryString_SubContract, cSheet.getId());
+						if(iSubContract > 0 || cSheet.getCommissionType() == 5){	//该委托单有转包(或该委托单为其他业务)，则完工确认时不需要判断‘完工器具数量是否大于等于有效器具数量’;
+							option.put("IsSubContract", true);
+						}else{
+							option.put("IsSubContract", false);
+						}
 						options.put(option);
 					}
 				}
+				JSONObject jsonObj = new JSONObject();
+				jsonObj.put("Code", "");
+				jsonObj.put("CustomerName", "总计");
+				jsonObj.put("CommissionDate", "");
+				jsonObj.put("ApplianceName", "");
+				jsonObj.put("ApplianceModel", "");
+				
+				jsonObj.put("ApplianceSpeciesName", "");
+				
+				jsonObj.put("SpeciesType", "");
+				jsonObj.put("ApplianceName", "");	//器具名称（常用名称）
+				jsonObj.put("ApplianceCode", "");	//出厂编号
+				jsonObj.put("AppManageCode", "");	//管理编号
+				jsonObj.put("Model", "");	//型号规格
+				jsonObj.put("Range", "");		//测量范围
+				jsonObj.put("Accuracy", "");	//精度等级
+				jsonObj.put("Manufacturer", "");	//制造厂商
+				jsonObj.put("Quantity", "");	//台/件数
+				jsonObj.put("MandatoryInspection", "");	//强制检验
+				jsonObj.put("Urgent", "");	//加急
+				jsonObj.put("Trans", "");	//转包
+				jsonObj.put("SubContractor", "");	//转包方
+				jsonObj.put("Appearance", "");	//外观附件
+				jsonObj.put("Repair", "");	//修理
+				jsonObj.put("ReportType", "");	//报告形式
+				jsonObj.put("OtherRequirements", "");	//其它要求
+				jsonObj.put("Location", "");	//存放位置
+				jsonObj.put("Allotee", "");	//派定人
+				jsonObj.put("CommissionDate","");		//委托日期
+				jsonObj.put("Status","");
+
+				List<Object[]> feeList = viewCSheetFeeMgr.findByHQL(queryStringAllFee + paramString, keys);
+				List<Long> quantityList = feeMgr.findByHQL(queryStringCount + paramString, keys);
+				List<Long> withdrawList = feeMgr.findByHQL(withDrawString + paramString, keys);
+				if(feeList.isEmpty()){
+					jsonObj.put("CustomerName", "总计");
+					jsonObj.put("TestFee", 0.0);
+					jsonObj.put("RepairFee", 0.0);
+					jsonObj.put("MaterialFee", 0.0);
+					jsonObj.put("CarFee", 0.0);
+					jsonObj.put("DebugFee", 0.0);
+					jsonObj.put("OtherFee", 0.0);
+					jsonObj.put("TotalFee", 0.0);
+			    	jsonObj.put("Quantity", 0.0);
+			    	jsonObj.put("WithdrawQuantity", 0.0);
+			    }else{
+				    for(Object[] fee:feeList){
+						jsonObj.put("CustomerName", "总计");
+				    	jsonObj.put("TestFee", fee[0]==null?0.0:(Double)fee[0]);
+				    	jsonObj.put("RepairFee", fee[1]==null?0.0:(Double)fee[1]);
+				    	jsonObj.put("MaterialFee", fee[2]==null?0.0:(Double)fee[2]);
+				    	jsonObj.put("CarFee", fee[3]==null?0.0:(Double)fee[3]);
+				    	jsonObj.put("DebugFee", fee[4]==null?0.0:(Double)fee[4]);
+				    	jsonObj.put("OtherFee", fee[5]==null?0.0:(Double)fee[5]);
+				    	jsonObj.put("TotalFee", fee[6]==null?0.0:(Double)fee[6]);
+				    	jsonObj.put("Quantity", quantityList.get(0)==null?0.0:(Long)quantityList.get(0));
+				    	jsonObj.put("WithdrawQuantity", withdrawList.get(0)==null?0.0:(Long)withdrawList.get(0));
+				   }
+			    }
+				
+				options.put(jsonObj);
 				retObj14.put("total", total);
 				retObj14.put("rows", options);
 
@@ -3977,9 +4280,6 @@ public class StatisticServlet extends HttpServlet {
 				String CommissionType = req.getParameter("CommissionType");
 				String ReportType = req.getParameter("ReportType");
 				String CustomerId = req.getParameter("CustomerId");
-				String ZipCode = req.getParameter("ZipCode");
-				String RegionId = req.getParameter("RegionId");
-				String Classi = req.getParameter("Classi");
 				String CommissionDateFrom = req.getParameter("CommissionDateFrom");
 				String CommissionDateEnd = req.getParameter("CommissionDateEnd");
 				String FinishDateFrom = req.getParameter("FinishDateFrom");
@@ -3992,12 +4292,13 @@ public class StatisticServlet extends HttpServlet {
 				String CheckOutUser = req.getParameter("CheckOutUser");
 				String SpeciesType = req.getParameter("SpeciesType");
 				String ApplianceSpeciesId = req.getParameter("ApplianceSpeciesId");
+				String HeadName = req.getParameter("HeadName");
 				
 				
 				String queryStr = "from OriginalRecord as model, Customer as c where model.commissionSheet.customerId = c.id and model.status<>1 and model.certificate is not null and model.certificate.pdf is not null and model.taskAssign.status<>1 ";
-				String queryStringAllFee = " select SUM(a.testFee),SUM(a.repairFee),SUM(a.materialFee),SUM(a.carFee),SUM(a.debugFee),SUM(a.otherFee),SUM(a.totalFee) " +
-											" from CertificateFeeAssign as a, OriginalRecord as model, Customer as c " +
-											" where a.originalRecord.id = model.id and model.commissionSheet.customerId = c.id and model.status<>1 and model.certificate is not null and model.certificate.pdf is not null and model.taskAssign.status<>1 "; 
+				String queryStringAllFee = " select SUM(model.testFee),SUM(model.repairFee),SUM(model.materialFee),SUM(model.carFee),SUM(model.debugFee),SUM(model.otherFee),SUM(model.totalFee) " +
+											" from OriginalRecord as model, Customer as c " +
+											" where model.commissionSheet.customerId = c.id and model.status<>1 and model.certificate is not null and model.certificate.pdf is not null and model.taskAssign.status<>1 "; 
 				
 				List<Object> keys = new ArrayList<Object>();
 				if(Code!=null&&!Code.equals("")){
@@ -4012,9 +4313,9 @@ public class StatisticServlet extends HttpServlet {
 					keys.add(Integer.valueOf(CommissionType));
 				}
 				if(ReportType!=null&&!ReportType.equals("")){
-					queryStr = queryStr + " and model.commissionSheet.reportType = ?";
-					queryStringAllFee = queryStringAllFee + " and model.commissionSheet.reportType = ?";
-					keys.add(Integer.valueOf(ReportType));
+					queryStr = queryStr + " and model.workType = ?";
+					queryStringAllFee = queryStringAllFee + " and model.workType = ?";
+					keys.add(ReportType);
 				}
 				if(CustomerId!=null&&!CustomerId.equals("")){
 					String cusIdStr = URLDecoder.decode(CustomerId, "UTF-8");
@@ -4040,37 +4341,17 @@ public class StatisticServlet extends HttpServlet {
 					queryStringAllFee = queryStringAllFee + " and model.commissionSheet.checkOutStaffId = ?";
 					keys.add(Integer.valueOf(checkUserStr));
 				}
-				if(ZipCode!=null&&!ZipCode.equals("")){
-					String zipCodeStr = URLDecoder.decode(ZipCode, "UTF-8");
-					queryStr = queryStr + " and c.zipCode = ?";
-					queryStringAllFee = queryStringAllFee + " and c.zipCode = ?";
-					keys.add(zipCodeStr);
-				}
-				if(RegionId!=null&&!RegionId.equals("")){
-					String RegionIdStr = URLDecoder.decode(RegionId, "UTF-8");
-					queryStr = queryStr + " and c.regionId = ?";
-					queryStringAllFee = queryStringAllFee + " and c.regionId = ?";
-					keys.add(Integer.valueOf(RegionIdStr));
-				}
-				if(Classi!=null&&!Classi.equals(""))
-				{
-					String cusClassiStr = URLDecoder.decode(Classi, "UTF-8");
-					queryStr = queryStr + " and c.classification like ?";
-					queryStringAllFee = queryStringAllFee + " and c.classification like ?";
-					keys.add("%" + cusClassiStr + "%");
-				}
 				if(CommissionDateFrom!=null&&!CommissionDateFrom.equals("")&&CommissionDateEnd!=null&&!CommissionDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateEnd, "utf-8"))));
-					
+					Timestamp Start = Timestamp.valueOf(CommissionDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(CommissionDateEnd + " 23:59:59");
 					queryStr = queryStr + " and (model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ? )";
 					queryStringAllFee = queryStringAllFee + " and (model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ? )";
 					keys.add(Start);
 					keys.add(End);
 				}
 				if(FinishDateFrom!=null&&!FinishDateFrom.equals("")&&FinishDateEnd!=null&&!FinishDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(FinishDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(FinishDateEnd + " 23:59:59");
 					
 					queryStr = queryStr + " and (model.commissionSheet.finishDate >= ? and model.commissionSheet.finishDate <= ? )";
 					queryStringAllFee = queryStringAllFee + " and (model.commissionSheet.finishDate >= ? and model.commissionSheet.finishDate <= ? )";
@@ -4078,8 +4359,8 @@ public class StatisticServlet extends HttpServlet {
 					keys.add(End);
 				}
 				if(CheckOutDateFrom!=null&&!CheckOutDateFrom.equals("")&&CheckOutDateEnd!=null&&!CheckOutDateEnd.equals("")){
-					Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateFrom, "utf-8"))));
-					Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateEnd, "utf-8"))));
+					Timestamp Start = Timestamp.valueOf(CheckOutDateFrom + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(CheckOutDateEnd + " 23:59:59");
 					
 					queryStr = queryStr + " and (model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? )";
 					queryStringAllFee = queryStringAllFee + " and (model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? )";
@@ -4088,9 +4369,19 @@ public class StatisticServlet extends HttpServlet {
 				}
 				if(Status!=null&&!Status.equals("")){
 					String statusStr = URLDecoder.decode(Status, "UTF-8");
-					queryStr = queryStr + " and model.commissionSheet.status = ?";
-					queryStringAllFee = queryStringAllFee + " and model.commissionSheet.status = ?";
-					keys.add(Integer.valueOf(statusStr));
+					if(statusStr.equals("<3")){
+						queryStr = queryStr + " and model.commissionSheet.status < ?";
+						queryStringAllFee = queryStringAllFee + " and model.commissionSheet.status < ?";
+						keys.add(Integer.valueOf(3));
+					}else if(statusStr.equals("<4")){
+						queryStr = queryStr + " and model.commissionSheet.status < ?";
+						queryStringAllFee = queryStringAllFee + " and model.commissionSheet.status < ?";
+						keys.add(Integer.valueOf(4));
+					}else{
+						queryStr = queryStr + " and model.commissionSheet.status = ?";
+						queryStringAllFee = queryStringAllFee + " and model.commissionSheet.status = ?";
+						keys.add(Integer.valueOf(statusStr));
+					}
 				}
 				if(SpeciesType!=null&&!SpeciesType.equals("")&&ApplianceSpeciesId!=null&&!ApplianceSpeciesId.equals("")){
 					String speciesTypeStr = URLDecoder.decode(SpeciesType, "UTF-8");
@@ -4099,6 +4390,12 @@ public class StatisticServlet extends HttpServlet {
 					queryStringAllFee = queryStringAllFee + " and (model.commissionSheet.speciesType = ? and model.commissionSheet.applianceSpeciesId = ?)";
 					keys.add(Integer.valueOf(speciesTypeStr)==1?true:false);
 					keys.add(Integer.valueOf(applianceSpeciesIdStr));
+				}
+				if(HeadName!=null&&!HeadName.equals("")){
+					String HeadNameStr = URLDecoder.decode(HeadName, "UTF-8");
+					queryStr = queryStr + " and model.headNameId = ?";
+					queryStringAllFee = queryStringAllFee + " and model.headNameId = ?";
+					keys.add(Integer.valueOf(HeadNameStr));
 				}
 				
 				int page = 1;
@@ -4123,39 +4420,29 @@ public class StatisticServlet extends HttpServlet {
 						CommissionSheet cSheet = oRecord.getCommissionSheet();
 						option.put("CommissionSheetCode", cSheet.getCode());
 						option.put("Code", oRecord.getCertificate().getCertificateCode());
+						option.put("ReportType", oRecord.getWorkType());
 						option.put("CustomerName", cSheet.getCustomerName());
 						option.put("CustomerAddress", cSheet.getCustomerAddress());
 						option.put("CustomerZipCode", cSheet.getCustomerZipCode());
 						option.put("CustomerTel", cSheet.getCustomerTel());
 						option.put("CustomerContactor", cSheet.getCustomerContactor());
-						option.put("ApplianceName", cSheet.getApplianceName()==null?"":cSheet.getApplianceName());	//器具名称（常用名称）
-						option.put("Quantity", cSheet.getQuantity());
+						option.put("ApplianceName", oRecord.getApplianceName()==null?"":oRecord.getApplianceName());	//器具名称
+						option.put("Quantity", oRecord.getQuantity());
+						option.put("TestDate", oRecord.getWorkDate());
 						option.put("Validity", oRecord.getValidity());
+						option.put("ApplianceManufacturer", oRecord.getManufacturer());
 						option.put("PDF", oRecord.getCertificate().getPdf());
-						option.put("ApplianceCode", cSheet.getAppFactoryCode());	//出厂编号
-						option.put("AppManageCode", cSheet.getAppManageCode());	//管理编号
-						option.put("Model", cSheet.getApplianceName()==null?"":cSheet.getApplianceModel()==null?"":cSheet.getApplianceModel());	//型号规格
-						List<Object[]> FList=feeMgr.findByHQL(CertificateFeeAssignManager.queryStringAllFeeByOriginalRecordIdAndCertificateId, oRecord.getId(), oRecord.getCertificate().getId());		
-																
-						if(FList.isEmpty()){
-							option.put("TestFee", 0.0);
-					    	option.put("RepairFee", 0.0);
-							option.put("MaterialFee", 0.0);
-							option.put("CarFee", 0.0);
-							option.put("DebugFee", 0.0);
-							option.put("OtherFee", 0.0);
-							option.put("TotalFee", 0.0);
-					    }else{
-						    for(Object[] fee:FList){							    	
-						    	option.put("TestFee", (Double)fee[0]==null?0.0:(Double)fee[0]);
-								option.put("RepairFee", (Double)fee[1]==null?0.0:(Double)fee[1]);
-								option.put("MaterialFee", (Double)fee[2]==null?0.0:(Double)fee[2]);
-								option.put("CarFee", (Double)fee[3]==null?0.0:(Double)fee[3]);
-								option.put("DebugFee", (Double)fee[4]==null?0.0:(Double)fee[4]);
-								option.put("OtherFee", (Double)fee[5]==null?0.0:(Double)fee[5]);
-								option.put("TotalFee", (Double)fee[6]==null?0.0:(Double)fee[6]);
-						   }
-					    }
+						option.put("ApplianceCode", oRecord.getApplianceCode());	//出厂编号
+						option.put("AppManageCode", oRecord.getManageCode());	//管理编号
+						option.put("Model", oRecord.getApplianceName()==null?"":oRecord.getModel()==null?"":oRecord.getModel());	//型号规格
+													    	
+						option.put("TestFee", oRecord.getTestFee()==null?0.0:oRecord.getTestFee());
+						option.put("RepairFee", oRecord.getRepairFee()==null?0.0:oRecord.getRepairFee());
+						option.put("MaterialFee", oRecord.getMaterialFee()==null?0.0:oRecord.getMaterialFee());
+						option.put("CarFee", oRecord.getCarFee()==null?0.0:oRecord.getCarFee());
+						option.put("DebugFee", oRecord.getDebugFee()==null?0.0:oRecord.getDebugFee());
+						option.put("OtherFee", oRecord.getOtherFee()==null?0.0:oRecord.getOtherFee());
+						option.put("TotalFee", oRecord.getTotalFee()==null?0.0:oRecord.getTotalFee());
 						options.put(option);
 					}
 				}
@@ -4243,6 +4530,7 @@ public class StatisticServlet extends HttpServlet {
 					String CheckOutUser = params.has("CheckOutUser")?params.getString("CheckOutUser"):"";
 					String SpeciesType = params.has("SpeciesType")?params.getString("SpeciesType"):"";
 					String ApplianceSpeciesId = params.has("ApplianceSpeciesId")?params.getString("ApplianceSpeciesId"):"";
+					String HeadName = params.has("HeadName")?params.getString("HeadName"):"";
 				
 					if(Code!=null&&!Code.equals("")){
 						String CodeStr = URLDecoder.decode(Code, "UTF-8");
@@ -4254,8 +4542,8 @@ public class StatisticServlet extends HttpServlet {
 						keys.add(Integer.valueOf(CommissionType));
 					}
 					if(ReportType!=null&&!ReportType.equals("")){
-						queryStr = queryStr + " and model.commissionSheet.reportType = ?";
-						keys.add(Integer.valueOf(ReportType));
+						queryStr = queryStr + " and model.workType = ?";
+						keys.add(ReportType);
 					}
 					if(CustomerId!=null&&!CustomerId.equals("")){
 						String cusIdStr = URLDecoder.decode(CustomerId, "UTF-8");
@@ -4277,41 +4565,23 @@ public class StatisticServlet extends HttpServlet {
 						queryStr = queryStr + " and model.commissionSheet.checkOutStaffId = ?";
 						keys.add(Integer.valueOf(checkUserStr));
 					}
-					if(ZipCode!=null&&!ZipCode.equals("")){
-						String zipCodeStr = URLDecoder.decode(ZipCode, "UTF-8");
-						queryStr = queryStr + " and c.zipCode = ?";
-						keys.add(zipCodeStr);
-					}
-					if(RegionId!=null&&!RegionId.equals("")){
-						String RegionIdStr = URLDecoder.decode(RegionId, "UTF-8");
-						queryStr = queryStr + " and c.regionId = ?";
-						keys.add(Integer.valueOf(RegionIdStr));
-					}
-					if(Classi!=null&&!Classi.equals(""))
-					{
-						String cusClassiStr = URLDecoder.decode(Classi, "UTF-8");
-						queryStr = queryStr + " and c.classification like ?";
-						keys.add("%" + cusClassiStr + "%");
-					}
 					if(CommissionDateFrom!=null&&!CommissionDateFrom.equals("")&&CommissionDateEnd!=null&&!CommissionDateEnd.equals("")){
-						Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateFrom, "utf-8"))));
-						Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CommissionDateEnd, "utf-8"))));
-						
+						Timestamp Start = Timestamp.valueOf(CommissionDateFrom + " 0:0:0");
+						Timestamp End = Timestamp.valueOf(CommissionDateEnd + " 23:59:59");
 						queryStr = queryStr + " and (model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ? )";
 						keys.add(Start);
 						keys.add(End);
 					}
 					if(FinishDateFrom!=null&&!FinishDateFrom.equals("")&&FinishDateEnd!=null&&!FinishDateEnd.equals("")){
-						Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateFrom, "utf-8"))));
-						Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(FinishDateEnd, "utf-8"))));
-						
+						Timestamp Start = Timestamp.valueOf(FinishDateFrom + " 0:0:0");
+						Timestamp End = Timestamp.valueOf(FinishDateEnd + " 23:59:59");
 						queryStr = queryStr + " and (model.commissionSheet.finishDate >= ? and model.commissionSheet.finishDate <= ? )";
 						keys.add(Start);
 						keys.add(End);
 					}
 					if(CheckOutDateFrom!=null&&!CheckOutDateFrom.equals("")&&CheckOutDateEnd!=null&&!CheckOutDateEnd.equals("")){
-						Timestamp Start = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateFrom, "utf-8"))));
-						Timestamp End = Timestamp.valueOf(DateTimeFormatUtil.DateTimeFormat.format(Date.valueOf(URLDecoder.decode(CheckOutDateEnd, "utf-8"))));
+						Timestamp Start = Timestamp.valueOf(CheckOutDateFrom + " 0:0:0");
+						Timestamp End = Timestamp.valueOf(CheckOutDateEnd + " 23:59:59");
 						
 						queryStr = queryStr + " and (model.commissionSheet.checkOutDate >= ? and model.commissionSheet.checkOutDate <= ? )";
 						keys.add(Start);
@@ -4319,8 +4589,17 @@ public class StatisticServlet extends HttpServlet {
 					}
 					if(Status!=null&&!Status.equals("")){
 						String statusStr = URLDecoder.decode(Status, "UTF-8");
-						queryStr = queryStr + " and model.commissionSheet.status = ?";
-						keys.add(Integer.valueOf(statusStr));
+						if(statusStr.equals("<3")){
+							queryStr = queryStr + " and model.status < ?";
+							keys.add(Integer.valueOf(3));
+						}else if(statusStr.equals("<4")){
+							queryStr = queryStr + " and model.status < ?";
+							keys.add(Integer.valueOf(4));
+						}
+						else{
+							queryStr = queryStr + " and model.status = ?";
+							keys.add(Integer.valueOf(statusStr));
+						}
 					}
 					if(SpeciesType!=null&&!SpeciesType.equals("")&&ApplianceSpeciesId!=null&&!ApplianceSpeciesId.equals("")){
 						String speciesTypeStr = URLDecoder.decode(SpeciesType, "UTF-8");
@@ -4328,6 +4607,11 @@ public class StatisticServlet extends HttpServlet {
 						queryStr = queryStr + " and (model.commissionSheet.speciesType = ? and model.commissionSheet.applianceSpeciesId = ?)";
 						keys.add(Integer.valueOf(speciesTypeStr)==1?true:false);
 						keys.add(Integer.valueOf(applianceSpeciesIdStr));
+					}
+					if(HeadName!=null&&!HeadName.equals("")){
+						String HeadNameStr = URLDecoder.decode(HeadName, "UTF-8");
+						queryStr = queryStr + " and model.headNameId = ?";
+						keys.add(Integer.valueOf(HeadNameStr));
 					}
 				}
 				
@@ -4344,39 +4628,29 @@ public class StatisticServlet extends HttpServlet {
 						CommissionSheet cSheet = oRecord.getCommissionSheet();
 						option.put("CommissionSheetCode", cSheet.getCode());
 						option.put("Code", oRecord.getCertificate().getCertificateCode());
+						option.put("ReportType", oRecord.getWorkType());
 						option.put("CustomerName", cSheet.getCustomerName());
 						option.put("CustomerAddress", cSheet.getCustomerAddress());
 						option.put("CustomerZipCode", cSheet.getCustomerZipCode());
 						option.put("CustomerTel", cSheet.getCustomerTel());
 						option.put("CustomerContactor", cSheet.getCustomerContactor());
-						option.put("ApplianceName", cSheet.getApplianceName()==null?"":cSheet.getApplianceName());	//器具名称（常用名称）
-						option.put("Quantity", cSheet.getQuantity());
+						option.put("ApplianceName", oRecord.getApplianceName()==null?"":oRecord.getApplianceName());	//器具名称
+						option.put("Quantity", oRecord.getQuantity());
+						option.put("TestDate", oRecord.getWorkDate());
 						option.put("Validity", oRecord.getValidity());
+						option.put("ApplianceManufacturer", oRecord.getManufacturer());
 						option.put("PDF", oRecord.getCertificate().getPdf());
-						option.put("ApplianceCode", cSheet.getAppFactoryCode());	//出厂编号
-						option.put("AppManageCode", cSheet.getAppManageCode());	//管理编号
-						option.put("Model", cSheet.getApplianceName()==null?"":cSheet.getApplianceModel()==null?"":cSheet.getApplianceModel());	//型号规格
-						List<Object[]> FList=feeMgr.findByHQL(CertificateFeeAssignManager.queryStringAllFeeByOriginalRecordIdAndCertificateId, oRecord.getId(), oRecord.getCertificate().getId());		
-																
-						if(FList.isEmpty()){
-							option.put("TestFee", 0.0);
-					    	option.put("RepairFee", 0.0);
-							option.put("MaterialFee", 0.0);
-							option.put("CarFee", 0.0);
-							option.put("DebugFee", 0.0);
-							option.put("OtherFee", 0.0);
-							option.put("TotalFee", 0.0);
-					    }else{
-						    for(Object[] fee:FList){							    	
-						    	option.put("TestFee", (Double)fee[0]==null?0.0:(Double)fee[0]);
-								option.put("RepairFee", (Double)fee[1]==null?0.0:(Double)fee[1]);
-								option.put("MaterialFee", (Double)fee[2]==null?0.0:(Double)fee[2]);
-								option.put("CarFee", (Double)fee[3]==null?0.0:(Double)fee[3]);
-								option.put("DebugFee", (Double)fee[4]==null?0.0:(Double)fee[4]);
-								option.put("OtherFee", (Double)fee[5]==null?0.0:(Double)fee[5]);
-								option.put("TotalFee", (Double)fee[6]==null?0.0:(Double)fee[6]);
-						   }
-					    }
+						option.put("ApplianceCode", oRecord.getApplianceCode());	//出厂编号
+						option.put("AppManageCode", oRecord.getManageCode());	//管理编号
+						option.put("Model", oRecord.getApplianceName()==null?"":oRecord.getModel()==null?"":oRecord.getModel());	//型号规格
+													    	
+						option.put("TestFee", oRecord.getTestFee()==null?0.0:oRecord.getTestFee());
+						option.put("RepairFee", oRecord.getRepairFee()==null?0.0:oRecord.getRepairFee());
+						option.put("MaterialFee", oRecord.getMaterialFee()==null?0.0:oRecord.getMaterialFee());
+						option.put("CarFee", oRecord.getCarFee()==null?0.0:oRecord.getCarFee());
+						option.put("DebugFee", oRecord.getDebugFee()==null?0.0:oRecord.getDebugFee());
+						option.put("OtherFee", oRecord.getOtherFee()==null?0.0:oRecord.getOtherFee());
+						option.put("TotalFee", oRecord.getTotalFee()==null?0.0:oRecord.getTotalFee());
 						objList.add(option);
 					}
 				}
@@ -4397,6 +4671,213 @@ public class StatisticServlet extends HttpServlet {
 			}finally{
 				resp.setContentType("text/html;charset=utf-8");
 				resp.getWriter().write(retObj16.toString());
+			}
+			break;
+		case 17://按委托单位汇总业务量
+			JSONObject retJSON17 = new JSONObject();
+			try {
+				String StartTime = req.getParameter("StartTime");
+				String EndTime = req.getParameter("EndTime");
+				String CustomerId = req.getParameter("CustomerId");
+				String DepartmentId = req.getParameter("DepartmentId");
+				String EmployeeId = req.getParameter("EmployeeId");
+				String Status = req.getParameter("Status");
+				
+				String queryStr = "from OriginalRecord as model where model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ?";
+						
+				int total = 0;
+				int doneTotal = 0;
+				List<Object[]> statistic;
+				JSONArray options = new JSONArray();
+				
+				int page = 1;
+				if (req.getParameter("page") != null)
+					page = Integer.parseInt(req.getParameter("page").toString());
+				int rows = 10;
+				if (req.getParameter("rows") != null)
+					rows = Integer.parseInt(req.getParameter("rows").toString());
+				
+				List<Object> keys = new ArrayList<Object>();
+				
+				if(StartTime!=null&&!StartTime.equals("")&&EndTime!=null&&!EndTime.equals(""))
+				{
+				
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
+					keys.add(Start);
+					keys.add(End);
+					
+					if(CustomerId!=null&&!CustomerId.equals(""))
+					{
+						queryStr = queryStr + " and model.commissionSheet.customerId = ?";
+						keys.add(Integer.valueOf(CustomerId));
+					}
+					if(DepartmentId!=null&&!DepartmentId.equals(""))
+					{
+						queryStr = queryStr + " and model.sysUserByStaffId.projectTeamId in (select (p.id) from ProjectTeam as p where p.department.id = ?) ";
+						keys.add(Integer.valueOf(DepartmentId));
+					}
+					if(EmployeeId!=null&&!EmployeeId.equals(""))
+					{
+						queryStr = queryStr + " and model.sysUserByStaffId.id = ? ";
+						keys.add(Integer.valueOf(EmployeeId));
+					}
+					if(Status!=null&&!Status.equals(""))
+					{
+						String statusStr = URLDecoder.decode(Status, "UTF-8");
+						if(statusStr.equals("<3")){
+							queryStr = queryStr + " and model.commissionSheet.status < ?";
+							keys.add(Integer.valueOf(3));
+						}else if(statusStr.equals("<4")){
+							queryStr = queryStr + " and (model.commissionSheet.status < ?)";
+							keys.add(Integer.valueOf(4));
+						}else{
+							queryStr = queryStr + " and model.commissionSheet.status = ?";
+							keys.add(Integer.valueOf(statusStr));
+						}						
+					}
+					total = taskMgr.getTotalCountByHQL("select count(distinct model.commissionSheet.customerName) " + queryStr, keys);
+					queryStr = "select model.commissionSheet.customerId, model.commissionSheet.customerName, sum(model.totalFee), sum(model.testFee), sum(model.materialFee), sum(model.carFee), sum(model.debugFee), sum(model.repairFee), sum(model.otherFee) " + queryStr + " group by model.commissionSheet.customerId, model.commissionSheet.customerName order by model.commissionSheet.customerId";
+					statistic = taskMgr.findPageAllByHQL(queryStr, page, rows, keys);
+					
+					
+					if(statistic!=null&&statistic.size()>0)
+					{
+						for(Object[] obj : statistic)
+						{
+							JSONObject option = new JSONObject();
+							option.put("CustomerName", obj[1].toString());
+							option.put("TotalFee",(Double)obj[2]==null?0.0:(Double)obj[2]);
+							option.put("TestFee", (Double)obj[3]==null?0.0:(Double)obj[3]);
+							option.put("MaterialFee", (Double)obj[4]==null?0.0:(Double)obj[4]);
+							option.put("CarFee", (Double)obj[5]==null?0.0:(Double)obj[5]);
+							option.put("DebugFee", (Double)obj[6]==null?0.0:(Double)obj[6]);
+							option.put("RepairFee", (Double)obj[7]==null?0.0:(Double)obj[7]);
+							option.put("OtherFee", (Double)obj[8]==null?0.0:(Double)obj[8]);
+							option.put("CustomerId", Integer.valueOf(obj[0].toString()));
+							
+							options.put(option);
+						}
+					}
+				}
+				retJSON17.put("total", total);
+				retJSON17.put("rows", options);
+				
+			} catch (Exception e){
+				
+				try {
+					retJSON17.put("total", 0);
+					retJSON17.put("rows", new JSONArray());
+				} catch (JSONException e1) {
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in StatisticServlet-->case 17", e);
+				}else{
+					log.error("error in StatisticServlet-->case 17", e);
+				}
+			}finally{
+				resp.setContentType("text/json;charset=utf-8");
+				resp.getWriter().write(retJSON17.toString());
+			}
+			break;
+		case 18://按委托单位汇总业务量
+			String paramsStr18 = req.getParameter("paramsStr");
+			JSONObject retJSON18 = new JSONObject();
+			try {
+				JSONObject params = new JSONObject(paramsStr18);
+				
+				String StartTime = params.has("StartTime")?params.getString("StartTime"):"";
+				String EndTime = params.has("EndTime")?params.getString("EndTime"):"";
+				String CustomerId = params.has("CustomerId")?params.getString("CustomerId"):"";
+				String DepartmentId = params.has("DepartmentId")?params.getString("DepartmentId"):"";
+				String EmployeeId = params.has("EmployeeId")?params.getString("EmployeeId"):"";
+				String Status = params.has("Status")?params.getString("Status"):"";
+				
+				String queryStr = "from OriginalRecord as model where model.commissionSheet.commissionDate >= ? and model.commissionSheet.commissionDate <= ?";
+
+				List<Object[]> statistic;
+				List<JSONObject> options = new ArrayList<JSONObject>();
+				
+				List<Object> keys = new ArrayList<Object>();
+				
+				if(StartTime!=null&&!StartTime.equals("")&&EndTime!=null&&!EndTime.equals(""))
+				{
+				
+					Timestamp Start = Timestamp.valueOf(StartTime + " 0:0:0");
+					Timestamp End = Timestamp.valueOf(EndTime + " 23:59:59");
+					keys.add(Start);
+					keys.add(End);
+					
+					if(CustomerId!=null&&!CustomerId.equals(""))
+					{
+						queryStr = queryStr + " and model.commissionSheet.customerId = ?";
+						keys.add(Integer.valueOf(CustomerId));
+					}
+					if(DepartmentId!=null&&!DepartmentId.equals(""))
+					{
+						queryStr = queryStr + " and model.sysUserByStaffId.projectTeamId in (select (p.id) from ProjectTeam as p where p.department.id = ?) ";
+						keys.add(Integer.valueOf(DepartmentId));
+					}
+					if(EmployeeId!=null&&!EmployeeId.equals(""))
+					{
+						queryStr = queryStr + " and model.sysUserByStaffId.id = ? ";
+						keys.add(Integer.valueOf(EmployeeId));
+					}
+					if(Status!=null&&!Status.equals(""))
+					{
+						String statusStr = URLDecoder.decode(Status, "UTF-8");
+						if(statusStr.equals("<3")){
+							queryStr = queryStr + " and model.commissionSheet.status < ?";
+							keys.add(Integer.valueOf(3));
+						}else if(statusStr.equals("<4")){
+							queryStr = queryStr + " and (model.commissionSheet.status < ?)";
+							keys.add(Integer.valueOf(4));
+						}else{
+							queryStr = queryStr + " and model.commissionSheet.status = ?";
+							keys.add(Integer.valueOf(statusStr));
+						}						
+					}
+
+					queryStr = "select model.commissionSheet.customerId, model.commissionSheet.customerName, sum(model.totalFee), sum(model.testFee), sum(model.materialFee), sum(model.carFee), sum(model.debugFee), sum(model.repairFee), sum(model.otherFee) " + queryStr + " group by model.commissionSheet.customerId, model.commissionSheet.customerName order by model.commissionSheet.customerId";
+					statistic = taskMgr.findByHQL(queryStr, keys);
+
+					if(statistic!=null&&statistic.size()>0)
+					{
+						for(Object[] obj : statistic)
+						{
+							JSONObject option = new JSONObject();
+							option.put("CustomerName", obj[1].toString());
+							option.put("TotalFee",(Double)obj[2]==null?0.0:(Double)obj[2]);
+							option.put("TestFee", (Double)obj[3]==null?0.0:(Double)obj[3]);
+							option.put("MaterialFee", (Double)obj[4]==null?0.0:(Double)obj[4]);
+							option.put("CarFee", (Double)obj[5]==null?0.0:(Double)obj[5]);
+							option.put("DebugFee", (Double)obj[6]==null?0.0:(Double)obj[6]);
+							option.put("RepairFee", (Double)obj[7]==null?0.0:(Double)obj[7]);
+							option.put("OtherFee", (Double)obj[8]==null?0.0:(Double)obj[8]);
+							option.put("CustomerId", Integer.valueOf(obj[0].toString()));
+							
+							options.add(option);
+						}
+					}
+				}
+				String filePath = ExportUtil.ExportToExcelByResultSet(options, null, "TransactionCustomerSUM_formatExcel", "TransactionCustomerSUM_formatTitle", ExportManager.class);
+				retJSON18.put("IsOK", filePath.equals("")?false:true);
+				retJSON18.put("Path", filePath);
+				
+			} catch (Exception e){
+				try{
+					retJSON18.put("IsOK", false);
+					retJSON18.put("Path", "");
+				} catch(Exception e1){
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in StatisticServlet-->case 18", e);
+				}else{
+					log.error("error in StatisticServlet-->case 18", e);
+				}
+			}finally{
+				resp.setContentType("text/html;charset=utf-8");
+				resp.getWriter().write(retJSON18.toString());
 			}
 			break;
 		}

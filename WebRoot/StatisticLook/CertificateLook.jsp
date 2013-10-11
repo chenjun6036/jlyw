@@ -54,7 +54,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			
@@ -73,7 +73,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			
@@ -92,7 +92,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 				
@@ -115,9 +115,10 @@
 	                {field:'ck',checkbox:true}
 				]],
 				columns:[[
-					{field:'Code',title:'证书号',width:100,align:'center'},
-					{field:'CommissionSheetCode',title:'委托单号',width:180,align:'center'},
-					{field:'CustomerName',title:'委托单位',width:80,align:'center'},
+					{field:'Code',title:'证书号',width:120,align:'center'},
+					{field:'CommissionSheetCode',title:'委托单号',width:100,align:'center'},
+					{field:'CustomerName',title:'委托单位',width:160,align:'center'},
+					{field:'ReportType',title:'证书类型',width:40,align:'center'},
 					{field:'CustomerAddress',title:'委托单位地址',width:80,align:'center'},
 					{field:'CustomerZipCode',title:'委托单位邮编',width:80,align:'center'},
 					{field:'CustomerTel',title:'委托单位电话',width:80,align:'center',sortable:true},
@@ -134,7 +135,8 @@
 					{field:'MaterialFee',title:'材料费',width:70,align:'center'},
 					{field:'DebugFee',title:'调试费',width:70,align:'center'},
 					{field:'CarFee',title:'交通费',width:70,align:'center'},
-					{field:'OtherFee',title:'其他费用',width:70,align:'center'}
+					{field:'OtherFee',title:'其他费用',width:70,align:'center'},
+					{field:'FinishLocation',title:'完工存放位置',width:80,align:'center'}
                 ]],
 				pagination:true,
 				rownumbers:true,
@@ -194,7 +196,7 @@
 		});
 		function query(){
 			$('#table6').datagrid('options').url='/jlyw/StatisticServlet.do?method=15';
-			$('#table6').datagrid('options').queryParams={'Code':encodeURI($('#Code').val()),'CustomerId':encodeURI($('#Customer').combobox('getValue')),'Receiver':encodeURI($('#Receiver').combobox('getValue')),'CommissionDateFrom':encodeURI($('#CommissionDateFrom').datebox('getValue')),'CommissionDateEnd':encodeURI($('#CommissionDateEnd').datebox('getValue')),'Status':encodeURI($('#Status').val()),'CommissionType':encodeURI($('#CommissionType').val()),'ReportType':encodeURI($('#ReportType').val()),'SpeciesType':encodeURI($('#SpeciesType').val()),'ApplianceSpeciesId':encodeURI($('#ApplianceSpeciesId').val()),'FinishUser':encodeURI($('#FinishUser').combobox('getValue')),'FinishDateFrom':encodeURI($('#FinishDateFrom').datebox('getValue')),'FinishDateEnd':encodeURI($('#FinishDateEnd').datebox('getValue')),'CheckOutUser':encodeURI($('#CheckOutUser').combobox('getValue')),'CheckOutDateFrom':encodeURI($('#CheckOutDateFrom').datebox('getValue')),'CheckOutDateEnd':encodeURI($('#CheckOutDateEnd').datebox('getValue'))};
+			$('#table6').datagrid('options').queryParams={'Code':encodeURI($('#Code').val()),'CustomerId':encodeURI($('#Customer').combobox('getValue')),'Receiver':encodeURI($('#Receiver').combobox('getValue')),'CommissionDateFrom':encodeURI($('#CommissionDateFrom').datebox('getValue')),'CommissionDateEnd':encodeURI($('#CommissionDateEnd').datebox('getValue')),'Status':encodeURI($('#Status').val()),'CommissionType':encodeURI($('#CommissionType').val()),'ReportType':encodeURI($('#ReportType').val()),'SpeciesType':encodeURI($('#SpeciesType').val()),'ApplianceSpeciesId':encodeURI($('#ApplianceSpeciesId').val()),'FinishUser':encodeURI($('#FinishUser').combobox('getValue')),'FinishDateFrom':encodeURI($('#FinishDateFrom').datebox('getValue')),'FinishDateEnd':encodeURI($('#FinishDateEnd').datebox('getValue')),'CheckOutUser':encodeURI($('#CheckOutUser').combobox('getValue')),'CheckOutDateFrom':encodeURI($('#CheckOutDateFrom').datebox('getValue')),'CheckOutDateEnd':encodeURI($('#CheckOutDateEnd').datebox('getValue')),'HeadName':encodeURI($('#HeadName').combobox('getValue'))};
 			$('#table6').datagrid('reload');
 		}
 		function reset(){
@@ -246,7 +248,7 @@
 		</form>
    <br />
 <div style="+position:relative;">
-     <div id="p" class="easyui-panel" style="width:1000px;height:330px;padding:10px;"
+     <div id="p" class="easyui-panel" style="width:1000px;height:360px;padding:10px;"
 				title="查询条件" collapsible="false"  closable="false">
                 <form id="query">
 			<table width="950px" id="table1">
@@ -268,10 +270,10 @@
                 	<td align="left">
 					<select id="ReportType" name="ReportType" style="width:152px">
 						<option value="" selected="selected">请选择...</option>
-						<option value="1">检定</option>
-						<option value="2">校准</option>
-						<option value="3">检测</option>
-						<option value="4">检验</option>
+						<option value="检定">检定</option>
+						<option value="校准">校准</option>
+						<option value="检测">检测</option>
+						<option value="检验">检验</option>
 					</select></td>
                 </tr>
                 <tr height="30px">
@@ -282,8 +284,11 @@
                             <option value="0" >已收件</option>
                             <option value="1" >已分配</option>
                             <option value="2" >转包中</option>
+                            <option value="<3">未完工</option>
                             <option value="3" >已完工</option>
+                            <option value="<4" >未结账</option>
                             <option value="4" >已结账</option>
+                            <option value="9" >已结束</option>
                             <option value="10" >已注销</option>
                             <option value="-1">预留中</option>
                         </select>
@@ -342,6 +347,12 @@
                     <td align="left">----------------------------</td>
 					<td align="left">
 						<input name="CheckOutDateEnd" id="CheckOutDateEnd" style="width:152px;" class="easyui-datebox" />
+					</td>
+                </tr> 
+                <tr height="30px">
+                	<td align="right">台头单位：</td>
+				  	<td align="left" colspan="3">
+						<select name="HeadName" id="HeadName" style="width:152px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" url="/jlyw/AddressServlet.do?method=1"></select>
 					</td>
                 </tr> 
                 <tr height="40px">

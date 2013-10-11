@@ -131,12 +131,12 @@
 			LODOP.ADD_PRINT_TEXT(20,700,135,20,"第#页/共&页");
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
 			LODOP.SET_PRINT_STYLEA(0,"Horient",1);
-			LODOP.ADD_PRINT_IMAGE(10,25,115,25,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");
+			LODOP.ADD_PRINT_IMAGE(10,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");
 			LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
 			LODOP.ADD_PRINT_TEXT(18,450,196,20,"常州市计量测试技术研究所");
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-			LODOP.ADD_PRINT_SHAPE(1,38,23,"99%",1,0,2,"#000000");
+			LODOP.ADD_PRINT_SHAPE(1,38,83,"99%",1,0,2,"#000000");
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
 			
 			LODOP.ADD_PRINT_TEXT(55,450,400,30,"部门产值明细表");

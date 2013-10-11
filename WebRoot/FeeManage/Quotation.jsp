@@ -240,6 +240,15 @@
 				valueField:'standardname',
 				textField:'standardname',
 				onSelect:function(){},
+				onLoadSuccess:function(){
+					
+					var data = $('#Search_Appli').combobox('getData');
+					if(data.length==1){
+						if(data[0]!=null){
+							$("#Search_Appli").combobox('select',data[0].standardname);
+						}
+					}
+				},
 				onChange:function(newValue, oldValue){
 					var allData = $(this).combobox('getData');
 					if(allData != null && allData.length > 0){
@@ -251,6 +260,34 @@
 						}
 					}
 					$(this).combobox('reload','/jlyw/ApplianceStandardNameServlet.do?method=0&ApplianceStandardName='+newValue);
+				}
+				
+			});
+			
+			$('#Search_PopularName').combobox({
+				//url:'/jlyw/ApplianceStandardNameServlet.do?method=0',
+				valueField:'name',
+				textField:'name',
+				onSelect:function(record){
+					try{
+						//现场委托单查询——仅在新建现场委托单界面用到
+						$("#Search_Appli").combobox('reload','/jlyw/AppliancePopularNameServlet.do?method=9&PopularName='+encodeURI(record.name));
+						
+						var data = $('#Search_Appli').combobox('getData');
+ 						$("#Search_Appli").combobox('select',data[0].standardname);
+					}catch(ex){}
+				},
+				onChange:function(newValue, oldValue){
+					var allData = $(this).combobox('getData');
+					if(allData != null && allData.length > 0){
+						for(var i=0; i<allData.length; i++)
+						{
+							if(newValue==allData[i].id){
+								return false;
+							}
+						}
+					}
+					$(this).combobox('reload','/jlyw/AppliancePopularNameServlet.do?method=8&AppliancePopularName='+newValue);
 					}
 			});
 			
@@ -426,6 +463,9 @@
 						
 					}
 				});
+				if($('#Search_PopularName').combobox('getValue')!=''&&$('#Search_PopularName').combobox('getValue').length>0){
+					$('#CertificateName').combobox('setValue',$('#Search_PopularName').combobox('getValue'));
+				}
 				//
 				$('#Model').combobox({
 					url:'/jlyw/TargetApplianceServlet.do?method=12&Type=1&standardNameName=' + encodeURI(row.StandardNameName),
@@ -728,6 +768,8 @@
 						<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="Add_QuotaItem()">加入报价单条目</a>
 						<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="Add_NewAppliance()">增加新器具</a>
 					</td>
+					<td align="right">常用名称:</td>
+				    <td width="18%"><input id="Search_PopularName" style="width:140px" name="Search_PopularName" type="text" /></td>
 				    <td align="right">受检器具标准名:</td>
 				    <td width="21%"><input id="Search_Appli" style="width:152px" name="Search_Appli" type="text" /></td>
 					<td width="9%"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="query()">查询</a></td>
@@ -923,7 +965,7 @@
 						<td align="right">最小费用:</td>
 						<td align="left"><input id="newMinFee" name="newMinFee" type="text" class="easyui-numberbox"  required="true" /></td>
 						<td align="right">最大费用:</td>
-						<td align="left"><input id="newMaxFee" name="newMinFee" type="text" class="easyui-numberbox" required="true"/></td>
+						<td align="left"><input id="newMaxFee" name="newMaxFee" type="text" class="easyui-numberbox" required="true"/></td>
 					</tr>
 				
 					<tr height="35px" style="padding-left:10px">

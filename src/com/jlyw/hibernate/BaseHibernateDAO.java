@@ -880,22 +880,6 @@ public class BaseHibernateDAO implements IBaseHibernateDAO {
 		}
 	}
 	
-	
-	public List findPageAllByHQLWithAnyIterm(String queryString, int start, int end, List<Object> arr){
-		try{
-			Query queryObject = getSession().createQuery(queryString);
-			int j=0;
-			for(Object i:arr){
-				queryObject.setParameter(j++, i);
-			}
-			queryObject.setFirstResult(start-1);
-			queryObject.setMaxResults(end);
-			return queryObject.list();
-		}catch(RuntimeException re){
-			throw re;
-		}
-	}
-	
 	/**
 	 * 得到记录总数
 	 * @param queryString 查询语句（HQL）
@@ -934,21 +918,6 @@ public class BaseHibernateDAO implements IBaseHibernateDAO {
 			List cc = queryObject.list();
 			Long a = (Long) cc.get(0);
 			return a.intValue();
-		}catch(RuntimeException re){
-			throw re;
-		}
-	}
-	/////////////////传进来一查询语句，返回结果数
-	public int getTotalCountByHQL1(String queryString,List<Object> arr) {
-		try{
-			Query queryObject = getSession().createQuery(queryString);
-			int j=0;
-			for(Object i:arr){
-				queryObject.setParameter(j++, i);
-			}
-			List cc = queryObject.list();
-			
-			return cc.size();
 		}catch(RuntimeException re){
 			throw re;
 		}

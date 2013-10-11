@@ -99,8 +99,8 @@
 						<th style="padding-top:10px">计量标准</th>
 						<th style="padding-top:10px">标准器具</th>
 						<tr>
-							<td align="center"><select id="StdStdApp_StandardId" name="StdStdApp_StandardId" class="easyui-combobox" url="/jlyw/StandardServlet.do?method=5" valueField="id" textField="name" style="width:170px" required="true" panelHeight="150px"/></td>
-							<td align="center"><select id="StdStdApp_StandardApplianceId" name="StdStdApp_StandardApplianceId" class="easyui-combobox" url="/jlyw/StandardApplianceServlet.do?method=5" valueField="id" textField="name" style="width:252px" required="true" panelHeight="150px"/></td>
+							<td align="center"><select id="StdStdApp_StandardId" name="StdStdApp_StandardId" class="easyui-combobox" valueField="id" textField="name" style="width:170px" required="true" panelHeight="150px"/></td>
+							<td align="center"><select id="StdStdApp_StandardApplianceId" name="StdStdApp_StandardApplianceId" class="easyui-combobox" valueField="id" textField="name" style="width:252px" required="true" panelHeight="150px"/></td>
 						</tr>
                         <tr height="20px"></tr>
 					</table>
@@ -142,7 +142,7 @@
                         <th style="padding-top:10px">计量标准</th>
 						<tr>
 							<td align="center"><select id="StdTgtApp_TargetApplianceId" name="StdTgtApp_TargetApplianceId" class="easyui-combobox" url="" valueField="id" textField="name" style="width:180px" required="true" panelHeight="150px"/></td>
-                            <td align="center"><select id="StdTgtApp_StandardId" name="StdTgtApp_StandardId" class="easyui-combobox" url="/jlyw/StandardServlet.do?method=5" valueField="id" textField="name" style="width:180px" required="true" panelHeight="150px"/></td>
+                            <td align="center"><select id="StdTgtApp_StandardId" name="StdTgtApp_StandardId" class="easyui-combobox" valueField="id" textField="name" style="width:180px" required="true" panelHeight="150px"/></td>
 						</tr>
 						<tr style="height:50px">
 							<td align="center"><a href="javascript:void(0)" onclick="Sub_Std_TgtApp()" class="easyui-linkbutton" iconCls="icon-add">新增</a></td>

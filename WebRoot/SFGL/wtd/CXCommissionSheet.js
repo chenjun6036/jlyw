@@ -76,7 +76,7 @@ $(function(){
 					return getCommissionSheetStatusInfo(value);
 				}
 			},
-			
+			{field:'LocaleCommissionCode',title:'现场委托书号',width:100,align:'center'},
 			{field:'Quantity',title:'台/件数',width:70,align:'center'},
 			{field:'FinishQuantity',title:'完工器具数量',width:70,align:'center'},
 			{field:'EffectQuantity',title:'有效器具数量',width:70,align:'center'},
@@ -164,7 +164,7 @@ $(function(){
 					}
 				}},
 			{field:'OtherRequirements',title:'其他要求',width:80,align:'center'},
-			{field:'Location',title:'存放位置',width:80,align:'center'},
+			{field:'FinishLocation',title:'存放位置',width:80,align:'center'},
 			{field:'Allotee',title:'派定人',width:80,align:'center'},
 			{field:'Remark',title:'备注',width:180,align:'center'}
 		]],
@@ -180,10 +180,19 @@ $(function(){
 				return 'color:#0033CC';
 			}
 		},
+		onSelect:function(rowIndex, rowData){
+			if(rowData.Status >= 3){
+				$('#FinishLocation').val(rowData.FinishLocation);
+				$('#FinishComCode').val(rowData.Code);
+			}
+		},
 		onDblClickRow : function(rowIndex, rowData){
 			if(rowData.Status < 3){
-				$.messager.alert('提示',"该委托单尚未完工确认，不能打印证书！",'info');
-				return false;
+				//$.messager.alert('提示',"该委托单尚未完工确认，不能打印证书！",'info');
+				$('#oneprint-execute-now').hide();
+				//return false;
+			}else{			
+				 $('#oneprint-execute-now').show();
 			}
 			
 			if(rowData.Remark!=''&&rowData.Remark.length>0&&rowData.Remark.indexOf("一证多件")>=0){//判断是否存在一证多件
@@ -288,16 +297,16 @@ function doLook(){
 		return false;
 	}
 	
-//	for(var i=0; i<rows.length; i++){
-		$('#Code').val(rows[0].Code);
-		$('#Pwd').val(rows[0].Pwd);
+	for(var i=0; i<rows.length; i++){
+		$('#Code').val(rows[i].Code);
+		$('#Pwd').val(rows[i].Pwd);
 		$('#doConfirmForm').submit();
-//	}
+	}
 }
 function doLoadHistoryCommission()
 {
 	$('#table6').datagrid('options').url='/jlyw/CommissionSheetServlet.do?method=9';
-	$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#SearchForm-Code').val(),'CommissionStatus':$('#CommissionStatus').val(),'ApplianceName':encodeURI($('#History_ApplianceName').val()),'BeginDate':$('#History_BeginDate').datebox('getValue'),'EndDate':$('#History_EndDate').datebox('getValue')};
+	$('#table6').datagrid('options').queryParams={'CustomerName':encodeURI($('#CustomerName').combobox('getValue')),'Code':$('#SearchForm-Code').val(),'CommissionStatus':$('#CommissionStatus').val(),'ApplianceName':encodeURI($('#History_ApplianceName').val()),'BeginDate':$('#History_BeginDate').datebox('getValue'),'EndDate':$('#History_EndDate').datebox('getValue'),'localeCode':$('#localeCode').val()};
 	$('#table6').datagrid('reload');
 }
 //完工确认
@@ -371,11 +380,24 @@ function doConfirm(){
 
 //打印证书(多个委托单)
 function PrintCertificate(){	
+		$("#CustomerName").combobox("clear");
 	var rows = $("#table6").datagrid("getSelections");	
 	if(rows.length == 0){
 		$.messager.alert('提示',"请选择要打印的委托单！",'info');
 		return false;
 	}
+	
+	for(var i=0;i<rows.length;i++){
+		if(rows[i].IsSubContract==false && rows[i].FinishQuantity < rows[i].EffectQuantity){
+			$.messager.alert('提示',"委托单："+rows[i].Code+" 不能打印证书(完工器具数量少于有效器具数量)！",'info');
+			return false;
+		}
+		if(rows[i].IsSubContract==false && rows[i].FinishQuantity > rows[i].EffectQuantity){
+			$.messager.alert('提示',"委托单："+rows[i].Code+" 不能打印证书(完工器具数量多于有效器具数量)！",'info');
+			return false;
+		}
+	}
+	
 	var idRowsStr = "";
 	
 	var comCodesRemark='';
@@ -407,26 +429,58 @@ function PrintCertificate(){
 				if(data.Certificates.length <= 0){
 					var newTitle = "打印预览区：共 0 份证书";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					PrintSubmit('/jlyw/SFGL/wtd/CertificatePrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
 					$.messager.alert('提示',"委托单尚未生成证书或委托单尚未完工确认！",'info');
 					return false;
 				}else{
 					var newTitle = "打印预览区：共 "+ data.Certificates.length +" 份证书";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					PrintSubmit('/jlyw/SFGL/wtd/CertificatePrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
 				}
 			}else{
 				$.messager.alert('提交失败！',data.msg,'error');
 			}
 		}
 	});	
+	
+
 }
+function PrintSubmit(url,data){
+		//var url = '/jlyw/SFGL/wtd/CertificatePrint.jsp';
+	/*	document.getElementById('PdfPrintFrame').contentWindow.document.designMode = "on";
+		document.getElementById('PdfPrintFrame').contentWindow.document.contentEditable = true;
+		document.getElementById('PdfPrintFrame').contentWindow.document.open();
+		var html = '<form action="'+url+'" method="post" target="_parent" id="postData_form">'+
+                 	'<input id="CertificationId" name="CertificationId" type="hidden" value=\''+data+'\'/>'+
+                	'</form>';
+        document.getElementById('PdfPrintFrame').contentWindow.document.writeln(html);
+        document.getElementById('PdfPrintFrame').contentWindow.document.close();
+		document.getElementById('PdfPrintFrame').contentWindow.document.getElementById('postData_form').submit();*/
+		document.getElementById('postData_form').action=url;
+		$('#CertificationId').val(data);
+		document.getElementById('postData_form').submit();
+	
+}
+
 //打印原始记录(多个委托单)
 function PrintOriginalRecordExcel(){	
 	var rows = $("#table6").datagrid("getSelections");	
 	if(rows.length == 0){
 		$.messager.alert('提示',"请选择要打印的委托单！",'info');
 		return false;
+	}
+	
+	for(var i=0;i<rows.length;i++){
+		if(rows[i].IsSubContract==false && rows[i].FinishQuantity < rows[i].EffectQuantity){
+			$.messager.alert('提示',"委托单："+rows[i].Code+" 不能打印证书(完工器具数量少于有效器具数量)！",'info');
+			return false;
+		}
+		if(rows[i].IsSubContract==false && rows[i].FinishQuantity > rows[i].EffectQuantity){
+			$.messager.alert('提示',"委托单："+rows[i].Code+" 不能打印证书(完工器具数量多于有效器具数量)！",'info');
+			return false;
+		}
 	}
 	var comCodesRemark='';
 	var idRowsStr = "";
@@ -457,13 +511,15 @@ function PrintOriginalRecordExcel(){
 				if(data.Certificates.length <= 0){
 					var newTitle = "打印预览区：共 0 份原始记录";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					PrintSubmit('/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
 					$.messager.alert('提示',"委托单尚未生成证书或委托单尚未完工确认！",'info');
 					return false;
 				}else{
 					var newTitle = "打印预览区：共 "+ data.Certificates.length +" 份原始记录";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					PrintSubmit('/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
 				}
 			}else{
 				$.messager.alert('提交失败！',data.msg,'error');
@@ -484,6 +540,8 @@ function doCloseSelectCertificatePrintWindow(){
 }
 //打印证书(一个委托单下所选择的多份证书)
 function PrintCertificateByOneCommissionSheet(){	
+	$("#CustomerName").combobox("clear");
+
 	var rows = $("#OriginalRecordTable").datagrid("getSelections");	
 	if(rows.length == 0){
 		$.messager.alert('提示',"请选择要打印的证书！",'info');
@@ -493,7 +551,7 @@ function PrintCertificateByOneCommissionSheet(){
 	for(var i = 0; i < rows.length; i++){
 		idRowsStr = idRowsStr + rows[i].OriginalRecordId + ";";
 	}
-	
+
 	$.ajax({
 		type:'POST',
 		url:'/jlyw/OriginalRecordServlet.do?method=10',
@@ -501,7 +559,7 @@ function PrintCertificateByOneCommissionSheet(){
 		dataType:"json",
 		success:function(data, textStatus){
 			if(data.IsOK){
-				if(data.Certificates.length <= 0){
+				/*if(data.Certificates.length <= 0){
 					var newTitle = "打印预览区：共 0 份证书";
 					$('#p2').panel({title:newTitle});
 					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
@@ -510,14 +568,40 @@ function PrintCertificateByOneCommissionSheet(){
 				}else{
 					var newTitle = "打印预览区：共 "+ data.Certificates.length +" 份证书";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					var i=0
+					var timer=setInterval(function(){
+					   $("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+data.Certificates[i].FileId);
+					   i++;
+					   if(i>=data.Certificates.length){
+						  
+						   i=1;
+						   clearInterval(timer)
+						}
+			 	   },13000);
 					doCloseSelectCertificatePrintWindow();
 				}
+				$("#OriginalRecordTable").datagrid("clearSelections");*/
+				if(data.Certificates.length <= 0){
+					var newTitle = "打印预览区：共 0 份证书";
+					$('#p2').panel({title:newTitle});
+					PrintSubmit('/jlyw/SFGL/wtd/CertificatePrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					$.messager.alert('提示',"委托单尚未生成证书或委托单尚未完工确认！",'info');
+					return false;
+				}else{
+					var newTitle = "打印预览区：共 "+ data.Certificates.length +" 份证书";
+					$('#p2').panel({title:newTitle});
+					PrintSubmit('/jlyw/SFGL/wtd/CertificatePrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/CertificatePrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					doCloseSelectCertificatePrintWindow();
+				}
+				$("#OriginalRecordTable").datagrid("clearSelections");
 			}else{
 				$.messager.alert('提交失败！',data.msg,'error');
 			}
 		}
 	});	
+		
 }
 //打印原始记录(一个委托单下所选择的多份原始记录)
 function PrintOriginalRecordExcelByOneCommissionSheet(){	
@@ -526,6 +610,7 @@ function PrintOriginalRecordExcelByOneCommissionSheet(){
 		$.messager.alert('提示',"请选择要打印的原始记录！",'info');
 		return false;
 	}
+	
 	var idRowsStr = "";
 	for(var i = 0; i < rows.length; i++){
 		idRowsStr = idRowsStr + rows[i].OriginalRecordId + ";";
@@ -541,15 +626,18 @@ function PrintOriginalRecordExcelByOneCommissionSheet(){
 				if(data.Certificates.length <= 0){
 					var newTitle = "打印预览区：共 0 份原始记录";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					PrintSubmit('/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
 					$.messager.alert('提示',"委托单尚未生成证书或委托单尚未完工确认！",'info');
 					return false;
 				}else{
 					var newTitle = "打印预览区：共 "+ data.Certificates.length +" 份原始记录";
 					$('#p2').panel({title:newTitle});
-					$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
+					PrintSubmit('/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp',JSON.stringify(data.Certificates));
+					//$("#PdfPrintFrame").attr("src","/jlyw/SFGL/wtd/OriginalRecordExcelPrint.jsp?CertificationId="+JSON.stringify(data.Certificates));
 					doCloseSelectCertificatePrintWindow();
 				}
+				$("#OriginalRecordTable").datagrid("clearSelections");
 			}else{
 				$.messager.alert('提交失败！',data.msg,'error');
 			}
@@ -557,7 +645,10 @@ function PrintOriginalRecordExcelByOneCommissionSheet(){
 	});	
 }
 
-
+function queryreset(){
+	$('#SearchForm').form('clear');
+	$('#CommissionStatus').val("1");
+}
 //打印合格证标签(多个委托单)
 function  PrintLabel(){	
 	var rows = $("#table6").datagrid("getSelections");	
@@ -584,6 +675,8 @@ function  PrintLabel(){
 				
 					$('#formLook').submit();
 				}
+				
+				
 			}else{
 				$.messager.alert('提交失败！',data.msg,'error');
 			}
@@ -619,9 +712,88 @@ function PrintLabelByOneCommissionSheet(){
 				
 					$('#formLook').submit();
 				}
+				$("#OriginalRecordTable").datagrid("clearSelections");
 			}else{
 				$.messager.alert('提交失败！',data.msg,'error');
 			}
 		}
 	});	
+}
+
+//完工存放位置修改
+function updateLocation(){
+	var rows = $("#table6").datagrid("getSelections");	
+	if(rows.length == 0){
+		$.messager.alert('提示',"请选择要完工确认的委托单！",'info');
+		return false;
+	}
+	if(rows.length >1){
+		$.messager.alert('提示',"请选择一份委托单！",'info');
+		return false;
+	}
+	
+	var result = confirm("您确定要进行修改完工存放位置吗?");
+	if(result == false){
+		return false;
+	}
+	//alert($("#FinishLocation").val());
+	
+	if($("#FinishLocation").val()==""){
+		var result = confirm("器具存放位置为空，您确定要继续完工确认吗?");
+		if(result == false){
+			return false;
+		}		
+	}
+
+	
+	$('#Confirm').form('submit',{
+		url: '/jlyw/CommissionSheetServlet.do?method=21',
+		onSubmit:function(){ return $('#Confirm').form('validate');},
+		success:function(data){
+		   var result = eval("("+data+")");
+		   if(result.IsOK){
+		   		//$.messager.alert('提示',result.msg,'info');
+				$('#table6').datagrid('reload');
+		   }else{
+		   		$.messager.alert('提交失败！',result.msg,'error');
+		   }
+		 }
+	});
+}
+
+function SelectLeft(){
+	var rows = $('#table6').datagrid('getRows');
+	var selections = $('#table6').datagrid('getSelections');
+	$('#table6').datagrid('selectAll');
+	for(var i = 0; i < selections.length; i++){
+		$('#table6').datagrid('unselectRow',$('#table6').datagrid('getRowIndex',selections[i]));
+	}
+}
+
+function CertificateList(){
+	var rows = $('#table6').datagrid('getSelections');
+	if(rows.length==0){
+		$.messager.alert('提示',"请选择一个委托单！",'info');
+		return false;
+	}
+	if(rows.length>1){
+		$.messager.alert('提示',"您选择了多个委托单，请确认其中一个！",'info');
+		return false;
+	}
+	var rowData = rows[0];
+	if(rowData.Status < 3){
+		//$.messager.alert('提示',"该委托单尚未完工确认，不能打印证书！",'info');
+		$('#oneprint-execute-now').hide();
+		//return false;
+	}else{			
+		 $('#oneprint-execute-now').show();
+	}
+	
+	if(rowData.Remark!=''&&rowData.Remark.length>0&&rowData.Remark.indexOf("一证多件")>=0){//判断是否存在一证多件
+		var confirmresult=confirm("该委托单包含了一证多件的证书，是否继续？");
+		if(confirmresult == false)
+			return false;
+	}
+	
+	doOpenSelectCertificatePrintWindow(rowData.Id);
 }

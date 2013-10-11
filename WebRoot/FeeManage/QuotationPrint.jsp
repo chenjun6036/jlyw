@@ -218,7 +218,7 @@
   <div style="padding-left:35px"><font size="2">&nbsp;&nbsp;&nbsp;&nbsp;2、请正确详细地提供受检器具型号规格、准确度等级等各项信息，这些信息将被复制到提交给客户的证书上。</font></div>
   <div style="padding-left:35px"><font size="2">&nbsp;&nbsp;&nbsp;&nbsp;3、计量器具经过检定、校准后，客户在本所提取样品、证书时，需结清各项检修费用。</font></div>
   <div style="padding-left:35px"><font size="2">&nbsp;&nbsp;&nbsp;&nbsp;4、现场检测不另加费用；本所派车现场检测，收交通费<%=ret.getString("CarCost") %>元/次。</font></div>
-  <div style="padding-left:35px"><font size="2">&nbsp;&nbsp;&nbsp;&nbsp;5、本所地址：常州市劳动西路323号&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;电话：0519-86662583&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传真：0519-86692565&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email：cjs@czjl.net</font></div>
+  <div style="padding-left:35px"><font size="2">&nbsp;&nbsp;&nbsp;&nbsp;5、本所地址：常州市武进区鸣新中路16号&nbsp;&nbsp;&nbsp;&nbsp;电话：0519-81002519&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传真：0519-81002098&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email：cjs@czjl.net</font></div>
    <div style="padding-left:47px" id="Remarkdiv"><font size=2><%=ret.getString("Remark") %></font></div>
   
  <%
@@ -301,12 +301,12 @@
 		LODOP.ADD_PRINT_TEXT(18,700,135,20,"第#页/共&页");
 		LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
 		LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
-		LODOP.ADD_PRINT_IMAGE(10,25,115,25,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");
+		LODOP.ADD_PRINT_IMAGE(10,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp' />");
 		LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
 		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
 		LODOP.ADD_PRINT_TEXT(18,450,196,20,"常州市计量测试技术研究所");	
 		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
-		LODOP.ADD_PRINT_SHAPE(1,38,23,1040,1,0,2,"#000000");
+		LODOP.ADD_PRINT_SHAPE(1,38,83,1040,1,0,2,"#000000");
 		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
 		
 		LODOP.ADD_PRINT_BARCODE(45,920,120,30,"EAN128A",code);

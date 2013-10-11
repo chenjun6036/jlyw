@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=gb2312" language="java" import="java.sql.*" errorPage="" %>
+<%@ page contentType="text/html; charset=gb2312" language="java" import="java.sql.*,com.jlyw.hibernate.*,com.jlyw.util.*" errorPage="" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -58,7 +58,9 @@
 		</jsp:include>
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
-	
+	<form id="DetailForm" method="post" action="/jlyw/StatisticLook/MissionLookByCommissionSheetCode.jsp" target="_blank">
+        <input id="DetailForm_Code" type="hidden" name="Code"/>
+        </form>
 	<div id="p" class="easyui-panel" style="width:1005px;padding:10px;"
 				title="委托单查询" collapsible="false"  closable="false">
 		<form id="SearchForm" method="post" >
@@ -67,6 +69,7 @@
 					<td width="10%" align="right" >委托单编号：</td>
 					<td width="22%" align="left" >
 						<input id="Code" class="easyui-validatebox" name="Code" style="width:150px;" required="true" />
+						<input id="LOGIN_USERLG" type="hidden" value="<%=session.getAttribute("LOGIN_USER")==null?"":((SysUser)session.getAttribute("LOGIN_USER")).getId() %>" />
 					</td>
 
 					<td width="10%" align="right">密  码：</td>
@@ -108,6 +111,7 @@
 			<input type="hidden" name="FileName" id="makecertificate-submit-form-FileName" value="" />
 			<input type="hidden" name="Version" id="makecertificate-submit-form-Version" value="" />
 			<input type="hidden" name="StaffId" id="makecertificate-submit-form-StaffId" value="" />
+			<input type="hidden" name="VerifierName" id="makecertificate-submit-form-VerifierName" value="" />
 		  </form>
 		  
 </DIV></DIV>
@@ -220,7 +224,7 @@
 		</div>
 	</div>
 
-<div id="add_original_record_window" class="easyui-window" collapsible="false" minimizable="false" maximizable="false" closed="true" modal="true" title="编辑原始记录" iconCls="icon-save" style="width:830px;height:670px;overflow:hidden;padding-left:5px;background:#fff;border:1px solid #ccc;">
+<div id="add_original_record_window" class="easyui-window" collapsible="false" minimizable="false" maximizable="false" closed="true" modal="true" title="编辑原始记录" iconCls="icon-save" style="width:1000px;height:670px;overflow:hidden;padding-left:5px;background:#fff;border:1px solid #ccc;">
 	<form id="AddOriginalForm" method="post">
 		<input type="hidden" name="OriginalRecordId" id="AddOriginalForm-OriginalRecordId" value="" />
 		<input type="hidden" name="WorkStaffId" id="AddOriginalForm-WorkStaffId" value="" /><!--用于添加成功后暂存ID，每次打开该对话框时清除该ID-->
@@ -235,9 +239,9 @@
 		<input type="hidden" name="StandardsString" id="AddOriginalForm-StandardsString" value="" />
 		<input type="hidden" name="SpecificationsString" id="AddOriginalForm-SpecificationsString" value="" />
 		
-		<table width="800px" border="0" height="320px">
+		<table width="970px" border="0" height="320px">
 			<tr>
-				<td width="600px" valign="top">
+				<td width="770px" valign="top">
 					<table id="Appliance" iconCls="icon-tip" width="600px" height="300px"></table>
 				</td>
 				<td width="200px" valign="top">
@@ -245,13 +249,13 @@
 				</td>
 			</tr>
 		</table>
-		<table width="800px" border="0">
+		<table width="970px" border="0">
 			<tr>
-				<td width="74" align="right">常用名称：</td>
-				<td width="185"  align="left">
+				<td width="100" align="right">常用名称：</td>
+				<td width="192" align="left">
 						<select name="ApplianceName" id="AddOriginalForm-ApplianceName" style="width:152px" class="easyui-combobox" valueField="Name" textField='Name'></select></td>
-				<td width="69" align="right">工作性质：</td>
-				<td width="163"  align="left">
+				<td width="100" align="right">工作性质：</td>
+				<td width="192" align="left">
 					<select name="WorkType" id="AddOriginalForm-WorkType" style="width:152px" class="easyui-validatebox" required="true">
 						<option value="" selected="selected">请选择...</option>
 						<option value="检定">检定</option>
@@ -259,13 +263,14 @@
 						<option value="检测">检测</option>
 						<option value="检验">检验</option>
 					</select>					</td>
-				<td width="65" align="right">工作地点：</td>
-				<td width="168" align="left">
+				<td width="90" align="right">工作地点：</td>
+				<td width="192" align="left">
 					<select name="WorkLocation" id="AddOriginalForm-WorkLocation" style="width:152px" class="easyui-validatebox" required="true">
 						<option value="" selected="selected">请选择...</option>
-						<option value="本所实验室">本所实验室</option>
+						<option value="本实验室">本实验室</option>
 						<option value="被测仪器使用现场">被测仪器使用现场</option>
 					</select>				    </td>
+			</tr>
 			</tr>
 			<tr>
 				<td align="right">制造单位：</td>
@@ -416,7 +421,11 @@
 	<table cellpadding="0" cellspacing="0" style="width:100%">
 		<tr>
 			<td style="text-align:left;padding-left:2px">
-			<label>标准名:</label><select id="function-toolbar-StandardName" style="width:60px" ></select><label>型号:</label><input id="function-toolbar-Model" class="easyui-combobox" valueField="name" textField='name' style="width:60px" /><label>范围:</label><input id="function-toolbar-Range" class="easyui-combobox" valueField="name" textField='name' style="width:60px" /><label>等级:</label><input id="function-toolbar-Accuracy" class="easyui-combobox" valueField="name" textField='name' style="width:60px" />
+			<label>标准名:</label><select id="function-toolbar-StandardName" style="width:60px" ></select><label>型号:</label><input id="function-toolbar-Model" class="easyui-combobox" valueField="name" textField='name' style="width:60px" /><label>范围:</label><input id="function-toolbar-Range" class="easyui-combobox" valueField="name" textField='name' style="width:60px" /><label>等级:</label><input id="function-toolbar-Accuracy" class="easyui-combobox" valueField="name" textField='name' style="width:60px" /><label>检定费:</label>
+        <input name="text"  id="function-toolbar-TestFee" class="easyui-numberbox" style="width:60px" />
+		 <label>受检器具:</label>
+          <select name="select" id="function-toolbar-TargetAppName" style="width:60px">
+          </select>
 			<input id="standardNameIdstandardNameId" name="standardNameIdstandardNameId"  type="hidden" />
 			<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-search" plain="true" title="查询受检器具" id="btnHistorySearch" onclick="doSearchTargetAppliance()">查询</a>
 			
@@ -507,7 +516,7 @@
 	</table>
 </div>
 
-<div id="selectTechnicalDocsAndStandards_window" class="easyui-window" closed="true" modal="true" title="选择检定规程、计量标准和标准器具" collapsible="false" minimizable="false" maximizable="false" iconCls="icon-save" style="width:650px;height:600px;padding:5px;">
+<div id="selectTechnicalDocsAndStandards_window" class="easyui-window" closed="true" modal="true" title="选择检定规程、计量标准和标准器具" collapsible="false" minimizable="false" maximizable="false" iconCls="icon-save" style="width:650px;height:650px;padding:5px;position:relative">
 	<div class="easyui-layout" fit="true">
 		<div region="center" border="false" style="background:#fff;border:1px solid #ccc;">				
 			<table id="table_Specification" fit="true" iconCls="icon-tip"></table>
@@ -515,7 +524,7 @@
 			<table id="table_StandardAppliance" fit="true" iconCls="icon-tip"></table>
 		</div>
 		<div region="south" border="false" style="text-align:right;height:30px;line-height:30px;">
-			<a class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="submitDocsAndStandards()" >提交并编辑证书</a>
+			<a class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="submitDocsAndStandards()" >提交所选并编辑证书</a>
 			<a class="easyui-linkbutton" iconCls="icon-cancel" href="javascript:void(0)" onclick="$('#selectTechnicalDocsAndStandards_window').window('close');">取消</a>
 		</div>
 	</div>

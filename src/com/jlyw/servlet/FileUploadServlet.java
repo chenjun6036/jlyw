@@ -27,6 +27,8 @@ import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
+import com.jlyw.hibernate.ApplianceManufacturer;
+import com.jlyw.hibernate.ApplianceManufacturerDAO;
 import com.jlyw.hibernate.AppliancePopularName;
 import com.jlyw.hibernate.AppliancePopularNameDAO;
 import com.jlyw.hibernate.ApplianceStandardName;
@@ -52,13 +54,16 @@ import com.jlyw.hibernate.SysUser;
 import com.jlyw.hibernate.VerifyAndAuthorize;
 import com.jlyw.hibernate.VerifyAndAuthorizeDAO;
 import com.jlyw.manager.AddressManager;
+import com.jlyw.manager.ApplianceManufacturerManager;
 import com.jlyw.manager.AppliancePopularNameManager;
 import com.jlyw.manager.ApplianceStandardNameManager;
 import com.jlyw.manager.CertificateManager;
 import com.jlyw.manager.CommissionSheetManager;
 import com.jlyw.manager.OriginalRecordExcelManager;
 import com.jlyw.manager.OriginalRecordManager;
+import com.jlyw.manager.QualificationManager;
 import com.jlyw.manager.RemakeCertificateManager;
+import com.jlyw.manager.UserManager;
 import com.jlyw.util.ExcelUtil;
 import com.jlyw.util.FlagUtil;
 import com.jlyw.util.KeyValueWithOperator;
@@ -207,7 +212,7 @@ public class FileUploadServlet extends HttpServlet {
 				response.getWriter().write(retJSON.toString());
 			}
 			break;
-		case 2:	//WebOffice上传原始记录（正式）
+		case 2:	//WebOffice上传原始记录（正式）xlsEdit
 			JSONObject retJSON2=new JSONObject();
 			try{
 				// 初始化上传组件  
@@ -606,6 +611,24 @@ public class FileUploadServlet extends HttpServlet {
 							}
 						}catch(Exception eee){
 							log.debug("exception in FileUploadServlet-->case 2-->更新常用名称", eee);
+						}
+						try{
+							//更新生产厂商
+							if(oRecord.getManufacturer() != null && oRecord.getManufacturer().trim().length() > 0){
+								ApplianceManufacturerManager manufacturerMgr = new ApplianceManufacturerManager();
+								int iManufacturerRet = manufacturerMgr.getTotalCount(new KeyValueWithOperator("applianceStandardName.id", oRecord.getTargetAppliance().getApplianceStandardName().getId(), "="), 
+										new KeyValueWithOperator("manufacturer", oRecord.getManufacturer(), "="));
+								if(iManufacturerRet == 0){
+									ApplianceManufacturer manufacturerTemp = new ApplianceManufacturer();
+									manufacturerTemp.setApplianceStandardName(oRecord.getTargetAppliance().getApplianceStandardName());
+									manufacturerTemp.setManufacturer(oRecord.getManufacturer());
+									manufacturerTemp.setBrief(LetterUtil.String2Alpha(oRecord.getManufacturer()));
+									manufacturerTemp.setStatus(0);
+									manufacturerMgr.save(manufacturerTemp);
+								}
+							}
+						}catch(Exception eee){
+							log.debug("exception in FileUploadServlet-->case 2-->更新生产厂商", eee);
 						}
 						
 						//按需删除文件数据库中过时的原始记录
@@ -1326,6 +1349,24 @@ public class FileUploadServlet extends HttpServlet {
 								}catch(Exception eee){
 									log.debug("exception in FileUploadServlet-->case 4-->更新常用名称", eee);
 								}
+								try{
+									//更新生产厂商
+									if(oRecord.getManufacturer() != null && oRecord.getManufacturer().trim().length() > 0){
+										ApplianceManufacturerManager manufacturerMgr = new ApplianceManufacturerManager();
+										int iManufacturerRet = manufacturerMgr.getTotalCount(new KeyValueWithOperator("applianceStandardName.id", oRecord.getTargetAppliance().getApplianceStandardName().getId(), "="), 
+												new KeyValueWithOperator("manufacturer", oRecord.getManufacturer(), "="));
+										if(iManufacturerRet == 0){
+											ApplianceManufacturer manufacturerTemp = new ApplianceManufacturer();
+											manufacturerTemp.setApplianceStandardName(oRecord.getTargetAppliance().getApplianceStandardName());
+											manufacturerTemp.setManufacturer(oRecord.getManufacturer());
+											manufacturerTemp.setBrief(LetterUtil.String2Alpha(oRecord.getManufacturer()));
+											manufacturerTemp.setStatus(0);
+											manufacturerMgr.save(manufacturerTemp);
+										}
+									}
+								}catch(Exception eee){
+									log.debug("exception in FileUploadServlet-->case 4-->更新生产厂商", eee);
+								}
 								
 								//按需删除文件数据库中过时的原始记录
 								try{
@@ -1644,7 +1685,7 @@ public class FileUploadServlet extends HttpServlet {
 				response.getWriter().write(retJSON5.toString());
 			}
 			break;
-		case 6:	//上传（提交）证书（Weboffice）
+		case 6:	//上传（提交）证书（Weboffice）docEdit
 			JSONObject retJSON6 = new JSONObject();
 			try{
 				// 初始化上传组件  
@@ -1655,7 +1696,8 @@ public class FileUploadServlet extends HttpServlet {
 		        String FileName = mySmartUpload.getRequest().getParameter("FileName");
 				String OriginalRecordId = mySmartUpload.getRequest().getParameter("OriginalRecordId");  //原始记录的ID
 				String VersionStr = mySmartUpload.getRequest().getParameter("Version");//证书的版本号
-		        
+				String VerifierName = mySmartUpload.getRequest().getParameter("VerifierName");	//核验人员姓名
+			
 				if(OriginalRecordId == null || OriginalRecordId.length() == 0
 						|| FileName == null || FileName.length() == 0){
 					throw new Exception("参数不完整！");
@@ -1734,8 +1776,34 @@ public class FileUploadServlet extends HttpServlet {
 					toBeDeleteFileIdCertificate = certificate.getDoc();
 				}
 				
-				//核验和授权签字记录，如果vNew的ID为null，则新增一个记录，否则，更新原记录
+				
+				//核验人员
+				SysUser checkStaff = null;
+				UserManager userMgr = new UserManager();
+				if(VerifierName != null && VerifierName.trim().length() > 0 && !VerifierName.equals("-1")){
+					
+					List<SysUser> userList = userMgr.findByVarProperty(new KeyValueWithOperator("name", VerifierName.trim(), "="),
+							new KeyValueWithOperator("status", 0, "="));
+					if(userList != null && userList.size() > 0){
+						checkStaff = userList.get(0);
+					}
+				}
+				//核验和授权签字记录，用于从方法中带出相关人员,如果vNew的ID为null，则新增一个记录，否则，更新原记录
 				VerifyAndAuthorize vNew = oRecord.getVerifyAndAuthorize();
+				//获取授权签字人员
+				SysUser authStaff = null;	//签字人
+				QualificationManager qfMgr = new QualificationManager();
+				if(checkStaff != null){ //核验人员不为空
+					List<Object[]> qfRetList = qfMgr.getVerifyOrAuthorizeQualifyUsers(oRecord.getTargetAppliance().getApplianceStandardName().getId(), 0, FlagUtil.QualificationType.Type_Qianzi);
+					if(qfRetList.size() == 0){
+						throw new Exception(String.format("找不到器具标准名称'%s'对应的授权签字人员！请联系基础数据管理员！", oRecord.getTargetAppliance().getApplianceStandardName().getName()));
+					}
+					Object[] userObj = qfRetList.get(0);
+					authStaff = userMgr.findById((Integer)userObj[0]);
+				}
+				
+				
+				//核验和授权签字记录，如果vNew的ID为null，则新增一个记录，否则，更新原记录
 				if(vNew == null){
 					vNew = new VerifyAndAuthorize();
 					vNew.setCode(UIDUtil.get22BitUID());
@@ -1752,16 +1820,20 @@ public class FileUploadServlet extends HttpServlet {
 					vNew.setIsAuthBgRuning(null);
 					vNew.setOriginalRecordExcel(null);
 					vNew.setSysUserByAuthorizeExecutorId(null);
-//					vNew.setSysUserByAuthorizerId(null);
+					vNew.setSysUserByAuthorizerId(null);
 					vNew.setSysUserByCreatorId(loginUser);
-//					vNew.setSysUserByVerifierId(null);
+					vNew.setSysUserByVerifierId(null);
 					vNew.setVerifyRemark(null);
 					vNew.setVerifyResult(null);
 					vNew.setVerifyTime(null);
-//					if(vNew.getSysUserByAuthorizerId() != null && vNew.getSysUserByVerifierId() != null){	//重新生成一份核验和授权签字记录：版本号+1
-//						vNew.setId(null);
-//						vNew.setVersion(vNew.getVersion() + 1);
-//					}
+					if(vNew.getSysUserByAuthorizerId() != null && vNew.getSysUserByVerifierId() != null){	//重新生成一份核验和授权签字记录：版本号+1
+						vNew.setId(null);
+						vNew.setVersion(vNew.getVersion() + 1);
+					}
+				}
+				if(checkStaff != null&&authStaff!=null){ //核验人员不为空
+					vNew.setSysUserByVerifierId(checkStaff);
+					vNew.setSysUserByAuthorizerId(authStaff);
 				}
 				
 				//处理上传的文件
@@ -2694,7 +2766,9 @@ public class FileUploadServlet extends HttpServlet {
 											cSheet, oRecord, certificate, new AddressManager().findById(cSheet.getHeadNameId()),
 											speList, stdList, stdAppList,alertString);
 									if(alertString!=null&&alertString.toString().length()>0)
-										alert = alert + oRecord.getCertificate().getCode() + alertString.toString()+";";
+										if(certificate!=null){
+											alert = alert + certificate.getCode() + alertString.toString()+";";
+										}
 									if(!fDocOut.exists() || fDocOut.length() == 0){
 										throw new Exception("证书文件生成失败！");
 									}
@@ -2811,6 +2885,20 @@ public class FileUploadServlet extends HttpServlet {
 										popNameDao.save(popNameTemp);
 									}
 								}
+								//更新生产厂商
+								if(oRecord.getManufacturer() != null && oRecord.getManufacturer().trim().length() > 0){
+									ApplianceManufacturerDAO manufacturerDao = new ApplianceManufacturerDAO();
+									int iManufacturerRet = manufacturerDao.getTotalCount("ApplianceManufacturer", new KeyValueWithOperator("applianceStandardName.id", oRecord.getTargetAppliance().getApplianceStandardName().getId(), "="), 
+											new KeyValueWithOperator("manufacturer", oRecord.getManufacturer(), "="));
+									if(iManufacturerRet == 0){
+										ApplianceManufacturer manufacturerTemp = new ApplianceManufacturer();
+										manufacturerTemp.setApplianceStandardName(oRecord.getTargetAppliance().getApplianceStandardName());
+										manufacturerTemp.setManufacturer(oRecord.getManufacturer());
+										manufacturerTemp.setBrief(LetterUtil.String2Alpha(oRecord.getManufacturer()));
+										manufacturerTemp.setStatus(0);
+										manufacturerDao.save(manufacturerTemp);
+									}
+								}
 								
 								tran.commit();
 							}catch(Exception ex){
@@ -2863,9 +2951,9 @@ public class FileUploadServlet extends HttpServlet {
 					e1.printStackTrace();
 				}
 				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
-					log.debug("exception in FileDownloadServlet-->case 9", e);
+					log.debug("exception in FileUploadServlet-->case 9", e);
 				}else{
-					log.error("error in FileDownloadServlet-->case 9", e);
+					log.error("error in FileUploadServlet-->case 9", e);
 				}
 			}finally{
 				response.setContentType("text/html;charset=utf-8");

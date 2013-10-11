@@ -165,7 +165,7 @@
 				}],
 				rowStyler:function(rowIndex, rowData){
 					if(rowData.Status == 10){	//ÒÑ×¢Ïú
-						return 'color:#FF0000'
+						return 'color:#FF0000';
 					}
 				}
 			});

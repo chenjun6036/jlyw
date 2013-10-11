@@ -157,7 +157,7 @@ public class CrmExportServlet extends HttpServlet {
 					response.getWriter().write(ret.toString());
 				}
 				break;
-			case 2://导出联系人信息
+			case 2://导出内部联系人信息
 				JSONObject ret2=new JSONObject();
 				try {
 					String p=request.getParameter("Par");
@@ -179,8 +179,10 @@ public class CrmExportServlet extends HttpServlet {
 					PreparedStatement ps1=conn.prepareStatement(queryString);
 					if(p!=null&&!p.equals(""))
 					{
+						/*JSONObject pars02=new JSONObject(p);
+						String str=pars02.getString("customerId1");*/
 						queryString+="and a.Id= ? ";
-						ps1.setInt(1, Integer.parseInt(p));
+						ps1.setInt(1, Integer.valueOf(p));
 					}
 					ResultSet rs1=ps1.executeQuery();
 					List<JSONObject>  lj=new ArrayList<JSONObject>();
@@ -197,7 +199,7 @@ public class CrmExportServlet extends HttpServlet {
 					}
 					conn.close();
 					String filePath=ExportUtil.ExportToExcelByResultSet(lj,null,"formatExcel","formatTitle",InsideContactorManager.class);
-					ret2.put("IsOK", filePath.equals("")?false:true);
+					ret2.put("IsOk", filePath.equals("")?false:true);
 					ret2.put("Path", filePath);
 				} catch (Exception e) {
 					// TODO: handle exception
@@ -206,9 +208,6 @@ public class CrmExportServlet extends HttpServlet {
 					response.setContentType("text/html;charset=utf-8");
 					response.getWriter().write(ret2.toString());
 				}
-				break;
-
-			default:
 				break;
 			case 3://导出潜在客户信息
 				JSONObject ret3=new JSONObject();
@@ -243,11 +242,15 @@ public class CrmExportServlet extends HttpServlet {
 					String cusName="";
 					String startDate="";
 					String endDate="";
+					String status="";
 					if(pars.length()!=0)
 					{
 						 cusName=pars.getString("CustomerName");
 						 startDate=pars.getString("StartDate");
 						 endDate=pars.getString("EndDate");
+						 status=pars.getString("Status");
+						 if(status.equals("4"))//
+								 status="";
 					}
 					
 					List<Object> keys=new ArrayList<Object>();
@@ -256,14 +259,23 @@ public class CrmExportServlet extends HttpServlet {
 					if(startDate!=null&&!startDate.equals(""))
 					{
 						String str=URLDecoder.decode(startDate,"UTF-8");
-						queryString+=" and (convert(varchar(10),model.createTime,120)>= ?)";//model.createTime
+						queryString+=" and (convert(varchar(10),a.createTime,120)>= ?)";//model.createTime
 						keys.add(str);
 					}
+					
+					
 					if(endDate!=null&&!endDate.equals(""))
 					{
 						String str=URLDecoder.decode(endDate,"UTF-8");
-						queryString+=" and (convert(varchar(10),model.createTime,120)<= ?)";//
+						queryString+=" and (convert(varchar(10),a.createTime,120)<= ?)";//
 						keys.add(str);
+					}
+					
+					if(status!=null&&!status.equals(""))
+					{
+						String str=URLDecoder.decode(status,"UTF-8");
+						queryString+=" and (a.status = ?)";//
+						keys.add(Integer.valueOf(str));
 					}
 					
 						
@@ -889,7 +901,6 @@ public class CrmExportServlet extends HttpServlet {
 					String customerLevel="";
 					String careContactor="";
 					String careDutySysUser="";
-					String code="";
 					String startTime="";
 					String endTime="";
 					String way="";
@@ -899,7 +910,7 @@ public class CrmExportServlet extends HttpServlet {
 						 customerLevel=pars13.getString("CustomerLevel");
 						 careContactor=pars13.getString("CareContactor");
 						 careDutySysUser=pars13.getString("CareDutySysUser");
-						 code=pars13.getString("Code");
+						// code=pars13.getString("Code");
 						 startTime=pars13.getString("StartTime");
 						 endTime=pars13.getString("EndTime");
 						 way=pars13.getString("Way");
@@ -928,11 +939,11 @@ public class CrmExportServlet extends HttpServlet {
 						query+=" and (sysUserByCareDutySysUserId.name like ? )";
 						key.add(URLDecoder.decode(careDutySysUser,"UTF-8"));
 					}
-					if(code!=null&&!code.equals(""))
+					/*if(code!=null&&!code.equals(""))
 					{
 						query+=" and (customer.code like ? )";
 						key.add("%"+URLDecoder.decode(code,"UTF-8")+"%");
-					}
+					}*/
 					if(way!=null&&!way.equals(""))
 					{
 						query+=" and (way= ? )";

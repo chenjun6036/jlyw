@@ -24,7 +24,9 @@
 			JSONObject ret=(JSONObject)request.getSession().getAttribute("FeeList");	
 			String name=ret.getString("DetailListSysUser");	
 			String code=ret.getString("DetailListCode");	
+			String DetailListType=ret.getString("DetailListType");
 			String CustomerName=ret.getString("CustomerName");
+			int	length = ret.getJSONArray("rows").length();
 //			String msg="";
 //			if(isok="false")
 //			   msg=ret.getString("msg");					         
@@ -44,6 +46,7 @@
 	<font color="#000000" size="2">No：<%=ret.getString("DetailListCode") %></font>
   <td>
 </TR>
+
 </table>	
 </DIV>
 
@@ -58,12 +61,18 @@
     <TD width="24%"><font color="#000000" size="2">结账日期：<%=ret.getString("DetailListDate") %></font>
 	</TD>
  </TR>
+ <TR>
+     <TD width="74%"><font color="#000000" size="2">收 款 人：<%=ret.getString("DetailListSysUser") %></font></TD>
+    
+    <TD width="24%"><font color="#000000" size="2">打印日期：<%= ret.getString("NowDate")%> </font>
+	</TD>
+ </TR>
 </TBODY>
 </TABLE>
 </div>
 
 <div id="div2">
-<TABLE border=0 cellSpacing=0 cellPadding=1 width="100%" style="border-collapse:collapse;table-layout:fixed;" bordercolor="#000000">
+<TABLE border=0 cellSpacing=0 cellPadding=1 width="100%" style="border-collapse:collapse;table-layout:fixed;" bordercolor="#000000" >
 <thead >
   <TR>
     <TD width="5%" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
@@ -94,14 +103,14 @@
       <DIV align=center><font size="2">存放位置</font></DIV></TD>
   </TR>
 </thead>      
-  <TBODY> 
+  <TBODY > 
  <% 
 	for(int i=0;i<ret.getJSONArray("rows").length();i++){
 						         
  %>        
   <TR>
     <TD align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("Id") %></font></TD>
-    <TD align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("CommissionSheetCode") %></font></TD>
+    <TD align="center" ><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("CommissionSheetCode") %></font></TD>
     <TD style="overflow:hidden;" align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("ApplianceName").length()>8?ret.getJSONArray("rows").getJSONObject(i).getString("ApplianceName").substring(0, 8):ret.getJSONArray("rows").getJSONObject(i).getString("ApplianceName") %></font></TD>
     <TD align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("Quantity") %></font></TD>
     <TD align="center"><font size="2"><%=ret.getJSONArray("rows").getJSONObject(i).getString("TQuantity") %></font></TD>
@@ -120,49 +129,49 @@
   }
    request.getSession().removeAttribute("FeeList");	
  %>
-<tr>
-	<td colspan="13" height="2px" style="height:2px"><div><hr color="black" size="1"/></div></td>
-</tr>
+
 </TBODY>
+
   <tfoot >
   <tr >
-    <TD align="center" ></TD>
-    <TD align="center"  >
+    <TD align="center" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 2px"></TD>
+    <TD align="center" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 2px" >
 		
 	</TD>
-    <TD align="center"  >
+    <TD align="center"  style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
 		
 	</TD> 
-	<TD align="center" tdata="subSum"  align="center" >
-  		<font color="#000000" size="2">###</font>
-	</TD>
-	<TD align="center" tdata="subSum"  align="center" >
-		<font color="#000000" size="2">###</font>
-  	</TD>    
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center" >
-		<font color="#000000" size="2">###</font>
-	</TD>
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center" >
-		<font color="#000000" size="2">###</font>
-	</TD>
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center"  >
-  		<font color="#000000" size="2">###</font>
-	</TD>
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center"  >
-		<font color="#000000" size="2">###</font>
-  	</TD>    
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center"  >
-		<font color="#000000" size="2">###</font>
-	</TD>
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center"  >
+	 <TD align="center" tdata="subSum"  style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
 		<font color="#000000" size="2">###</font>
 	</TD> 
-	<TD align="center" tdata="subSum" format="#,##0.0" align="center"  >
+	 <TD align="center" tdata="subSum"  style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
 		<font color="#000000" size="2">###</font>
-	</TD>
-	<TD align="center"  align="center"  >
+	</TD> 
+	
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center" tdata="subSum"  format="#,##0.0" style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
+		<font color="#000000" size="2">###</font>
+	</TD> 
+	<TD align="center"  style="border-left:0;border-right:0; border-bottom:solid 1px; border-top:solid 1px">
 		
-	</TD>   
+	</TD> 
  </tr>
   </tfoot>
 </TABLE>
@@ -205,7 +214,8 @@
 	LODOP=getLodop(document.getElementById('LODOP_OB'),document.getElementById('LODOP_EM'));  
 	var name2='<%=name%>';
 	var code='<%=code%>';
-	
+	var length='<%=length%>';
+	var DetailListType='<%=DetailListType%>';
 //	if(msg.length==0)
 //	    console("错误："+msg);
 	var nowDate = new Date();
@@ -226,68 +236,164 @@
 	
 		LODOP.PRINT_INIT("打印控件功能演示_Lodop功能_分页打印综合表格");
 		LODOP.SET_PRINT_PAGESIZE(1,0,0,"A4");
-	
-		LODOP.ADD_PRINT_TABLE(145,"1%","98%",340,document.getElementById("div2").innerHTML);
-		LODOP.SET_PRINT_STYLEA(0,"Vorient",3);	
-		
-		LODOP.ADD_PRINT_HTM(110,"5%","90%",30,document.getElementById("div1").innerHTML);
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-		LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+		if(length<17){//二联的话，要少于等于十六行数据
 			
-	    LODOP.ADD_PRINT_HTM(0,"5%","90%",100,document.getElementById("div3").innerHTML);
-		LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",0);
-		//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
+			LODOP.ADD_PRINT_TABLE(150,"1%","98%",340,document.getElementById("div2").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"Vorient",3);	
+			
+			LODOP.ADD_PRINT_TABLE(700,"1%","98%",340,document.getElementById("div2").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"Vorient",3);	
+			
+			LODOP.ADD_PRINT_HTM(95,"5%","90%",50,document.getElementById("div1").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
 				
-		LODOP.ADD_PRINT_TEXT(33,660,135,20,"第#页/共&页");
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
-		LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
-		LODOP.ADD_PRINT_IMAGE(25,25,117,25,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'  />");
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
-		LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
-		LODOP.ADD_PRINT_TEXT(33,300,196,20,"常州市计量测试技术研究所");	
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
-		LODOP.ADD_PRINT_SHAPE(1,53,23,"95%",1,0,2,"#000000");
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_HTM(0,"5%","90%",100,document.getElementById("div3").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",0);
+			//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
+					
+			LODOP.ADD_PRINT_TEXT(33,660,135,20,"第#页/共&页");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
+			LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
+			LODOP.ADD_PRINT_IMAGE(25,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'  />");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
+			LODOP.ADD_PRINT_TEXT(33,300,196,20,"常州市计量测试技术研究所");	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_SHAPE(1,53,83,"95%",1,0,2,"#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			
+			LODOP.ADD_PRINT_BARCODE(60,"75%",120,30,"EAN128A",code);
+			LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ShowBarText",0);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
 		
-		LODOP.ADD_PRINT_BARCODE(60,"75%",120,30,"EAN128A",code);
-		LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
-		LODOP.SET_PRINT_STYLEA(0,"ShowBarText",0);
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-		LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
-	
-		LODOP.ADD_PRINT_TEXT(90,"76%",113,30,"No:"+code);
-		LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
-		LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
-		LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-		LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			LODOP.ADD_PRINT_TEXT(90,"76%",113,30,"No:"+code);
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
+			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			
+			LODOP.ADD_PRINT_TEXT(75,"42%",140,30,"费用清单");
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",16);
+			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			
+			LODOP.ADD_PRINT_SHAPE(1,550,23,"95%",1,1,2,"#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",0);	
+			
+			//二联
 		
-		LODOP.ADD_PRINT_TEXT(75,"42%",140,30,"费用清单");
-		LODOP.SET_PRINT_STYLEA(0,"FontSize",16);
-		LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
-		LODOP.SET_PRINT_STYLEA(0,"Bold",1);
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-		LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			LODOP.ADD_PRINT_HTM(645,"5%","90%",50,document.getElementById("div1").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",2);
+				
+			LODOP.ADD_PRINT_HTM(0,"5%","90%",100,document.getElementById("div3").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",0);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",2);	
+					
+			LODOP.ADD_PRINT_TEXT(583,660,135,20,"第#页/共&页");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
+			LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
+			LODOP.ADD_PRINT_IMAGE(575,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'  />");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
+			LODOP.ADD_PRINT_TEXT(583,300,196,20,"常州市计量测试技术研究所");	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_SHAPE(1,603,83,"95%",1,0,2,"#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			
+			LODOP.ADD_PRINT_BARCODE(610,"75%",120,30,"EAN128A",code);
+			LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ShowBarText",0);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",2);
 		
-		LODOP.ADD_PRINT_TEXT(1050,630,130,20,"打印日期："+printdate);
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-		LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
-		LODOP.ADD_PRINT_TEXT(1050,25,150,20,"收款人："+name2);
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
-		LODOP.ADD_PRINT_TEXT(1050,300,196,20,"常州市计量测试技术研究所");	
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
-		LODOP.ADD_PRINT_SHAPE(1,1045,23,"95%",1,0,2,"#000000");
-		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_TEXT(640,"76%",113,30,"No:"+code);
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
+			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",2);
+			
+			LODOP.ADD_PRINT_TEXT(625,"42%",140,30,"费用清单");
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",16);
+			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",2);
+			
+
+		}else{
+			LODOP.ADD_PRINT_TABLE(150,"1%","98%",900,document.getElementById("div2").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"Vorient",3);	
+			
+			LODOP.ADD_PRINT_HTM(95,"5%","90%",50,document.getElementById("div1").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+				
+			LODOP.ADD_PRINT_HTM(0,"5%","90%",100,document.getElementById("div3").innerHTML);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",0);
+			//LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);	
+					
+			LODOP.ADD_PRINT_TEXT(33,660,135,20,"第#页/共&页");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
+			LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
+			LODOP.ADD_PRINT_IMAGE(25,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'  />");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
+			LODOP.ADD_PRINT_TEXT(33,300,196,20,"常州市计量测试技术研究所");	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_SHAPE(1,53,83,"95%",1,0,2,"#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			
+			LODOP.ADD_PRINT_BARCODE(60,"75%",120,30,"EAN128A",code);
+			LODOP.SET_PRINT_STYLEA(0,"Color","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ShowBarText",0);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+		
+			LODOP.ADD_PRINT_TEXT(90,"76%",113,30,"No:"+code);
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",9);
+			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			
+			LODOP.ADD_PRINT_TEXT(75,"42%",140,30,"费用清单");
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",16);
+			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
+			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"LinkedItem",1);
+			
+			/*LODOP.ADD_PRINT_TEXT(1050,630,130,20,"打印日期："+printdate);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_STYLEA(0,"Horient",1);	
+			LODOP.ADD_PRINT_TEXT(1050,25,150,20,"收款人："+name2);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_TEXT(1050,300,196,20,"常州市计量测试技术研究所");	
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
+			LODOP.ADD_PRINT_SHAPE(1,1045,23,"95%",1,0,2,"#000000");
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	*/
+		}
 	};
 	function PreviewMytable(){
 		Mytable();
-		defaultprinter();	
-		LODOP.PREVIEW();	
+		defaultprinter(-1);	
+		LODOP.PREVIEW();
+		//LODOP.PRINT();	
 	};	
 	function PrintMytable(){
 		Mytable();
-		if(!defaultprinter()){
+		if(!defaultprinter(-1)){
 			LODOP.PREVIEW();
 			return false;	
 		}	
@@ -298,10 +404,11 @@
 	};	
 
 	document.onreadystatechange = function(){   
-        if(document.readyState=="complete")   
-        {   
-       		 PreviewMytable();
-        } 
+        if (DetailListType=="YL") {
+   			PreviewMytable();
+   		}else{
+   			PrintMytable();
+   		}
 	}
 		
 </script>

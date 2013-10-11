@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <system-config>
 	<file-server>
-		<mongodb-host>192.168.0.2</mongodb-host>
+		<mongodb-host>10.132.64.10</mongodb-host>
 		<mongodb-port>27017</mongodb-port>
 		<mongodb-dbname>czjl</mongodb-dbname>
 		<mongodb-poolsize>200</mongodb-poolsize>

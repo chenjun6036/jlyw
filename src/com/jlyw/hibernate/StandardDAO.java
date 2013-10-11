@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
  * @see com.jlyw.hibernate.Standard
  * @author MyEclipse Persistence Tools
  */
+
 public class StandardDAO extends BaseHibernateDAO {
 	private static final Logger log = LoggerFactory
 			.getLogger(StandardDAO.class);
@@ -82,8 +83,8 @@ public class StandardDAO extends BaseHibernateDAO {
 	public List findByExample(Standard instance) {
 		log.debug("finding Standard instance by example");
 		try {
-			List results = getSession()
-					.createCriteria("com.jlyw.hibernate.Standard")
+			List results = getSession().createCriteria(
+					"com.jlyw.hibernate.Standard")
 					.add(Example.create(instance)).list();
 			log.debug("find by example successful, result size: "
 					+ results.size());

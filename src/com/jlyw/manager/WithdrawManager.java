@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.hibernate.Transaction;
 
+import com.jlyw.hibernate.CommissionSheet;
+import com.jlyw.hibernate.CommissionSheetDAO;
 import com.jlyw.hibernate.Withdraw;
 import com.jlyw.hibernate.WithdrawDAO;
 import com.jlyw.util.KeyValueWithOperator;
@@ -194,6 +196,38 @@ private WithdrawDAO m_dao = new WithdrawDAO();
 		}
 		catch(Exception e){
 			return null;
+		}
+	}
+	
+	
+	/**
+	 * 退样
+	 * 更新一条Withdraw记录
+	 * @param appSpecies Withdraw对象
+	 * @return 更新成功，返回true；否则返回false
+	 */
+	public boolean withdrawUpdate(Withdraw appSpecies){
+		Transaction tran = m_dao.getSession().beginTransaction();
+		try {			
+			m_dao.update(appSpecies);
+			CommissionSheet comSheet= appSpecies.getCommissionSheet();
+			String queryString = "from Withdraw as a where a.commissionSheet.id = ? and a.commissionSheet.status != ? and a.executeResult = true";
+			List<Withdraw> withdrawList = m_dao.findByHQL(queryString, comSheet.getId(),10);//非注销
+			int number=0;
+			for(Withdraw w:withdrawList){
+				number +=w.getNumber();
+			}
+			if(number==comSheet.getQuantity()){
+				m_dao.updateByHQL("update CommissionSheet set status = 9,finishLocation = ? where id = ? ",appSpecies.getLocation(),comSheet.getId());	//置已结束状态
+			}		
+			tran.commit() ;
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			tran.rollback();
+			return false;
+		} finally {
+			m_dao.closeSession();
 		}
 	}
 }

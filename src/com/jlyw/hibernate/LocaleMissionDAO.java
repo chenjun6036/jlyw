@@ -1,6 +1,5 @@
 package com.jlyw.hibernate;
 
-import java.sql.Timestamp;
 import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
@@ -23,21 +22,6 @@ import org.slf4j.LoggerFactory;
 public class LocaleMissionDAO extends BaseHibernateDAO {
 	private static final Logger log = LoggerFactory
 			.getLogger(LocaleMissionDAO.class);
-	// property constants
-	public static final String CUSTOMER_NAME = "customerName";
-	public static final String BRIEF = "brief";
-	public static final String ADDRESS = "address";
-	public static final String ZIP_CODE = "zipCode";
-	public static final String CONTACTOR = "contactor";
-	public static final String TEL = "tel";
-	public static final String CONTACTOR_TEL = "contactorTel";
-	public static final String DEPARTMENT = "department";
-	public static final String STAFFS = "staffs";
-	public static final String STATUS = "status";
-	public static final String REMARK = "remark";
-	public static final String FEEDBACK = "feedback";
-	public static final String VEHICLE_LISENCES = "vehicleLisences";
-	public static final String CODE = "code";
 
 	public void save(LocaleMission transientInstance) {
 		log.debug("saving LocaleMission instance");
@@ -76,9 +60,9 @@ public class LocaleMissionDAO extends BaseHibernateDAO {
 	public List findByExample(LocaleMission instance) {
 		log.debug("finding LocaleMission instance by example");
 		try {
-			List results = getSession().createCriteria(
-					"com.jlyw.hibernate.LocaleMission").add(
-					Example.create(instance)).list();
+			List results = getSession()
+					.createCriteria("com.jlyw.hibernate.LocaleMission")
+					.add(Example.create(instance)).list();
 			log.debug("find by example successful, result size: "
 					+ results.size());
 			return results;
@@ -101,62 +85,6 @@ public class LocaleMissionDAO extends BaseHibernateDAO {
 			log.error("find by property name failed", re);
 			throw re;
 		}
-	}
-
-	public List findByCustomerName(Object customerName) {
-		return findByProperty(CUSTOMER_NAME, customerName);
-	}
-
-	public List findByBrief(Object brief) {
-		return findByProperty(BRIEF, brief);
-	}
-
-	public List findByAddress(Object address) {
-		return findByProperty(ADDRESS, address);
-	}
-
-	public List findByZipCode(Object zipCode) {
-		return findByProperty(ZIP_CODE, zipCode);
-	}
-
-	public List findByContactor(Object contactor) {
-		return findByProperty(CONTACTOR, contactor);
-	}
-
-	public List findByTel(Object tel) {
-		return findByProperty(TEL, tel);
-	}
-
-	public List findByContactorTel(Object contactorTel) {
-		return findByProperty(CONTACTOR_TEL, contactorTel);
-	}
-
-	public List findByDepartment(Object department) {
-		return findByProperty(DEPARTMENT, department);
-	}
-
-	public List findByStaffs(Object staffs) {
-		return findByProperty(STAFFS, staffs);
-	}
-
-	public List findByStatus(Object status) {
-		return findByProperty(STATUS, status);
-	}
-
-	public List findByRemark(Object remark) {
-		return findByProperty(REMARK, remark);
-	}
-
-	public List findByFeedback(Object feedback) {
-		return findByProperty(FEEDBACK, feedback);
-	}
-
-	public List findByVehicleLisences(Object vehicleLisences) {
-		return findByProperty(VEHICLE_LISENCES, vehicleLisences);
-	}
-
-	public List findByCode(Object code) {
-		return findByProperty(CODE, code);
 	}
 
 	public List findAll() {

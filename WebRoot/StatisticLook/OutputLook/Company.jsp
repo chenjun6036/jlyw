@@ -20,7 +20,7 @@
 		$(function(){
 		    var lastIndex;		
 			$('#result').datagrid({
-			    width:1000,
+			    width:900,
 				height:500,
 				title:'产值信息',
 //				iconCls:'icon-save',
@@ -61,7 +61,7 @@
 					handler:function(){
 						$('#StartTime').val($('#dateTimeFrom').datebox('getValue'));
 						$('#EndTime').val($('#dateTimeEnd').datebox('getValue'));
-						
+						$('#HeadName1').val($('#HeadName').combobox("getValue"));
 						$('#CommissionType1').val($('#CommissionType').val());
 						$('#formLook').submit();
 					}
@@ -87,6 +87,8 @@
 						$('#UserMX_dateTimeFrom').val($('#dateTimeFrom').datebox('getValue'));
 						$('#UserMX_dateTimeEnd').val($('#dateTimeEnd').datebox('getValue'));
 						$('#UserMX_CommissionType').val($('#CommissionType').val());
+						$('#UserMX_HeadNameId').val($('#HeadName').combobox('getValue'));
+						$('#UserMX_HeadName').val($('#HeadName').combobox('getText'));
 						$('#UserMXForm').submit();
 					}
 				},'-',{
@@ -105,6 +107,8 @@
 						$('#DeptMX_dateTimeFrom').val($('#dateTimeFrom').datebox('getValue'));
 						$('#DeptMX_dateTimeEnd').val($('#dateTimeEnd').datebox('getValue'));
 						$('#DeptMX_CommissionType').val($('#CommissionType').val());
+						$('#DeptMX_HeadNameId').val($('#HeadName').combobox('getValue'));
+						$('#DeptMX_HeadName').val($('#HeadName').combobox('getText'));
 						$('#DeptMXForm').submit();
 					}
 				},'-',{
@@ -117,6 +121,8 @@
 						$('#MX_dateTimeFrom').val($('#dateTimeFrom').datebox('getValue'));
 						$('#MX_dateTimeEnd').val($('#dateTimeEnd').datebox('getValue'));
 						$('#MX_CommissionType').val($('#CommissionType').val());
+						$('#MX_HeadNameId').val($('#HeadName').combobox('getValue'));
+						$('#MX_HeadName').val($('#HeadName').combobox('getText'));
 						$('#MXForm').submit();
 					}
 				}],
@@ -133,7 +139,7 @@
 		function query(){
 			$('#result').datagrid('loadData', {'total':0, 'rows':[]});
 			$('#result').datagrid('options').url='/jlyw/StatisticServlet.do?method=1';
-			$('#result').datagrid('options').queryParams={'StartTime':encodeURI($('#dateTimeFrom').datebox('getValue')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getValue')),'CommissionType':encodeURI($('#CommissionType').val())};
+			$('#result').datagrid('options').queryParams={'StartTime':encodeURI($('#dateTimeFrom').datebox('getValue')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getValue')),'CommissionType':encodeURI($('#CommissionType').val()),'HeadName':encodeURI($('#HeadName').combobox('getValue'))};
 			$('#result').datagrid('reload');
 		}
 		
@@ -188,6 +194,8 @@
      <input id="DeptMX_dateTimeFrom" type="hidden" name="dateTimeFrom"/>
 	 <input id="DeptMX_dateTimeEnd" type="hidden" name="dateTimeEnd"/>
 	 <input id="DeptMX_CommissionType" type="hidden" name="CommissionType"/>
+	 <input id="DeptMX_HeadNameId" type="hidden" name="HeadNameId"/>
+	 <input id="DeptMX_HeadName" type="hidden" name="HeadName"/>
 </form>
 <form id="UserMXForm" method="post" action="/jlyw/StatisticLook/OutputLook/Person.jsp" target="_blank">
 	 <input id="UserMX_userid" type="hidden" name="employeeid"/>
@@ -195,11 +203,15 @@
      <input id="UserMX_dateTimeFrom" type="hidden" name="dateTimeFrom"/>
 	 <input id="UserMX_dateTimeEnd" type="hidden" name="dateTimeEnd"/>
 	 <input id="UserMX_CommissionType" type="hidden" name="CommissionType"/>
+	 <input id="UserMX_HeadNameId" type="hidden" name="HeadNameId"/>
+	 <input id="UserMX_HeadName" type="hidden" name="HeadName"/>
 </form>
 <form id="MXForm" method="post" action="/jlyw/StatisticLook/OutputLook/CompanyMX.jsp" target="_blank">
 	 <input id="MX_dateTimeFrom" type="hidden" name="dateTimeFrom"/>
 	 <input id="MX_dateTimeEnd" type="hidden" name="dateTimeEnd"/>
 	 <input id="MX_CommissionType" type="hidden" name="CommissionType"/>
+	 <input id="MX_HeadNameId" type="hidden" name="HeadNameId"/>
+	 <input id="MX_HeadName" type="hidden" name="HeadName"/>
 </form>
 <form id="frm_export" method="post" action="/jlyw/StatisticServlet.do?method=11">
 <input id="paramsStr" name="paramsStr" type="hidden" />
@@ -217,7 +229,7 @@
 	<DIV class="JlywCenterLayoutDIV">
    <br />
 <div style="+position:relative;">
-     <div id="p" class="easyui-panel" style="width:1000px;height:125px;padding:10px;"
+     <div id="p" class="easyui-panel" style="width:900px;height:135px;padding:10px;"
 				title="统计条件" collapsible="false"  closable="false">
 			<table width="850px" id="table1">
             <form id="searchForm">
@@ -230,20 +242,17 @@
 					<td width="22%" align="left">
 						<input name="dateTimeEnd" id="dateTimeEnd" type="text" style="width:152px;"  class="easyui-datebox"  required="true">
 					</td>
-                    <td width="10%" align="right">委托形式：</td>
-					<td width="22%" align="left">
-						<select name="CommissionType" id="CommissionType" style="width:100px" required="true">
-                        	<option value="" selected="selected">全部</option>
-                            <option value="1">送样检测</option>
-                            <option value="2" >现场检测</option>
-                            <option value="3" >公正计量</option>
-                            <option value="4" >形式评价</option>
-                            <option value="5" >其它业务</option>
-                            <option value="6" >自检业务</option>
-                            <option value="7" >现场带回</option>
-                        </select>
-					</td>			
 				</tr >
+				<tr height="30px">
+					<td width="10%" align="right" >委托形式：</td>
+					<td width="22%" align="left" >
+						<select name="CommissionType" id="CommissionType" style="width:152px"><option value="" selected="selected">全部</option><option value="1">送样检测</option><option value="2" >现场检测</option><option value="3" >公正计量</option><option value="4" >形式评价</option><option value="5" >其它业务</option><option value="6" >自检业务</option><option value="7" >现场带回</option></select>
+					</td>
+					<td width="10%" align="right">台头单位：</td>
+					<td width="22%" align="left" colspan="3">
+						<input name="HeadName" id="HeadName" style="width:152px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" url="/jlyw/AddressServlet.do?method=1"/>
+					</td>
+				</tr>
 				<tr height="40px">
 				    <td width="10%" colspan="3" align="center"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="query()">查询</a></td>
 				    <td width="21%" colspan="3" align="center"><a class="easyui-linkbutton" iconCls="icon-redo" href="javascript:void(0)" onClick="reset()">重置</a></td>
@@ -253,15 +262,15 @@
 		</div>
 	  <br />
       <div style="width:900px;height:500px;">
-	     <table id="result" iconCls="icon-tip" width="1000px" height="500px" ></table>
+	     <table id="result" iconCls="icon-tip" width="900px" height="500px" ></table>
 	  </div>
-	  
 	<form id="formLook" method="post" action="/jlyw/StatisticServlet.do?method=9" target="PrintFrame" accept-charset="utf-8" >
 			
 		
 		<input name="StartTime" id="StartTime" type="hidden"/>
 		<input name="EndTime" id="EndTime" type="hidden" />
 		<input name="CommissionType" id="CommissionType1" type="hidden" />
+		<input name="HeadName" id="HeadName1" type="hidden" />
 	</form>
 	<iframe id="PrintFrame" name="PrintFrame" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>
 

@@ -225,6 +225,9 @@
 					var clickname=rowData.Name;
 					clickname="受检器具 '"+clickname+"' 的型号规格、不确定度、测量范围管理";
 					$('#p2').panel({title:clickname});
+					$('#model_info_table').datagrid('clearSelections');
+					$('#accuracy_info_table').datagrid('clearSelections');
+					$('#range_info_table').datagrid('clearSelections');
 					
 					$('#model_info_table').datagrid('options').url='/jlyw/TargetApplianceServlet.do?method=7';
 					$('#model_info_table').datagrid('options').queryParams={'TargetAppId':encodeURI(rowData.Id),'Type':encodeURI('1')};
@@ -246,7 +249,7 @@
 	 			title:'型号规格信息',
 	 			width:320,
 	 			height:300,
-				singleSelect:true, 
+				singleSelect:false, 
 				fit: false,
 				nowrap: false,
 				striped: true,
@@ -280,8 +283,9 @@
 							if(select)
 							{
 								$('#edit_model_div').window('open');
-								$('#frm_edit_model').show();
 								
+								$('#frm_edit_model').show();
+
 								$('#Model_id').val(select.Id);
 								$('#edit_model').val(select.Model);
 								$('#edit_modelEn').val(select.ModelEn);
@@ -295,25 +299,31 @@
 						text:'删除',
 						iconCls:'icon-remove',
 						handler:function(){
-							var select = $('#model_info_table').datagrid('getSelected');
-							if(select)
+							var rows = $('#model_info_table').datagrid('getSelections');
+							if(rows.length!=0)
 							{
 								$.messager.confirm('提示','确认删除吗？',function(r){
 								if(r){
-										$.ajax({
-											type:'POST',
-											url:'/jlyw/TargetApplianceServlet.do?method=10',
-											data:'id='+select.Id + '&Type=1',
-											dataType:"json",
-											success:function(data, textStatus){
-												$('#model_info_table').datagrid('reload');
-											}
-										});
+									var idStr="";
+									for(var i =0; i < rows.length; i++){
+										idStr = idStr + rows[i].Id + "|";
+									}
+									$.ajax({
+										type:'POST',
+										url:'/jlyw/TargetApplianceServlet.do?method=10',
+										data:'idStr='+idStr + '&Type=1',
+										dataType:"json",
+										success:function(data, textStatus){
+											$('#model_info_table').datagrid('reload');
+										}
+									});
+									$('#model_info_table').datagrid('clearSelections');
 								}
 								});
 							}else{
 								$.messager.alert('提示','请选择一行数据','warning');
 							}
+							
 						}
 				}]
 	 		});
@@ -321,7 +331,7 @@
 	 			title:'不确定度信息',
 	 			width:320,
 	 			height:300,
-				singleSelect:true, 
+				singleSelect:false, 
 				fit: false,
 				nowrap: false,
 				striped: true,
@@ -369,25 +379,31 @@
 						text:'删除',
 						iconCls:'icon-remove',
 						handler:function(){
-							var select = $('#accuracy_info_table').datagrid('getSelected');
-							if(select)
+							var rows = $('#accuracy_info_table').datagrid('getSelections');
+							if(rows.length!=0)
 							{
 								$.messager.confirm('提示','确认删除吗？',function(r){
 								if(r){
-										$.ajax({
-											type:'POST',
-											url:'/jlyw/TargetApplianceServlet.do?method=10',
-											data:'id='+select.Id + '&Type=2',
-											dataType:"json",
-											success:function(data, textStatus){
-												$('#accuracy_info_table').datagrid('reload');
-											}
-										});
+									var idStr="";
+									for(var i =0; i < rows.length; i++){
+										idStr = idStr + rows[i].Id + "|";
+									}
+									$.ajax({
+										type:'POST',
+										url:'/jlyw/TargetApplianceServlet.do?method=10',
+										data:'idStr='+ idStr + '&Type=2',
+										dataType:"json",
+										success:function(data, textStatus){
+											$('#accuracy_info_table').datagrid('reload');
+										}
+									});
+									$('#accuracy_info_table').datagrid('clearSelections');
 								}
 								});
 							}else{
 								$.messager.alert('提示','请选择一行数据','warning');
 							}
+							
 						}
 				}]
 	 		});
@@ -395,7 +411,7 @@
 	 			title:'测量范围信息',
 	 			width:320,
 	 			height:300,
-				singleSelect:true, 
+				singleSelect:false, 
 				fit: false,
 				nowrap: false,
 				striped: true,
@@ -442,21 +458,25 @@
 						text:'删除',
 						iconCls:'icon-remove',
 						handler:function(){
-							var select = $('#range_info_table').datagrid('getSelected');
-							if(select)
+							var rows = $('#range_info_table').datagrid('getSelections');
+							if(rows.length!=0)
 							{
 								$.messager.confirm('提示','确认删除吗？',function(r){
 								if(r){
-										$.ajax({
-											type:'POST',
-											url:'/jlyw/TargetApplianceServlet.do?method=10',
-											data:'id='+select.Id + '&Type=3',
-											dataType:"json",
-											success:function(data, textStatus){
-												$('#range_info_table').datagrid('reload');
-											}
-										});
-									
+									var idStr="";
+									for(var i =0; i < rows.length; i++){
+										idStr = idStr + rows[i].Id + "|";
+									}
+									$.ajax({
+										type:'POST',
+										url:'/jlyw/TargetApplianceServlet.do?method=10',
+										data:'idStr='+ idStr + '&Type=3',
+										dataType:"json",
+										success:function(data, textStatus){
+											$('#range_info_table').datagrid('reload');
+										}
+									});
+									$('#range_info_table').datagrid('clearSelections');
 								}
 								});
 							}else{
@@ -533,6 +553,7 @@
 		}
 		
 		function query(){
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/TargetApplianceServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'queryStandardName':encodeURI($('#queryStandardName').combobox('getValue')),'appname':encodeURI($('#nameCn').val()),'queryTestCycle':encodeURI($('#queryTestCycle').val()),'queryStatus':encodeURI($('#querystatus').combobox('getValue')),'queryPromiseDuration':encodeURI($('#queryPromiseDuration').val()),'queryCertification':encodeURI((document.getElementById('querycerother').checked?"1":"0")+(document.getElementById('querycer1').checked?"1":"0")+(document.getElementById('querycer2').checked?"1":"0")+(document.getElementById('querycer3').checked?"1":"0"))};
 			$('#table2').datagrid('reload');

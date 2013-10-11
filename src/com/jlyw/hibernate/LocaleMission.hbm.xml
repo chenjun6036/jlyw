@@ -25,13 +25,16 @@
         <many-to-one name="customer" class="com.jlyw.hibernate.Customer" fetch="select">
             <column name="CustomerId" not-null="true" />
         </many-to-one>
+        <many-to-one name="address" class="com.jlyw.hibernate.Address" fetch="select">
+            <column name="HeadNameId" />
+        </many-to-one>
         <property name="customerName" type="java.lang.String">
             <column name="CustomerName" length="200" not-null="true" />
         </property>
         <property name="brief" type="java.lang.String">
             <column name="Brief" length="100" not-null="true" />
         </property>
-        <property name="address" type="java.lang.String">
+        <property name="address_1" type="java.lang.String">
             <column name="Address" length="200" not-null="true" />
         </property>
         <property name="zipCode" type="java.lang.String">

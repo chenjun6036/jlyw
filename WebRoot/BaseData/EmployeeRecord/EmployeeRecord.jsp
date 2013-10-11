@@ -89,42 +89,13 @@
 		}
 		
 		function cancel(){
-			/*$('#Name').val("");
-			$('#userName').val("");
-			$('#Brief').val("");
-			$('#Gender').combobox('setValue',0);
-			$('#JobNum').val("");
-			$('#Birthplace').val("");
+			$('#frm_add_employee').form('clear');
 			$('#Birthday').datebox('setValue',"");
-			$('#IDNum').val("");
-			$('#PoliticsStatus').val("");
-			$('#Nation').val("");
 			$('#WorkSince').datebox('setValue',"");
 			$('#WorkHereSince').datebox('setValue',"");
-			$('#Education').val("");
 			$('#EducationDate').datebox('setValue',"");
-			$('#EducationFrom').val("");
-			$('#Degree').val("");
 			$('#DegreeDate').datebox('setValue',"");
-			$('#DegreeFrom').val("");
-			$('#JobTitle').val("");
-			$('#Specialty').val("");
-			$('#AdministrationPost').val("");
-			$('#PartyPost').val("");
 			$('#PartyDate').datebox('setValue',"");
-			$('#HomeAdd').val("");
-			$('#WorkAdd').val("");
-			$('#Tel').val("");
-			$('#Cellphone1').val("");
-			$('#Cellphone2').val("");
-			$('#Email').val("");
-			$('#ProjectTeamId').combobox('setValue',"");
-			$('#Status').combobox('setValue',0);
-			$('#Type').val("");
-			$('#Remark').val("");
-			$('#Signature').uploadifyClearQueue();
-			$('#Photograph').uploadifyClearQueue();*/
-			$('#frm_add_employee').form('clear');
 		}
 		
 		function getBrief(){
@@ -172,7 +143,7 @@
 					<td align="right">出&nbsp;生&nbsp;地：</td>
 					<td align="left"><input id="Birthplace" name="Birthplace" type="text" class="easyui-validatebox" required="true" /></td>
 					<td align="right">出&nbsp;&nbsp;&nbsp;&nbsp;生&nbsp;&nbsp;<br />年&nbsp;月&nbsp;日：</td>
-					<td align="left"><input id="Birthday" name="Birthday" type="text" class="easyui-datebox" style="width:150px" required="true" editable="false"/></td>
+					<td align="left"><input id="Birthday" name="Birthday" type="text" class="easyui-datebox" style="width:150px" required="true"  /></td>
 					<td align="right">身份证号：</td>
 					<td align="left"><input id="IDNum" name="IDNum" type="text" class="easyui-validatebox" required="true"/></td>
 				</tr>
@@ -189,9 +160,9 @@
                  </tr>
                  <tr>
                     <td align="right">参加工作&nbsp;&nbsp;<br/>日&nbsp;&nbsp;&nbsp;&nbsp;期：</td>
-                    <td align="left"><input id="WorkSince" name="WorkSince" type="text" class="easyui-datebox" style="width:150px"  required="true"  editable="false"/></td>
+                    <td align="left"><input id="WorkSince" name="WorkSince" type="text" class="easyui-datebox" style="width:150px"  required="true"  /></td>
                     <td align="right">进所工作&nbsp;&nbsp;<br/>时&nbsp;&nbsp;&nbsp;&nbsp;间：</td>
-                    <td align="left"><input id="WorkHereSince" name="WorkHereSince" type="text" class="easyui-datebox" style="width:150px" required="true" editable="false"/></td>
+                    <td align="left"><input id="WorkHereSince" name="WorkHereSince" type="text" class="easyui-datebox" style="width:150px" required="true"  /></td>
                     <td align="right">职&nbsp;&nbsp;&nbsp;&nbsp;称：</td>
                     <td align="left"><input id="JobTitle" name="JobTitle" style="width:150px" class="easyui-combobox" required="true" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=18"/></td>
                  </tr>
@@ -221,7 +192,7 @@
                 </tr>
 				<tr>
 					<td align="right">入党时间：</td>
-					<td align="left"><input id="PartyDate" name="PartyDate" type="text" class="easyui-datebox" style="width:150px" editable="false"/></td>
+					<td align="left"><input id="PartyDate" name="PartyDate" type="text" class="easyui-datebox" style="width:150px"/></td>
 					<td align="right">家庭住址：</td>
 					<td align="left"><input id="HomeAdd" name="HomeAdd" type="text" class="easyui-validatebox" required="true"/></td>
 					<td align="right">工作地点：</td>

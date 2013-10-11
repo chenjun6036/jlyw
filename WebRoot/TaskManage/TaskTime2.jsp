@@ -61,7 +61,7 @@
 
 		function doOpenUploadExcelWindow(){
 			//$("#upload_excel_window").window('open');
-			$("#file_upload").uploadify("settings", "uploader", '/jlyw/FileUploadServlet.do?method=9&CommissionSheetId='+$('#CommissionSheetId').val());
+			//$("#file_upload").uploadify("settings", "uploader", '/jlyw/FileUploadServlet.do?method=9&CommissionSheetId='+$('#CommissionSheetId').val());
 		}
 		function doCloseUploadExcelWindow(){
 			$('#file_upload').uploadify('cancel','*', false); 	//删除未上传的文件队列
@@ -70,9 +70,15 @@
 		function doUploadExcels(){
 			$('#loading-msg').text('^_^');
 			//上传
+			$("#file_upload").uploadify("settings", "uploader", '/jlyw/FileUploadServlet.do?method=9&CommissionSheetId='+$('#CommissionSheetId').val());
   			$('#file_upload').uploadify('upload','*'); 
 		}
 		
+		function detail(){
+			$('#DetailForm_Code').val($('#Code').val());
+			$('#DetailForm').submit();
+		}
+
 		function doLoadCommissionSheet(){	//查找委托单
 			$("#SearchForm").form('submit', {
 				url:'/jlyw/CommissionSheetServlet.do?method=3',
@@ -94,7 +100,7 @@
 						if(result.CommissionObj.Ness == 0){
 							$("#Ness").attr("checked",true);	//勾选
 						}			
-						doOpenUploadExcelWindow();					
+						//doOpenUploadExcelWindow();					
 					}else{
 						$.messager.alert('查询失败！',result.msg,'error');
 					}
@@ -121,6 +127,9 @@
 		</jsp:include>
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
+		<form id="DetailForm" method="post" action="/jlyw/StatisticLook/MissionLookByCommissionSheetCode.jsp" target="_blank">
+        <input id="DetailForm_Code" type="hidden" name="Code"/>
+        </form>
 	 <form id="SearchForm" method="post" >
 		<input id="Code" type="hidden" name="Code" value="<%= request.getParameter("Code")==null?"":request.getParameter("Code") %>" style="width:150px;" />
 		<input id="Pwd" type="hidden" name="Pwd" value="<%= request.getParameter("Pwd")==null?"":request.getParameter("Pwd") %>" style="width:150px;" />
@@ -155,6 +164,7 @@
 			</table>
 		</div>
 		<div region="south" border="false" style="text-align:right;height:30px;line-height:30px;">
+			<a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onclick="detail()" >查看委托单附件等详细信息</a>
 			<a class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="doUploadExcels()" >确认提交</a>
 			<a class="easyui-linkbutton" iconCls="icon-cancel" href="javascript:void(0)" onclick="doCloseUploadExcelWindow()">取消</a>
 		</div>

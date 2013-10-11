@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>反馈信息管理</title>
+<title>分配投诉处理任务</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -234,6 +234,8 @@
 						iconCls:'icon-save',
 						handler:function(){
 								ShowWaitingDlg("正在导出，请稍后......");
+								$('#table1').datagrid('options').queryParams={'Status':encodeURI('1'),'CustomerName':encodeURI($('#customerName1').combobox('getValue')),'StartDate':encodeURI($('#startDate1').datebox('getValue')),'EndDate':encodeURI($('#endDate1').datebox('getValue'))};
+								
 							$('#par').val(JSON.stringify($('#table1').datagrid('options').queryParams));
 							$('#frm_export').form('submit',{
 								success:function(data){

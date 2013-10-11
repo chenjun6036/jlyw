@@ -167,11 +167,76 @@ public class WordUtil {
 						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getFax()==null?"":dwAddress.getFax());
 					}
 				}
+				//台头单位对应的计量授权声明（中文）
+				for(int i = 0; i < docParser.getQNameCount("DwAuthorizationStatement"); i++){
+					bookMarkKey = docParser.getAttribute("DwAuthorizationStatement", "tagName", i);
+					if(bookMarkKey != null && bookMarkKey.length() > 0){
+						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getAuthorizationStatement()==null?"":dwAddress.getAuthorizationStatement());
+					}
+				}
+				//台头单位对应的计量授权声明（英文）
+				for(int i = 0; i < docParser.getQNameCount("DwAuthorizationStatementEn"); i++){
+					bookMarkKey = docParser.getAttribute("DwAuthorizationStatementEn", "tagName", i);
+					if(bookMarkKey != null && bookMarkKey.length() > 0){
+						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getAuthorizationStatementEn()==null?"":dwAddress.getAuthorizationStatementEn());
+					}
+				}
+				//台头单位对应的实验室认可声明（中文）
+				for(int i = 0; i < docParser.getQNameCount("DwCNASStatement"); i++){
+					bookMarkKey = docParser.getAttribute("DwCNASStatement", "tagName", i);
+					if(bookMarkKey != null && bookMarkKey.length() > 0){
+						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getCnasstatement()==null?"":dwAddress.getCnasstatement());
+					}
+				}
+				//台头单位对应的实验室认可声明（英文）
+				for(int i = 0; i < docParser.getQNameCount("DwCNASStatementEn"); i++){
+					bookMarkKey = docParser.getAttribute("DwCNASStatementEn", "tagName", i);
+					if(bookMarkKey != null && bookMarkKey.length() > 0){
+						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getCnasstatementEn()==null?"":dwAddress.getCnasstatementEn());
+					}
+				}
+				//台头单位对应的溯源声明（中文）
+				for(int i = 0; i < docParser.getQNameCount("DwStandardStatement"); i++){
+					bookMarkKey = docParser.getAttribute("DwStandardStatement", "tagName", i);
+					if(bookMarkKey != null && bookMarkKey.length() > 0){
+						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getStandardStatement()==null?"":dwAddress.getStandardStatement());
+					}
+				}
+				//台头单位对应的溯源声明（英文）
+				for(int i = 0; i < docParser.getQNameCount("DwStandardStatementEn"); i++){
+					bookMarkKey = docParser.getAttribute("DwStandardStatementEn", "tagName", i);
+					if(bookMarkKey != null && bookMarkKey.length() > 0){
+						docWriter.setValueByBookMark(bookMarkKey, dwAddress.getStandardStatementEn()==null?"":dwAddress.getStandardStatementEn());
+					}
+				}
 				
 				/***********            安全码信息                   ************/
 				String securityCode = LetterUtil.getCertificateSecurityCode(certificate.getCertificateCode(), oRecord.getWorkDate());
-				String securityCodeP1 = securityCode.substring(0, securityCode.length()>16?16:securityCode.length());
-				String securityCodeP2 = securityCode.length()<=16?"":securityCode.substring(16, securityCode.length());
+				StringBuilder strBuilder = new StringBuilder(securityCode);
+				if(strBuilder.toString().length()>28){
+					strBuilder.insert(28," ");
+				}
+				if(strBuilder.toString().length()>24){
+					strBuilder.insert(24," ");
+				}
+				if(strBuilder.toString().length()>20){
+					strBuilder.insert(20," ");
+				}
+				if(strBuilder.toString().length()>16){
+					strBuilder.insert(16," ");
+				}
+				if(strBuilder.toString().length()>12){
+					strBuilder.insert(12," ");
+				}
+				if(strBuilder.toString().length()>8){
+					strBuilder.insert(8," ");
+				}
+				if(strBuilder.toString().length()>4){
+					strBuilder.insert(4," ");
+				}
+				String securityCodeP1 =strBuilder.toString();
+				//String securityCodeP1 = securityCode.substring(0, securityCode.length()>16?16:securityCode.length());
+				//String securityCodeP2 = securityCode.length()<=16?"":securityCode.substring(16, securityCode.length());
 				//安全码（SecurityCodeA1：前一半；SecurityCodeA2：后一半）
 				for(int i = 0; i < docParser.getQNameCount("SecurityCodeP1"); i++){
 					bookMarkKey = docParser.getAttribute("SecurityCodeP1", "tagName", i);
@@ -179,13 +244,13 @@ public class WordUtil {
 						docWriter.setValueByBookMark(bookMarkKey, securityCodeP1);
 					}
 				}
-				for(int i = 0; i < docParser.getQNameCount("SecurityCodeP2"); i++){
-					bookMarkKey = docParser.getAttribute("SecurityCodeP2", "tagName", i);
-					if(bookMarkKey != null && bookMarkKey.length() > 0){
-						docWriter.setValueByBookMark(bookMarkKey, securityCodeP2);
-					}
-				}
-				
+//				for(int i = 0; i < docParser.getQNameCount("SecurityCodeP2"); i++){
+//					bookMarkKey = docParser.getAttribute("SecurityCodeP2", "tagName", i);
+//					if(bookMarkKey != null && bookMarkKey.length() > 0){
+//						docWriter.setValueByBookMark(bookMarkKey, securityCodeP2);
+//					}
+//				}
+//				
 				//证书编号
 				for(int i = 0; i < docParser.getQNameCount("CertificateCode"); i++){
 					bookMarkKey = docParser.getAttribute("CertificateCode", "tagName", i);
@@ -215,7 +280,7 @@ public class WordUtil {
 				for(int i = 0; i < docParser.getQNameCount("Customer"); i++){
 					bookMarkKey = docParser.getAttribute("Customer", "tagName", i);
 					if(bookMarkKey != null && bookMarkKey.length() > 0){
-						docWriter.setValueByBookMark(bookMarkKey, cSheet.getCustomerName());
+						docWriter.setValueByBookMark(bookMarkKey, cSheet.getSampleFrom()==null?cSheet.getCustomerName():cSheet.getSampleFrom());
 					}
 				}
 				//送检单位（地址）
@@ -727,7 +792,7 @@ public class WordUtil {
 				}
 				
 				java.sql.Timestamp sampleRecvDate = null;	//样品接收时间
-				if(cSheet.getCommissionType() == 2){	//现场检测：现场检测的时间
+				if(cSheet.getCommissionType() == 2&&cSheet.getLocaleCommissionDate()!=null){	//现场检测：现场检测的时间
 					sampleRecvDate = cSheet.getLocaleCommissionDate();
 				}else{
 					sampleRecvDate = cSheet.getCommissionDate();
@@ -907,8 +972,31 @@ public class WordUtil {
 				
 				/***********            安全码信息                   ************/
 				String securityCode = LetterUtil.getCertificateSecurityCode(certificate.getCertificateCode(), oRecord.getWorkDate());
-				String securityCodeP1 = securityCode.substring(0, securityCode.length()>16?16:securityCode.length());
-				String securityCodeP2 = securityCode.length()<=16?"":securityCode.substring(16, securityCode.length());
+				StringBuilder strBuilder = new StringBuilder(securityCode);
+				if(strBuilder.toString().length()>28){
+					strBuilder.insert(28," ");
+				}
+				if(strBuilder.toString().length()>24){
+					strBuilder.insert(24," ");
+				}
+				if(strBuilder.toString().length()>20){
+					strBuilder.insert(20," ");
+				}
+				if(strBuilder.toString().length()>16){
+					strBuilder.insert(16," ");
+				}
+				if(strBuilder.toString().length()>12){
+					strBuilder.insert(12," ");
+				}
+				if(strBuilder.toString().length()>8){
+					strBuilder.insert(8," ");
+				}
+				if(strBuilder.toString().length()>4){
+					strBuilder.insert(4," ");
+				}
+				String securityCodeP1 =strBuilder.toString();
+				//String securityCodeP1 = securityCode.substring(0, securityCode.length()>16?16:securityCode.length());
+				//String securityCodeP2 = securityCode.length()<=16?"":securityCode.substring(16, securityCode.length());
 				//安全码（SecurityCodeA1：前一半；SecurityCodeA2：后一半）
 				for(int i = 0; i < docParser.getQNameCount("SecurityCodeP1"); i++){
 					bookMarkKey = docParser.getAttribute("SecurityCodeP1", "tagName", i);
@@ -916,12 +1004,12 @@ public class WordUtil {
 						docWriter.setValueByBookMark(bookMarkKey, securityCodeP1);
 					}
 				}
-				for(int i = 0; i < docParser.getQNameCount("SecurityCodeP2"); i++){
-					bookMarkKey = docParser.getAttribute("SecurityCodeP2", "tagName", i);
-					if(bookMarkKey != null && bookMarkKey.length() > 0){
-						docWriter.setValueByBookMark(bookMarkKey, securityCodeP2);
-					}
-				}
+//				for(int i = 0; i < docParser.getQNameCount("SecurityCodeP2"); i++){
+//					bookMarkKey = docParser.getAttribute("SecurityCodeP2", "tagName", i);
+//					if(bookMarkKey != null && bookMarkKey.length() > 0){
+//						docWriter.setValueByBookMark(bookMarkKey, securityCodeP2);
+//					}
+//				}
 				
 				//证书编号
 				for(int i = 0; i < docParser.getQNameCount("CertificateCode"); i++){
@@ -952,7 +1040,8 @@ public class WordUtil {
 				for(int i = 0; i < docParser.getQNameCount("Customer"); i++){
 					bookMarkKey = docParser.getAttribute("Customer", "tagName", i);
 					if(bookMarkKey != null && bookMarkKey.length() > 0){
-						docWriter.setValueByBookMark(bookMarkKey, oRecord.getCommissionSheet().getCustomerName());
+						CommissionSheet cSheet = oRecord.getCommissionSheet();
+						docWriter.setValueByBookMark(bookMarkKey, cSheet.getSampleFrom()==null?cSheet.getCustomerName():cSheet.getSampleFrom());
 					}
 				}
 				//送检单位（地址）
@@ -1058,7 +1147,8 @@ public class WordUtil {
 				if(authorizerPicPath != null && authorizerPicPath.length() > 0){
 					bookMarkKey = docParser.getAttribute("Authorizer", "tagName");
 					if(bookMarkKey != null && bookMarkKey.length() > 0){
-						docWriter.addPicByBookMark(bookMarkKey, authorizerPicPath);
+						//docWriter.addPicByBookMark(bookMarkKey, authorizerPicPath);
+						docWriter.replacePicByBookMark(bookMarkKey, authorizerPicPath);
 					}
 				}
 				
@@ -1079,7 +1169,8 @@ public class WordUtil {
 				if(checkerPicPath != null && checkerPicPath.length() > 0){
 					bookMarkKey = docParser.getAttribute("Checker", "tagName");
 					if(bookMarkKey != null && bookMarkKey.length() > 0){
-						docWriter.addPicByBookMark(bookMarkKey, checkerPicPath);
+						//docWriter.addPicByBookMark(bookMarkKey, checkerPicPath);
+						docWriter.replacePicByBookMark(bookMarkKey, checkerPicPath);
 					}
 				}
 				

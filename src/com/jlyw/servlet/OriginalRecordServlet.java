@@ -25,6 +25,7 @@ import com.jlyw.hibernate.Certificate;
 import com.jlyw.hibernate.CommissionSheet;
 import com.jlyw.hibernate.OriginalRecord;
 import com.jlyw.hibernate.OriginalRecordExcel;
+import com.jlyw.hibernate.RemakeCertificate;
 import com.jlyw.hibernate.Specification;
 import com.jlyw.hibernate.Standard;
 import com.jlyw.hibernate.StandardAppliance;
@@ -39,6 +40,7 @@ import com.jlyw.manager.InformationManager;
 import com.jlyw.manager.OriginalRecordExcelManager;
 import com.jlyw.manager.OriginalRecordManager;
 import com.jlyw.manager.QualificationManager;
+import com.jlyw.manager.RemakeCertificateManager;
 import com.jlyw.manager.SpecificationManager;
 import com.jlyw.manager.StandardApplianceManager;
 import com.jlyw.manager.StandardManager;
@@ -65,6 +67,7 @@ import com.jlyw.util.mongodbService.MongoPattern;
  */
 public class OriginalRecordServlet extends HttpServlet {
 	private static Log log = LogFactory.getLog(OriginalRecordServlet.class);
+	private static Object MutexObjectOfNewCommissionSheet = new Object();		//用于互斥访问
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -266,6 +269,9 @@ public class OriginalRecordServlet extends HttpServlet {
 				if(CommissionSheetId == null || CommissionSheetId.trim().length() == 0){
 					throw new Exception("委托单未指定！");
 				}
+				if (ApplianceCode != null && ApplianceCode.length() >= 50) {
+					throw new Exception("出厂编号长度不能超过50！");
+				}
 				if(Quantity == null || Quantity.trim().length() == 0){
 					throw new Exception("器具数量为空！");
 				}
@@ -418,7 +424,7 @@ public class OriginalRecordServlet extends HttpServlet {
 				if(WorkDate != null && WorkDate.trim().length() > 0){
 					Date workDate = new Date(DateTimeFormatUtil.DateFormat.parse(WorkDate).getTime());
 					o.setWorkDate(workDate);	//检校日期
-					if(tApp.getTestCycle() != null){	//计算最大的有效日期
+					if(tApp.getTestCycle() != null && !o.getWorkType().equals("校准")){	//计算最大的有效日期
 						Calendar calendar = Calendar.getInstance();
 						calendar.setTime(workDate);
 						calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) + tApp.getTestCycle());
@@ -434,11 +440,11 @@ public class OriginalRecordServlet extends HttpServlet {
 				o.setRepairLevel(RepairLevel);	//修理级别
 				if(RepairLevel != null && RepairLevel.trim().length() > 0){	//修理费
 					if(RepairLevel.equalsIgnoreCase("小")){
-						o.setRepairFee(tApp.getSrfee() * NumberInt);
+						o.setRepairFee(tApp.getSrfee());
 					}else if(RepairLevel.equalsIgnoreCase("中")){
-						o.setRepairFee(tApp.getMrfee() * NumberInt);
+						o.setRepairFee(tApp.getMrfee());
 					}else if(RepairLevel.equalsIgnoreCase("大")){
-						o.setRepairFee(tApp.getLrfee() * NumberInt);
+						o.setRepairFee(tApp.getLrfee());
 					}
 				}
 				if(CarFee != null && CarFee.length() > 0){
@@ -467,7 +473,7 @@ public class OriginalRecordServlet extends HttpServlet {
 				o.setAbnormalDesc(AbnormalDesc);	//异常情况说明
 				
 				o.setMandatory(Mandatory);
-				o.setManageCode(MandatoryCode);
+				o.setMandatoryCode(MandatoryCode);
 				o.setMandatoryPurpose(MandatoryPurpose);
 				o.setMandatoryItemType(MandatoryItemType);
 				o.setMandatoryType(MandatoryType);
@@ -568,7 +574,8 @@ public class OriginalRecordServlet extends HttpServlet {
 				if(oRecord == null){
 					throw new Exception("找不到指定的原始记录！");
 				}
-				if(!oRecord.getSysUserByStaffId().getId().equals(((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId())){
+				SysUser user = (SysUser) req.getSession().getAttribute(SystemCfgUtil.SessionAttrNameLoginUser);
+				if(!(oRecord.getSysUserByStaffId().getId().equals(((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId())||(user.getName().equals("系统管理员")))){
 					throw new Exception("您不是该原始记录的检校人员，不能注销该原始记录！");
 				}
 				
@@ -797,6 +804,7 @@ public class OriginalRecordServlet extends HttpServlet {
 					rows = Integer.parseInt(req.getParameter("rows").toString());
 				String CommissionNumber = req.getParameter("CommissionNumber");	//委托单号
 				String CustomerName = req.getParameter("CustomerName");	//委托单位
+				String type=req.getParameter("type");	//type=1代表是重新编制证书的核验列表
 				
 				List<KeyValueWithOperator> condList = new ArrayList<KeyValueWithOperator>();	//查询条件
 				if(CommissionNumber != null && CommissionNumber.trim().length() > 0){
@@ -807,7 +815,13 @@ public class OriginalRecordServlet extends HttpServlet {
 					CustomerName = URLDecoder.decode(CustomerName.trim(), "UTF-8"); //解决jquery传递中文乱码问题
 					condList.add(new KeyValueWithOperator("commissionSheet.customerName", "%"+CustomerName+"%", "like"));
 				}
-				condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));	//委托单尚未完工或注销的
+				if(type==null){
+					condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));	//委托单尚未完工或注销的
+				}else{
+					condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, ">="));	//委托单尚未注销的
+					condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiZhuXiao, "<"));	//委托单尚未注销的
+				}
+				
 				condList.add(new KeyValueWithOperator("status", 1, "<>"));	//原始记录尚未注销的
 				condList.add(new KeyValueWithOperator("verifyAndAuthorize.sysUserByVerifierId.id", ((SysUser)req.getSession().getAttribute("LOGIN_USER")).getId(), "="));  //审核人
 				condList.add(new KeyValueWithOperator("verifyAndAuthorize.verifyTime", null, "is null"));	//尚未审核的
@@ -817,6 +831,7 @@ public class OriginalRecordServlet extends HttpServlet {
 				
 				int total = oRecordMgr.getTotalCount(condList);
 				List<OriginalRecord> oRetList = oRecordMgr.findPagedAllBySort(page, rows, "verifyAndAuthorize.createTime", true, condList);
+				RemakeCertificateManager remakeMgr = new RemakeCertificateManager();
 				for(OriginalRecord o : oRetList){
 					JSONObject jsonObj = new JSONObject();
 					
@@ -895,7 +910,14 @@ public class OriginalRecordServlet extends HttpServlet {
 					jsonObj.put("AuthorizeTime", (o.getVerifyAndAuthorize()==null || o.getVerifyAndAuthorize().getAuthorizeTime()==null)?"":DateTimeFormatUtil.DateTimeFormat.format(o.getVerifyAndAuthorize().getAuthorizeTime()));	//批准时间
 					jsonObj.put("AuthorizeResult", (o.getVerifyAndAuthorize()==null || o.getVerifyAndAuthorize().getAuthorizeResult() == null)?"":o.getVerifyAndAuthorize().getAuthorizeResult()?"1":"0");	//批准结果
 					jsonObj.put("AuthorizeRemark", (o.getVerifyAndAuthorize()==null || o.getVerifyAndAuthorize().getAuthorizeRemark()==null)?"":o.getVerifyAndAuthorize().getAuthorizeRemark());	//批准备注
-
+					if(type!=null){//重新编制证书的相关信息
+						List<RemakeCertificate> rcList = (new RemakeCertificateManager()).findByVarProperty(new KeyValueWithOperator("originalRecord.id", o.getId(), "="));
+						if(rcList==null||rcList.size()==0){
+							jsonObj.put("CreateRemark", "");
+						}else{
+							jsonObj.put("CreateRemark", rcList.get(0).getCreateRemark());
+						}
+					}
 					
 					jsonArray.put(jsonObj);
 				}
@@ -995,6 +1017,8 @@ public class OriginalRecordServlet extends HttpServlet {
 					rows = Integer.parseInt(req.getParameter("rows").toString());
 				String CommissionNumber = req.getParameter("CommissionNumber");	//委托单号
 				String CustomerName = req.getParameter("CustomerName");	//委托单位
+				String type=req.getParameter("type");	//type=1代表是重新编制证书的核验列表
+				
 				String OwnTask = req.getParameter("OwnTask");	//为true表示返回当前用户的任务列表，为false表示返回所有用户的任务列表 
 				if(OwnTask == null){
 					OwnTask = "true";
@@ -1009,7 +1033,12 @@ public class OriginalRecordServlet extends HttpServlet {
 					CustomerName = URLDecoder.decode(CustomerName.trim(), "UTF-8"); //解决jquery传递中文乱码问题
 					condList.add(new KeyValueWithOperator("commissionSheet.customerName", "%"+CustomerName+"%", "like"));
 				}
-				condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));	//委托单尚未完工或注销的
+				if(type==null){
+					condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, "<"));	//委托单尚未完工或注销的
+				}else{
+					condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, ">="));	//委托单尚未注销的
+					condList.add(new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiZhuXiao, "<"));	//委托单尚未注销的
+				}
 				condList.add(new KeyValueWithOperator("status", 1, "<>"));	//原始记录尚未注销的
 				condList.add(new KeyValueWithOperator("verifyAndAuthorize.verifyResult", true, "=")); //已通过核验的
 				condList.add(new KeyValueWithOperator("taskAssign.status", 1, "<>"));	//任务分配尚未注销的
@@ -1022,9 +1051,10 @@ public class OriginalRecordServlet extends HttpServlet {
 				
 				int total = oRecordMgr.getTotalCount(condList);
 				List<OriginalRecord> oRetList = oRecordMgr.findPagedAllBySort(page, rows, "verifyAndAuthorize.createTime", true, condList);
+				RemakeCertificateManager remakeMgr = new RemakeCertificateManager();
 				for(OriginalRecord o : oRetList){
 					JSONObject jsonObj = new JSONObject();
-					
+										
 					jsonObj.put("CommissionCode", o.getCommissionSheet().getCode());
 					jsonObj.put("CommissionPwd", o.getCommissionSheet().getPwd());
 //					jsonObj.put("ApplianceName", o.getCommissionSheet().getApplianceName());	//器具名称
@@ -1101,6 +1131,14 @@ public class OriginalRecordServlet extends HttpServlet {
 					jsonObj.put("AuthorizeResult", (o.getVerifyAndAuthorize()==null || o.getVerifyAndAuthorize().getAuthorizeResult() == null)?"":o.getVerifyAndAuthorize().getAuthorizeResult()?"1":"0");	//批准结果
 					jsonObj.put("AuthorizeRemark", (o.getVerifyAndAuthorize()==null || o.getVerifyAndAuthorize().getAuthorizeRemark()==null)?"":o.getVerifyAndAuthorize().getAuthorizeRemark());	//批准备注
 					jsonObj.put("IsAuthBgRuning", (o.getVerifyAndAuthorize()!=null&&o.getVerifyAndAuthorize().getIsAuthBgRuning()!=null&&o.getVerifyAndAuthorize().getIsAuthBgRuning())?true:false);	//是否后台生成
+					if(type!=null){//重新编制证书的相关信息
+						List<RemakeCertificate> rcList = (new RemakeCertificateManager()).findByVarProperty(new KeyValueWithOperator("originalRecord.id", o.getId(), "="));
+						if(rcList==null||rcList.size()==0){
+							jsonObj.put("CreateRemark", "");
+						}else{
+							jsonObj.put("CreateRemark", rcList.get(0).getCreateRemark());
+						}
+					}
 					
 					jsonArray.put(jsonObj);
 				}
@@ -1238,14 +1276,23 @@ public class OriginalRecordServlet extends HttpServlet {
 				KeyValueWithOperator k1 = new KeyValueWithOperator("status", 1, "<>");
 				KeyValueWithOperator k2 = new KeyValueWithOperator("certificate.pdf", null, "is not null");
 				KeyValueWithOperator k3 = new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, ">=");
+				String hqlQueryString_FinishQuantity = "select model from OriginalRecord as model where model.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录(签字已通过且不是正在后台执行)
+				List<OriginalRecord> fQuantityList;
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
 				JSONArray cerArray = new JSONArray();
 				for(String CommissionId : CommissionIdArray){
-					List<OriginalRecord> oRecList = oRecordMgr.findByPropertyBySort("id", true, 
+					List<OriginalRecord> oRecList = oRecordMgr.findByPropertyBySort("certificate.certificateCode", true, 
 							k1, k2, k3,
 							new KeyValueWithOperator("commissionSheet.id", Integer.parseInt(CommissionId), "="));
 					for(OriginalRecord o : oRecList){
 						if(o.getCertificate().getPdf().length() > 0){
 							JSONObject obj = new JSONObject();
+							fQuantityList = new ArrayList<OriginalRecord>();
+							fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, o.getId(), true);	//
+							if(fQuantityList==null||fQuantityList.size()==0){
+								throw new Exception("证书"+o.getCertificate().getCertificateCode()+"未完成核验签字");
+							}		
+							//fQuantityList=null;
 							obj.put("FileId", o.getCertificate().getPdf());
 							cerArray.put(obj);
 						}
@@ -1286,13 +1333,22 @@ public class OriginalRecordServlet extends HttpServlet {
 				KeyValueWithOperator k2 = new KeyValueWithOperator("certificate.pdf", null, "is not null");
 				KeyValueWithOperator k3 = new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, ">=");
 				JSONArray cerArray = new JSONArray();
+				String hqlQueryString_FinishQuantity = "select model from OriginalRecord as model where model.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录(签字已通过且不是正在后台执行)
+				List<OriginalRecord> fQuantityList1;
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
 				for(String OriginalRecordId : OriginalRecordIdArray){
-					List<OriginalRecord> oRecList = oRecordMgr.findByPropertyBySort("id", true, 
+					List<OriginalRecord> oRecList = oRecordMgr.findByPropertyBySort("certificate.certificateCode", true, 
 							k1, k2, k3,
 							new KeyValueWithOperator("id", Integer.parseInt(OriginalRecordId), "="));
 					for(OriginalRecord o : oRecList){
 						if(o.getCertificate().getPdf().length() > 0){
 							JSONObject obj = new JSONObject();
+							fQuantityList1 = new ArrayList<OriginalRecord>();
+							fQuantityList1 = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, Integer.parseInt(OriginalRecordId), true);	//
+							if(fQuantityList1==null||fQuantityList1.size()==0){
+								throw new Exception("证书"+o.getCertificate().getCertificateCode()+"未完成核验签字");
+							}		
+							//fQuantityList1=null;
 							obj.put("FileId", o.getCertificate().getPdf());
 							cerArray.put(obj);
 						}
@@ -1388,54 +1444,56 @@ public class OriginalRecordServlet extends HttpServlet {
 				String []oRecordIdArray = OriginalRecordIds.split(";");
 				VerifyAndAuthorizeManager vMgr = new VerifyAndAuthorizeManager();
 				int doneSuccess = 0;
-				for(String oRecordId : oRecordIdArray){
-					if(oRecordId != null && oRecordId.length() > 0){
-						OriginalRecord o = oRecordMgr.findById(Integer.parseInt(oRecordId));
-						if(o == null || o.getStatus() == 1 || o.getVerifyAndAuthorize() == null){
-							continue;
-						}
-						if(o.getCertificate() == null || o.getCertificate().getPdf() == null){
-							continue;
-						}
-						VerifyAndAuthorize v = o.getVerifyAndAuthorize();
-						if(v.getVerifyTime() == null || !v.getVerifyResult()){
-							continue;
-						}
-						if(v.getAuthorizeTime() != null && v.getIsAuthBgRuning() == null){
-							continue;
-						}
-						if(!v.getOriginalRecordExcel().getId().equals(o.getOriginalRecordExcel().getId()) ||
-								!v.getCertificate().getId().equals(o.getCertificate().getId())){
-							continue;
-						}
-						if(FromAuthByCode != null && FromAuthByCode.equals("true")){	//代签
-							//无操作
-						}else{	//授权签字人执行签名
-							if(loginUser == null || loginUser.getId().equals(o.getSysUserByStaffId().getId())){
+				
+				synchronized(MutexObjectOfNewCommissionSheet) {
+					for(String oRecordId : oRecordIdArray){
+						if(oRecordId != null && oRecordId.length() > 0){
+							OriginalRecord o = oRecordMgr.findById(Integer.parseInt(oRecordId));
+							if(o == null || o.getStatus() == 1 || o.getVerifyAndAuthorize() == null){
 								continue;
 							}
+							if(o.getCertificate() == null || o.getCertificate().getPdf() == null){
+								continue;
+							}
+							VerifyAndAuthorize v = o.getVerifyAndAuthorize();
+							if(v.getVerifyTime() == null || !v.getVerifyResult()){
+								continue;
+							}
+							if(v.getAuthorizeTime() != null && v.getIsAuthBgRuning() == null){
+								continue;
+							}
+							if(!v.getOriginalRecordExcel().getId().equals(o.getOriginalRecordExcel().getId()) ||
+									!v.getCertificate().getId().equals(o.getCertificate().getId())){
+								continue;
+							}
+							if(FromAuthByCode != null && FromAuthByCode.equals("true")){	//代签
+								//无操作
+							}else{	//授权签字人执行签名
+								if(loginUser == null ){
+									continue;
+								}
+							}
+							
+							if(Integer.parseInt(ExecutorResult)>0){	//审核通过：后台执行签字
+								v.setAuthorizeRemark(ExecuteMsg);
+								v.setAuthorizeResult(Integer.parseInt(ExecutorResult)>0?true:false);
+								v.setAuthorizeTime(new Timestamp(System.currentTimeMillis()));
+								v.setSysUserByAuthorizeExecutorId(loginUser);
+								AuthBackgroundRuningManager.AddAnAuthBackgroundRuning(v);
+							}else{	//审核不通过
+								v.setAuthorizeRemark(ExecuteMsg);
+								v.setAuthorizeResult(Integer.parseInt(ExecutorResult)>0?true:false);
+								v.setAuthorizeTime(new Timestamp(System.currentTimeMillis()));
+								v.setSysUserByAuthorizeExecutorId(loginUser);
+								v.setIsAuthBgRuning(null);
+								vMgr.update(v);
+							}
+							doneSuccess ++;
 						}
-						
-						if(Integer.parseInt(ExecutorResult)>0){	//审核通过：后台执行签字
-							v.setAuthorizeRemark(ExecuteMsg);
-							v.setAuthorizeResult(Integer.parseInt(ExecutorResult)>0?true:false);
-							v.setAuthorizeTime(new Timestamp(System.currentTimeMillis()));
-							v.setSysUserByAuthorizeExecutorId(loginUser);
-							AuthBackgroundRuningManager.AddAnAuthBackgroundRuning(v);
-						}else{	//审核不通过
-							v.setAuthorizeRemark(ExecuteMsg);
-							v.setAuthorizeResult(Integer.parseInt(ExecutorResult)>0?true:false);
-							v.setAuthorizeTime(new Timestamp(System.currentTimeMillis()));
-							v.setSysUserByAuthorizeExecutorId(loginUser);
-							v.setIsAuthBgRuning(null);
-							vMgr.update(v);
-						}
-						doneSuccess ++;
 					}
+					retJSON12.put("IsOK", true);
+					retJSON12.put("msg", String.format("成功授权签字 '%d'份证书！", doneSuccess));
 				}
-				retJSON12.put("IsOK", true);
-				retJSON12.put("msg", String.format("成功授权签字 '%d'份证书！", doneSuccess));
-				
 			}catch (Exception e){
 				try {
 					retJSON12.put("IsOK", false);
@@ -1581,6 +1639,8 @@ public class OriginalRecordServlet extends HttpServlet {
 					footerObj.put("RepairFee", RepairFee);
 					footerObj.put("MaterialFee", MaterialFee);
 					footerObj.put("CarFee", CarFee);
+					footerObj.put("AuthorizerId", "");	//批准人（签字人）
+					footerObj.put("AuthorizerName","");
 					footerObj.put("DebugFee", DebugFee);
 					footerObj.put("OtherFee", OtherFee);
 					footerObj.put("TotalFee", TotalFee);
@@ -1814,6 +1874,9 @@ public class OriginalRecordServlet extends HttpServlet {
 				KeyValueWithOperator k2 = new KeyValueWithOperator("certificate.pdf", null, "is not null");
 				KeyValueWithOperator k3 = new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, ">=");
 				KeyValueWithOperator k4 = new KeyValueWithOperator("taskAssign.status", 1, "<>");
+				String hqlQueryString_FinishQuantity = "select model from OriginalRecord as model where model.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录(签字已通过且不是正在后台执行)
+				List<OriginalRecord> fQuantityList;
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
 				JSONArray cerArray = new JSONArray();
 				for(String CommissionId : CommissionIdArray){
 					List<OriginalRecord> oRecList = oRecordMgr.findByPropertyBySort("id", true, 
@@ -1824,6 +1887,12 @@ public class OriginalRecordServlet extends HttpServlet {
 								o.getOriginalRecordExcel().getPdf() != null && 
 								o.getOriginalRecordExcel().getPdf().length() > 0){
 							JSONObject obj = new JSONObject();
+							fQuantityList = new ArrayList<OriginalRecord>();
+							fQuantityList = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, o.getId(), true);	//
+							if(fQuantityList==null||fQuantityList.size()==0){
+								throw new Exception("证书"+o.getCertificate().getCertificateCode()+"未完成核验签字");
+							}		
+							//fQuantityList=null;
 							obj.put("FileId", o.getOriginalRecordExcel().getPdf());
 							cerArray.put(obj);
 						}
@@ -1863,6 +1932,9 @@ public class OriginalRecordServlet extends HttpServlet {
 				KeyValueWithOperator k2 = new KeyValueWithOperator("certificate.pdf", null, "is not null");
 				KeyValueWithOperator k3 = new KeyValueWithOperator("commissionSheet.status", FlagUtil.CommissionSheetStatus.Status_YiWanGong, ">=");
 				KeyValueWithOperator k4 = new KeyValueWithOperator("taskAssign.status", 1, "<>");
+				String hqlQueryString_FinishQuantity = "select model from OriginalRecord as model where model.id=? and model.status<>1 and model.taskAssign.status<>1 and model.verifyAndAuthorize.authorizeResult=? and model.verifyAndAuthorize.isAuthBgRuning is null ";	//签字通过的原始记录(签字已通过且不是正在后台执行)
+				List<OriginalRecord> fQuantityList1;
+				CommissionSheetManager cSheetMgr = new CommissionSheetManager();
 				JSONArray cerArray = new JSONArray();
 				for(String OriginalRecordId : OriginalRecordIdArray){
 					List<OriginalRecord> oRecList = oRecordMgr.findByPropertyBySort("id", true, 
@@ -1873,6 +1945,12 @@ public class OriginalRecordServlet extends HttpServlet {
 								o.getOriginalRecordExcel().getPdf() != null && 
 								o.getOriginalRecordExcel().getPdf().length() > 0){
 							JSONObject obj = new JSONObject();
+							fQuantityList1 = new ArrayList<OriginalRecord>();
+							fQuantityList1 = cSheetMgr.findByHQL(hqlQueryString_FinishQuantity, o.getId(), true);	//
+							if(fQuantityList1==null||fQuantityList1.size()==0){
+								throw new Exception("证书"+o.getCertificate().getCertificateCode()+"未完成核验签字");
+							}		
+							//fQuantityList1=null;
 							obj.put("FileId", o.getOriginalRecordExcel().getPdf());
 							cerArray.put(obj);
 						}
@@ -2150,6 +2228,63 @@ public class OriginalRecordServlet extends HttpServlet {
 				resp.setContentType("text/json;charset=utf-8");
 				resp.getWriter().write(retJSON20.toString());
 			}
+			break;
+		case 21://查询一个委托单的历史原始记录
+			JSONObject retJSON21 = new JSONObject();
+			try {
+				String CommissionId = req.getParameter("CommissionSheetId");	//委托单Id
+				
+				if(CommissionId == null || CommissionId.trim().length() == 0){
+					throw new Exception("委托单未指定！");
+				}
+				OriginalRecordExcel oriReExcel = new OriginalRecordExcel();
+				OriginalRecordExcelManager oriReExcelMgr = new OriginalRecordExcelManager();
+				List<OriginalRecordExcel> oRecRetExcelList = oriReExcelMgr.findByPropertyBySort("originalRecord.id", true,
+						new KeyValueWithOperator("commissionSheet.id", Integer.parseInt(CommissionId), "="));
+				CertificateManager cerMgr = new CertificateManager();
+				List<Certificate> cerList = cerMgr.findByHQL("from Certificate as model where model.commissionSheet.id = ? and model.pdf is not null", Integer.parseInt(CommissionId));
+				
+				if(oRecRetExcelList != null && oRecRetExcelList.size() > 0){
+					JSONArray jsonArray = new JSONArray();
+					for(OriginalRecordExcel o:oRecRetExcelList){
+						JSONObject jsonObj = new JSONObject();
+						jsonObj.put("CertificateCode", o.getCertificateCode()==null?"":o.getCertificateCode());	//证书编号
+						jsonObj.put("ExcelCode", o.getCode()+o.getVersion());		//EXCEL code
+						jsonObj.put("Pdf", o.getPdf()==null?"":o.getPdf());	//Excel PDF
+						jsonObj.put("Doc", o.getDoc()==null?"":o.getDoc());	//Excel Doc
+						for(int i = 0; i < cerList.size(); i++){
+							if(cerList.get(i).getCertificateCode().equals(o.getCertificateCode())){
+								jsonObj.put("CertificatePdf", cerList.get(i).getPdf());
+								jsonObj.put("CertificateDoc", cerList.get(i).getDoc());
+								break;
+							}
+						}
+						jsonObj.put("LastEditTime", DateTimeFormatUtil.DateTimeFormat.format(o.getLastEditTime()));	//
+						
+						jsonArray.put(jsonObj);
+					}
+					
+					retJSON21.put("total", oRecRetExcelList.size());
+					retJSON21.put("rows", jsonArray);
+				}else{
+					throw new Exception("");
+				}
+			} catch (Exception e){
+				try {
+					retJSON21.put("total", 0);
+					retJSON21.put("rows", new JSONArray());
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in OriginalRecordServlet-->case 21", e);
+				}else{
+					log.error("error in OriginalRecordServlet-->case 21", e);
+				}
+			}finally{
+				resp.setContentType("text/json;charset=utf-8");
+				resp.getWriter().write(retJSON21.toString());
+			}	
 			break;
 		}
 	}

@@ -6,7 +6,8 @@
 		String dateTimeFrom = request.getParameter("dateTimeFrom");
 		String dateTimeEnd = request.getParameter("dateTimeEnd");
 		String CommissionType = request.getParameter("CommissionType");
-		
+		String headnameid = request.getParameter("HeadNameid");
+		String headname = request.getParameter("HeadName");
 %> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -47,7 +48,7 @@
 							}
 						}
 					}
-					$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+					$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 				}
 			});
 			if('<%=dateTimeFrom%>'!='null'&&'<%=dateTimeEnd%>'!='null'){
@@ -62,7 +63,10 @@
 				} 
 				$('#employeeid').combobox('loadData',[{id:'<%=employeeid%>',name:'<%=employeename%>',jobNum:''}]);
 				$('#employeeid').combobox('setValue','<%=employeeid%>');
-			 
+				if('<%=headnameid%>'!='null'){
+				 	$('#HeadName').combobox('loadData',[{id:'<%=headnameid%>',headname:'<%=headname%>'}]);
+					$('#HeadName').combobox('setValue','<%=headnameid%>');		
+				} 
 			}   
 			
 		});
@@ -134,7 +138,7 @@
 			
 			if('<%=dateTimeFrom%>'!='null'&&'<%=dateTimeEnd%>'!='null'){
 				 $('#result').datagrid('options').url='/jlyw/StatisticServlet.do?method=2';
-				 $('#result').datagrid('options').queryParams={'EmployeeId':encodeURI('<%=employeeid%>'),'StartTime':encodeURI($('#dateTimeFrom').datebox('getValue')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getValue')),'CommissionType':$('#CommissionType').val()};
+				 $('#result').datagrid('options').queryParams={'EmployeeId':encodeURI('<%=employeeid%>'),'StartTime':encodeURI($('#dateTimeFrom').datebox('getValue')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getValue')),'CommissionType':$('#CommissionType').val(),'HeadName':encodeURI($('#HeadName').combobox('getValue'))};
 				 $('#result').datagrid('reload');
 				 
 				 $('#EmployeeId1').val(encodeURI('<%=employeeid%>'));
@@ -147,7 +151,7 @@
 				return false ;
 			 $('#result').datagrid('loadData', {'total':0, 'rows':[]});
 			 $('#result').datagrid('options').url='/jlyw/StatisticServlet.do?method=2';
-			 $('#result').datagrid('options').queryParams={'EmployeeId':encodeURI($('#employeeid').combobox('getValue')),'StartTime':encodeURI($('#dateTimeFrom').datebox('getValue')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getValue')),'CommissionType':$('#CommissionType').val()};
+			 $('#result').datagrid('options').queryParams={'EmployeeId':encodeURI($('#employeeid').combobox('getValue')),'StartTime':encodeURI($('#dateTimeFrom').datebox('getValue')),'EndTime':encodeURI($('#dateTimeEnd').datebox('getValue')),'CommissionType':$('#CommissionType').val(),'HeadName':encodeURI($('#HeadName').combobox('getValue'))};
 			 $('#result').datagrid('reload');
 		}
 		
@@ -192,6 +196,7 @@
 			$('#EndTime').val($('#dateTimeEnd').datebox('getValue'));
 			
 			$('#CommissionType1').val($('#CommissionType').val());
+			$('#HeadName1').val($('#HeadName').combobox("getValue"));
 			
 			$('#formLook').submit();
 		}
@@ -246,27 +251,42 @@
 			<form id="searchForm">
 			<table width="850px" id="table1">
 				<tr >
-					<td colspan="2" align="right" >
-					 员&nbsp;&nbsp;工：<input id="employeeid" class="easyui-combobox" name="employee" url="" style="width:150px;" valueField="id" textField="name" panelHeight="150px" required="true" />&nbsp;
-				     起始时间：<input name="date1" id="dateTimeFrom" type="text" style="width:152px;"  class="easyui-datebox" required="true" >&nbsp;
-					 结束时间：<input name="date2" id="dateTimeEnd" type="text" style="width:152px;"  class="easyui-datebox" required="true" >&nbsp;
-					 委托形式：<select name="CommissionType" id="CommissionType" style="width:100px"><option value="" selected="selected">全部</option><option value="1">送样检测</option><option value="2" >现场检测</option><option value="3" >公正计量</option><option value="4" >形式评价</option><option value="5" >其它业务</option><option value="6" >自检业务</option><option value="7" >现场带回</option></select>&nbsp;
+					<td width="10%" align="right" >员&nbsp;&nbsp;工：</td>
+					<td width="22%" align="left" >
+						<input id="employeeid" class="easyui-combobox" name="employee" url="" style="width:150px;" valueField="id" textField="name" panelHeight="150px"  required="true"/>
 					</td>
-					
+					<td width="10%" align="right">起始时间：</td>
+					<td width="22%" align="left">
+						<input name="date1" id="dateTimeFrom" type="text" style="width:152px;"  class="easyui-datebox" required="true"/>
+					</td>
+					<td width="10%" align="right">结束时间：</td>
+					<td width="22%" align="left">
+						<input name="date2" id="dateTimeEnd" type="text" style="width:152px;"  class="easyui-datebox"  required="true"/>
+					</td>
 				</tr >
+				<tr height="30px">
+					<td width="10%" align="right" >委托形式：</td>
+					<td width="22%" align="left" >
+						<select name="CommissionType" id="CommissionType" style="width:152px"><option value="" selected="selected">全部</option><option value="1">送样检测</option><option value="2" >现场检测</option><option value="3" >公正计量</option><option value="4" >形式评价</option><option value="5" >其它业务</option><option value="6" >自检业务</option><option value="7" >现场带回</option></select>
+					</td>
+					<td width="10%" align="right">台头单位：</td>
+					<td width="22%" align="left" colspan="3">
+						<input name="HeadName" id="HeadName" style="width:152px" class="easyui-combobox" valueField="id" textField="headname" panelHeight="auto" url="/jlyw/AddressServlet.do?method=1"/>
+					</td>
+				</tr>
 				<tr height="40px">
-				    <td width="10%"  align="center"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="query()">查询</a></td>
-				    <td width="21%"  align="center"><a class="easyui-linkbutton" iconCls="icon-redo" href="javascript:void(0)" onClick="reset()">重置</a></td>
+				    <td width="10%" colspan="3" align="center"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="query()">查询</a></td>
+				    <td width="21%" colspan="3" align="center"><a class="easyui-linkbutton" iconCls="icon-redo" href="javascript:void(0)" onClick="reset()">重置</a></td>
 				</tr>
 				
 		</table>
 		</form>
 		</div>
-		
+		<br/>
       <div style="width:900px;height:400px;">
 	     <table id="result" iconCls="icon-tip" width="900px" height="400px" ></table>
 	  </div>
-	 
+	 <br/>
 	  <div id="p1" class="easyui-panel" style="width:900px;padding:10px;"
 				title="统计结果" collapsible="false"  closable="false" align="center">
                 <label id="statistics"></label>
@@ -302,6 +322,7 @@
 		<input name="StartTime" id="StartTime" type="hidden"/>
 		<input name="EndTime" id="EndTime" type="hidden" />
 		<input name="CommissionType" id="CommissionType1" type="hidden" />
+		<input name="HeadNameid" id="HeadName1" type="hidden" />
 	</form>
 	<iframe id="PrintFrame" name="PrintFrame" src="" frameborder="0" width="1px" height="1px" scrolling="no"></iframe>
 

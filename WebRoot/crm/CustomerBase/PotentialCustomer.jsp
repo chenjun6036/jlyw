@@ -34,7 +34,7 @@
 			},
 			onLoadSuccess: function () 
 			{
-			$('#insideContactorId').combobox('clear');
+				$('#insideContactorId').combobox('clear');
 				var data=$('#insideContactorId').combobox('getData');
 				$('#insideContactorId').combobox('select',data[0].ContactorId);
 				
@@ -68,9 +68,11 @@
 		   	success:function(data){
 		   		var result = eval("("+data+")");
 		   		$.messager.alert('提示',result.msg,'info');
-		   		if(result.IsOK){
+		   		if(result.IsOk){
+		   			$('#frm_add_customer').form('clear');
+		   			$("#AddPotentialToFormer").dialog('close');
 		   			$('#table1').datagrid('reload');
-		   			cancel();
+		   			
 		   			}
 		   		}
 		});
@@ -82,9 +84,9 @@
 		
 	$(function(){
 	$('#cla').combobox({
-		multiple:'true'
+		multiple:true
 		});
-	$('#frm_add_customer').form('validate');
+	//$('#frm_add_customer').form('validate');
 	});
 		
 	function check()
@@ -134,7 +136,6 @@ $(function(){
 	$("#customerName1").combobox({
 		valueField:'name',
 		textField:'name',
-		required:true,
 		onSelect:function(record){
 				$("#address").val(record.address);
 				$('#customerId1').val(record.id);
@@ -173,23 +174,8 @@ $(function(){
 		$('#table1').datagrid('options').queryParams={'CustomerName':encodeURI($('#customerName1').combobox('getValue')),'CustomerId':/* encodeURI */($('#customerId1').val())};
 		$('#table1').datagrid('reload');
 	}
-
-		function cancel1(){
-			$('#frm_add_conInfo').form('clear');
-		}
 		
-		function Add(){
-			$('#frm_add_conInfo').form('submit',{
-				url: '/jlyw/CrmServlet.do?method=7',
-				onSubmit:function(){ return $('#frm_add_conInfo').form('validate');},
-		   		success:function(data){
-		   			var result = eval("("+data+")");
-		   				$.messager.alert('提示',result.msg,'info');
-		   				if(result.IsOK)
-		   					cancel();
-		   		 }
-			});
-		}
+
 
 		$(function(){
 		$('#table1').datagrid({
@@ -199,7 +185,7 @@ $(function(){
                 nowrap: false,
                 striped: true,
                 singleSelect:true, 
-				url:'/jlyw/CrmServlet.do?method=15',
+				url:'/jlyw/CrmServlet.do?method=14',
 				//sortName:'Id',
 				sortOrder:'asc',
 				remoteSort: false,
@@ -261,6 +247,7 @@ $(function(){
 						}
 					}},
 					{field:'Industry',title:'行业',width:80,align:'center'},
+					
 					{field:'IndustryId',title:'ID',width:80,align:'center',hidden:true},
 					{field:'RegionId',title:'Id',width:80,align:'center',hidden:true},
 					{field:'Brief1',title:'',width:80,align:'center',hidden:true},
@@ -331,16 +318,17 @@ $(function(){
 			});
 			
 		function Sub(){
-		closed();
 			$('#form2').form('submit',{
 				url: '/jlyw/CrmServlet.do?method=16',
 				onSubmit:function(){return $('#form2').form('validate');},
 		   		success:function(data){
 		   			var result = eval("("+data+")");
 		   			$.messager.alert('提示',result.msg,'info');
-		   			if(result.IsOK)
+		   			if(result.IsOk)
+		   			{
 		   				closed();
-		   			$('#table1').datagrid('reload');		
+		   			$('#table1').datagrid('reload');	
+		   			}	
 		   		}
 			});
 		}
@@ -351,7 +339,6 @@ $(function(){
 			//$('#table1').datagrid('reload');
 		}
 		function del(){
-			closed();
 			$('#ff1').form('submit',{
 				url:'/jlyw/CrmServlet.do?method=17',
 				onSubmit:function(){
@@ -360,13 +347,15 @@ $(function(){
 				success:function(data){
 					var result = eval("(" + data + ")");
 			   		$.messager.alert('提示',result.msg,'info');
-			   		if(result.IsOK)
+			   		if(result.IsOk)
+			   		{
 			   		 closed();
-			   		$('#table1').datagrid('reload');	
+			   		$('#table1').datagrid('reload');
+			   		}	
 				}
 			});
 		}
-		function cancel()
+		function cancel1()
 		{
 		$('#query1').form('clear');
 		}
@@ -407,8 +396,8 @@ $(function(){
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
 		<form id="frm_export" method="post" action="/jlyw/CrmExportServlet.do?method=3">
-<input id="par" name="Par" type="hidden"/>
-</form>
+		<input id="par" name="Par" type="hidden"/>
+		</form>
 <form id="frm_down" method="post" action="/jlyw/Export.do?" target="_self">
 <input id="filePath" name="filePath" type="hidden" />
 </form>
@@ -559,11 +548,8 @@ $(function(){
 		<tr height="30px">
 			<td align="right">单位类型：</td>
 			<td align="left" >
-				<select id="customerType" name="CustomerType" class="easyui-combobox" style="width:145px" required="true" panelHeight="auto" editable="false">
-					<option value='0'>国有企业</option>
-					<option value='1'>外资企业</option>
-					<option value='2'>中外合资企业</option>
-					<option value='3'>民营企业</option>
+				<select id="customerType" name="CustomerType" class="easyui-combobox" style="width:145px" required="true" panelHeight="auto" valueField="id" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=29" editable="false">
+					
 				</select>
 			</td>
 			<td align="right">单位地址：</td>
@@ -578,19 +564,20 @@ $(function(){
 			<td align="right">邮&nbsp;&nbsp;&nbsp;&nbsp;编：</td>
 			<td align="left" ><input id="zcd" name="ZipCode" type="text" class="easyui-validatebox" required="true"/></td>
 		</tr>
+		<tr height="3px;"><td align="left" colspan="5" >-------------------------------------------------------------------------------------------------------------</td>
+		</tr>
 		<tr  height="30px">
 			<td align="right">内部联系人：</td>
 			<td align="left">
-				<select id="insideContactorId" name="InsideContactorId" panelHeight="auto" class="easyui-combobox" style="width:145px" required="true" editable="false" ></select>
+				<select id="insideContactorId" name="InsideContactorId" panelHeight="auto" class="easyui-combobox" style="width:145px"  editable="false" ></select>
 			</td>
 			<td align="right">角&nbsp;&nbsp;&nbsp;&nbsp;色：</td>
-			<td align="left" ><select style="width:145px" id="role" name="Role" type="text" class="easyui-combobox" required="true" panelHeight="auto">
+			<td align="left" ><select style="width:145px" id="role" name="Role" type="text" class="easyui-combobox"  panelHeight="auto">
 			<option value="1" selected="selected">A</option>
 			<option value="2">B</option>
 			</select></td>
 		</tr>
-		<tr height="3px;"><td align="left" colspan="5" >-------------------------------------------------------------------------------------------------------------</td>
-		</tr>
+		
 		<tr height="30px">
 			
 			<td align="right">单位代码：</td>
@@ -654,9 +641,7 @@ $(function(){
 		<option value="5">5级</option>
 		<option value="6">6级</option>
 		<option value="7">7级</option>
-		<option value="8">8级</option>
-		<option value="9">9级</option>
-		<option value="10">10级</option>
+
 		
 		</select>
 		

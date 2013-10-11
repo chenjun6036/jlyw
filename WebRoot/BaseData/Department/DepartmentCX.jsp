@@ -318,6 +318,7 @@
 		
 		
 		function query(){
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/DepartmentServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'DepartmentName':encodeURI($('#name').val())};
 			$('#table2').datagrid('reload');

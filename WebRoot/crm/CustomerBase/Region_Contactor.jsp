@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>委托单位信息查询</title>
+<title>内部联系人区域分配信息查询</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -114,12 +114,12 @@ $(function(){
 			$(function(){
 			$('#region_contactors').datagrid({
 				title:'联系人信息',
-				width:800,
+				width:700,
 				height:500,
                 nowrap: false,
                 striped: true,
                 singleSelect:true, 
-				url:'',
+				url:'/jlyw/CustomerContactorServlet.do?method=6',
 				//sortName:'Id',
 				//sortOrder:'desc',
 				remoteSort: false,
@@ -134,12 +134,31 @@ $(function(){
 					{field:'RegionId',title:'地区ID',width:100,align:'center'},
 					//{field:'Address',title:'地址',width:100,align:'center'},
 					{field:'Name',title:'联系人姓名',width:100,align:'center'},
-					{field:'ContactorId',title:'联系人Id',width:100,align:'center'},
+					{field:'ContactorId',title:'联系人Id',hidden:true},
 					{field:'JobNum',title:'联系人工号',width:100,align:'center'},
-					{field:'Id',title:'Id',width:80,align:'center'},
-					{field:'Status',title:'状态',width:80,align:'center'},
+					{field:'Id',hidden:true},
+					{field:'Status',title:'状态',width:80,align:'center',
+					formatter:function(value,rowData,rowIndex){
+							if(value == 1 || value == '1')
+							{
+								rowData['Status']=1;
+							    return "已分配";
+							}
+							else if(value == 2 || value == '2')
+							{
+								rowData['Status']=2;
+								return "未分配";
+							}
+							else if(value == 3 || value == '3')
+							{
+								rowData['Status']=3;
+								return "已过期";
+							}
+							
+						}
+					},
 				
-					{field:'LastEditTime',title:'最后使用时间',width:160,align:'center'}
+					{field:'LastEditTime',title:'最后使用时间',width:150,align:'center'}
 				]],
 				pagination:true,
 				rownumbers:true,
@@ -191,9 +210,6 @@ $(function(){
 					}
 				} */]
 			});
-			
-			//$('#queryname').combobox('setValue',"");
-			//$('#queryInsideContactor').combobox('setValue',"");
 		});
 
 		function query()
@@ -213,6 +229,7 @@ $(function(){
 		   		var result = eval("("+data+")");
 		   		$.messager.alert('提示',result.msg,'info');
 		   		if(result.IsOk){
+		   			$("#add_region_contactors").dialog('close');
 		   			$('#region_contactors').datagrid('reload');
 		   			//cancel();
 		   			}
@@ -228,6 +245,7 @@ $(function(){
 		   		var result = eval("("+data+")");
 		   		$.messager.alert('提示',result.msg,'info');
 		   		if(result.IsOk){
+		   		$("#edit_region_contactors").dialog('close');
 		   			$('#region_contactors').datagrid('reload');
 		   			//cancel();
 		   			}
@@ -235,6 +253,12 @@ $(function(){
 		});
 	}
 	
+	function closed()
+	{
+	$("#edit_region_contactors").dialog('close');
+	$("#add_region_contactors").dialog('close');
+	
+	}
 	function LogOffContactor(){
 			$('#frm_log_off_con').form('submit',{
 				url: '/jlyw/CustomerContactorServlet.do?method=3',
@@ -262,7 +286,7 @@ $(function(){
 <DIV class="JlywMainLayoutDiv">
 	<DIV class="JlywTopLayoutDIV">
 		<jsp:include page="/Common/Title.jsp" flush="true">
-			<jsp:param name="TitleName" value="委托单位信息查询管理" />
+			<jsp:param name="TitleName" value="内部联系人区域分配信息查询管理" />
 		</jsp:include>
 	</DIV>
 	<DIV class="JlywCenterLayoutDIV">
@@ -271,7 +295,7 @@ $(function(){
 			<br />
 			<br />
 			<form id="query">
-			<table id="table1" class="easyui-panel" title="查询" style="width:900px;">
+			<table id="table1" class="easyui-panel" title="查询" style="width:700px;">
             
 				<tr>
 					<td align="right" >地区：</td>
@@ -280,6 +304,7 @@ $(function(){
 				  	<td align="left"><input class="easyui-validate" id="name0" name="Name0"></input></td>
                     <td align="right">状态：</td>
 				  	<td align="left"><select id="status0" name="Status0" class="easyui-combobox">
+				  	<option value="">==显示全部==</option>
 				  	<option value="1">已分配</option>
 				  	<option value="2">未分配</option>
 				  	<option value="3">已过期</option>
@@ -293,23 +318,23 @@ $(function(){
 			</table> </form>
 		</div>
         <br/>
-        <table id="region_contactors" style="height:500px; width:900px"></table>
+        <table id="region_contactors" style="height:500px; width:700px"></table>
         </div>
-    <div id="add_region_contactors" class="easyui-window" title="新增" style="padding: 10px;width: 500px;height: 200px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
+    <div id="add_region_contactors" class="easyui-window" title="新增" style="padding: 10px;width: 400px;height: 150px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="frm_add" method="post">
 				<div>
 					<table  iconCls="icon-edit" >
 					<tr>
 					<td align="right" >地区：</td>
-				  	<td align="left"><input  class="easyui-combobox"  id="rigionId1" name="RegionId1" valueField="id" textField="name" panelHeight="auto" mode="remote" url="/jlyw/RegionServlet.do?method=2" required="true" editable="false"></input></td>
+				  	<td align="left"><input style="width:100px;"  class="easyui-combobox"  id="rigionId1" name="RegionId1" valueField="id" textField="name" panelHeight="auto" mode="remote" url="/jlyw/RegionServlet.do?method=2" required="true" editable="false"></input></td>
 					</tr>
 						<tr>
 						
 						<td align="right">姓名：</td>
-							<td align="left"><input id="insideContactor1" name="InsideContactor1" class="easyui-combobox" required="true"/></td>
+							<td align="left"><input style="width:100px;" id="insideContactor1" name="InsideContactor1" class="easyui-combobox" required="true"/></td>
 							<td align="right">工&nbsp;&nbsp;&nbsp;&nbsp;号：
 													
-							<td align="left" ><input id="jobNum1" name="JobNum1" class="easyui-validatebox" required="true"/></td>
+							<td align="left" ><input style="width:100px;" id="jobNum1" name="JobNum1" class="easyui-validatebox" required="true"/></td>
 							
                         </tr>
                       	
@@ -324,28 +349,29 @@ $(function(){
 			</form>
 		</div>
 		
-		<div id="edit_region_contactors" class="easyui-window" title="新增" style="padding: 10px;width: 450px;height: 200px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
+		<div id="edit_region_contactors" class="easyui-window" title="新增" style="padding: 10px;width: 400px;height: 150px;" iconCls="icon-edit" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
 			<form id="frm_edit" method="post">
 				<div>
 					<table  iconCls="icon-edit" >
 					<tr>
-						<td align="right" ><input type="hidden" name="Id"></input>地区：</td>
-				  		<td align="left"><input  class="easyui-combobox"  id="rigionId" name="RegionId" valueField="id" textField="name" panelHeight="auto" mode="remote" url="/jlyw/RegionServlet.do?method=2" required="true" editable="false"></input></td>
-						<td align="right">姓名：</td>
-						<td align="left"><input id="name" name="Name" class="easyui-combobox" required="true"/>
+						<td align="right" ><input type="hidden" name="Id"></input>地&nbsp;&nbsp;&nbsp;&nbsp;区：</td>
+				  		<td align="left"><input style="width:100px;"  class="easyui-combobox"  id="rigionId" name="RegionId" valueField="id" textField="name" panelHeight="auto" mode="remote" url="/jlyw/RegionServlet.do?method=2" required="true" editable="false"></input></td>
+						<td align="right">姓&nbsp;&nbsp;&nbsp;&nbsp;名：</td>
+						<td align="left"><input style="width:100px;" id="name" name="Name" class="easyui-combobox" required="true"/>
 						<input id="conId" name="ConId" type="hidden"/>
 						</td>
 					</tr>
                     <tr>
                         	<td align="right">工&nbsp;&nbsp;&nbsp;&nbsp;号：
-                        	<td align="left" ><input id="jobNum" name="JobNum" class="easyui-validatebox" required="true"/></td>
-                        	<td align="right">状&nbsp;&nbsp;&nbsp;&nbsp;态：
+                        	<td align="left" ><input style="width:95px;" id="jobNum" name="JobNum" class="easyui-validatebox" required="true"/></td>
+                        	<td><input id="status" name="Status" type="hidden"/></td>
+                        	<!-- <td align="right">状&nbsp;&nbsp;&nbsp;&nbsp;态：
                         	<td align="left" >
-                        	<select id="status" name="Status" class="easyui-combobox" required="true">
+                        	<select style="width:100px;" id="status" name="Status" class="easyui-combobox" required="true">
                         	<option value="1">已分配</option>
 				  			<option value="2">未分配</option>
 				  			<option value="3">已过期</option>
-                        	</select></td>
+                        	</select></td> -->
 					</tr>
 
 						<tr height="50px">	

@@ -223,7 +223,7 @@
 		function query()
 		{
 			$('#privilege').datagrid('options').url='/jlyw/PrivilegeServlet.do?method=2';
-			$('#privilege').datagrid('options').queryParams={'queryname':encodeURI($('#privilegename').combobox('getValue'))};
+			$('#privilege').datagrid('options').queryParams={'queryname':encodeURI($('#privilegename').combobox('getText'))};
 			$('#privilege').datagrid('clearSelections');
 			$('#privilege').datagrid('reload');
 		}
@@ -260,7 +260,7 @@
 		function query1()
 		{
 			$('#roles').datagrid('options').url='/jlyw/RoleServlet.do?method=2';
-			$('#roles').datagrid('options').queryParams={'queryname':encodeURI($('#rolename').combobox('getValue'))};
+			$('#roles').datagrid('options').queryParams={'queryname':encodeURI($('#rolename').combobox('getText'))};
 			$('#roles').datagrid('clearSelections');
 			$('#roles').datagrid('reload');
 		}

@@ -20,7 +20,7 @@
 		nowDate = new Date();
 			//$("#DateFrom").datebox('setValue', nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate()));
 		$("#DateEnd").datebox('setValue', nowDate.getFullYear()+'-'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'-'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate()));
-		$("#FeeAssignForm-FeeAllotee").combobox({
+		/*$("#FeeAssignForm-FeeAllotee").combobox({
 			valueField:'name',
 			textField:'name',
 			onSelect:function(record){
@@ -36,6 +36,24 @@
 					}
 				}
 				$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+			}
+		});*/
+		$('#Customer').combobox({
+		//	url:'/jlyw/CustomerServlet.do?method=6',
+			valueField:'id',
+			textField:'name',
+			onSelect:function(){},
+			onChange:function(newValue, oldValue){
+				var allData = $(this).combobox('getData');
+				if(allData != null && allData.length > 0){
+					for(var i=0; i<allData.length; i++)
+					{
+						if(newValue==allData[i].id){
+							return false;
+						}
+					}
+				}
+				$(this).combobox('reload','/jlyw/CustomerServlet.do?method=6&CustomerName='+newValue);
 			}
 		});
 		var lastIndex;
@@ -184,7 +202,7 @@
 //			width:800,
 			nowrap: false,
 			striped: true,
-			
+			showFooter:true,
 			url:'',
 			remoteSort: false,
 			idField:'CertificateFeeAssignId',
@@ -197,6 +215,7 @@
 					{field:'CertificateCode',title:'证书编号',width:70,sortable:true,align:'center'},
 					{field:'CustomerName',title:'单位名称',width:120,sortable:true,align:'center'},
 					{field:'ApplianceName',title:'器具名称',width:70,sortable:true,align:'center'},
+					{field:'ReportType',title:'证书类型',width:70,sortable:true,align:'center'},
 					{field:'FeeAlloteeName',title:'姓名',width:70,sortable:true,align:'center'},
 					{field:'Quantity',title:'数量',width:40,sortable:true,align:'center'},
 					{field:'OldTotalFee',title:'总费用',width:50,align:'center'},
@@ -577,6 +596,7 @@ function commissionSheetTotalFeeChange(preValueObj, newValueObj)//委托单总费用改
 				if(result.IsOK){
 					$.messager.alert('提示！','费用修改成功！','info');
 					$('#certificateFee').val(JSON.stringify($('#fee_assign_table').datagrid('getRows')));
+					$('#fee_assign_table').datagrid('reload');
 				}else{
 					$.messager.alert('提交失败！',result.msg,'error');
 				}

@@ -38,30 +38,36 @@
 		<form id="SearchForm" method="post" >
 			<table width="850px" id="table1">
 				<tr>
-					<td width="9%" align="right" >委托单编号：</td>
-					<td width="18%" align="left" >
+					<td  align="right" >委托单编号：</td>
+					<td  align="left" >
 				  <input id="SearchForm-Code" class="easyui-validatebox" name="Code" style="width:152px;" value="" />				  </td>
 
-					<td width="9%" align="right">委托单位：</td>
-					<td width="19%" align="left">
+					<td  align="right">委托单位：</td>
+					<td  align="left">
 				  <select name="CustomerName" id="CustomerName" style="width:152px"></select>				  </td>
 					
-					<td width="11%"  align="right">委托单状态：</td>
+					<td   align="right">委托单状态：</td>
 					
-				    <td width="13%"  align="left"><select name="CommissionStatus" id="CommissionStatus" style="width:100px">
+				    <td   align="left"><select name="CommissionStatus" id="CommissionStatus" style="width:100px">
 							<option value="" >全部</option>
 							<option value="1" selected="selected">未完工</option>
 							<option value="2">已完工</option>
+							<option value="4">已结账</option>
+							<option value="9">已结束</option>
+
 					</select>	</td>
-				    <td width="21%"  align="center"></td>
+				    <td   align="center"></td>
+				    <td  align="center"></td>
 				</tr>
 				<tr>
 					<td align="right">开始时间：</td>
 					<td align="left"><input class="easyui-datebox" id="History_BeginDate" type="text" style="width:152px" /></td>
 					<td align="right">截止时间：</td>
 					<td align="left"><input class="easyui-datebox" id="History_EndDate" type="text" style="width:152px" /></td>
-					<td colspan="2" align="right"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="doLoadHistoryCommission()">查询</a>&nbsp;&nbsp;</td>
-					<td align=""></td>
+					<td align="right">现场单号：</td>
+					<td align="left"><input id="localeCode" type="text" style="width:152px" /></td>
+					<td align="center"><a class="easyui-linkbutton" iconCls="icon-search" href="javascript:void(0)" onClick="doLoadHistoryCommission()">查询</a></td>
+					<td align="center"><a class="easyui-linkbutton" iconCls="icon-reload" href="javascript:void(0)" onClick="queryreset()">重置</a></td>
 				</tr>
 		</table>
 		</form>
@@ -70,11 +76,11 @@
 			<table width="850px" style="margin-top:20px" >
 				<tr >
 				     <td width="12%" align="right" ><!--<label>器具名称：</label>--><input type="hidden" id="History_ApplianceName" value="" style="width:120px" />完工存放位置:</td>
-					 <td width="25%" align="left" ><input name="FinishLocation" id="FinishLocation" type="text" value="" />
+					 <td width="25%" align="left" ><input name="FinishLocation" id="FinishLocation" type="text" value="" class="easyui-validatebox" required="true" /><input name="FinishComCode" id="FinishComCode" type="hidden" value="" />
 					 </td>
 					
 					<td  align="left" style="padding-top:10px;">
-	                     <a id="btn_confirm" class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="doConfirm()" >完工确认</a> 
+	                     <a id="btn_confirm" class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="doConfirm()" >完工确认</a>  <a id="btn_updateLocation" class="easyui-linkbutton" iconCls="icon-edit" href="javascript:void(0)" onclick="updateLocation()" >完工存放位置修改</a> 
 					</td>
 					
 				</tr>
@@ -83,7 +89,7 @@
 		</div> 
 	<table id="table6" style="height:300px; width:1000px">
 	</table>
-	<form method="post" action="/jlyw/TaskManage/CompleteConfirm.jsp" id="doConfirmForm">
+	<form method="post" action="/jlyw/TaskManage/CompleteConfirm.jsp" id="doConfirmForm" target="_blank">
 		<input type="hidden" name="Code" id="Code" value="" />
 		<input type="hidden" name="Pwd" id="Pwd" value="" />
 	</form>
@@ -91,7 +97,7 @@
 		<table cellpadding="0" cellspacing="0" style="width:100%">
 			<tr>
 				<td style="padding-left:2px">
-					<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-print" name="print" onclick="PrintCertificate()" title="打印委托单证书">打印证书</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-search" name="print" onclick="doLook()" title="查看委托单明细">查看委托单明细</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-print" name="print" onclick="PrintOriginalRecordExcel()" title="打印委托单的原始记录">打印原始记录</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-print" name="print" onclick="PrintLabel()" title="打印合格证标签">打印合格证标签</a>
+					<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-print" name="print" onclick="PrintCertificate()" title="打印委托单证书">打印证书</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-search" name="print" onclick="doLook()" title="查看委托单明细">查看委托单明细</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-print" name="print" onclick="PrintOriginalRecordExcel()" title="打印委托单的原始记录">打印原始记录</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-print" name="print" onclick="PrintLabel()" title="打印合格证标签">打印合格证标签</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-undo" name="SelectLeft" onclick="SelectLeft()" title="反选">反选</a>&nbsp;<a href="javascript:void(0)" plain="true" class="easyui-linkbutton" icon="icon-search" name="CertificateList" onclick="CertificateList()" title="选择证书打印">选择证书打印</a>
 				</td>
 				<td style="text-align:right;padding-right:2px">
 				</td>
@@ -101,9 +107,11 @@
 	
 	 <div id="p2" class="easyui-panel" style="width:1000px; height:200px; padding:10px;"
 				title="打印预览区" collapsible="false"  closable="false">
-		<iframe id="PdfPrintFrame" src="" frameborder="0" width="100%" height="100%"></iframe>
+			<iframe id="PdfPrintFrame" name="PdfPrintFrame" src="" frameborder="0" width="100%" height="100%"></iframe>
+			<form action="" method="post" target="PdfPrintFrame" id="postData_form">
+		 		<input id="CertificationId" name="CertificationId" type="hidden" value=""/>
+			</form>
 	 </div>
-	
 	
 	<div id="select_certificate_print_window" class="easyui-window" closed="true" modal="true" title="选择要打印的证书或原始记录" iconCls="icon-print" style="width:780px;height:400px;padding:5px;">
 		<div class="easyui-layout" fit="true">
@@ -111,7 +119,7 @@
 				<table id="OriginalRecordTable" iconCls="icon-tip"></table>
 			</div>
 			<div region="south" border="false" style="text-align:right;height:30px;line-height:30px;">
-				<a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onclick="PrintCertificateByOneCommissionSheet()" >打印证书</a>&nbsp;&nbsp;<a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onclick="PrintOriginalRecordExcelByOneCommissionSheet()" >打印原始记录</a>&nbsp;&nbsp;<a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onclick="PrintLabelByOneCommissionSheet()" >打印合格证标签</a>&nbsp;&nbsp;
+				<span id="oneprint-execute-now"><a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onclick="PrintCertificateByOneCommissionSheet()" >打印证书</a>&nbsp;&nbsp;<a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onclick="PrintOriginalRecordExcelByOneCommissionSheet()" >打印原始记录</a>&nbsp;&nbsp;<a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onclick="PrintLabelByOneCommissionSheet()" >打印合格证标签</a></span>&nbsp;&nbsp;
 				<a class="easyui-linkbutton" iconCls="icon-cancel" href="javascript:void(0)" onclick="doCloseSelectCertificatePrintWindow()">取消</a>
 			</div>
 		</div>

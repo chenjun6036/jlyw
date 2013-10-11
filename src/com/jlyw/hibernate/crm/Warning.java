@@ -1,9 +1,12 @@
 package com.jlyw.hibernate.crm;
 
+import java.util.Date;
+
 import com.jlyw.hibernate.CustomerContactor;
 
 public class Warning {
 	private String title;
+	private Date validity;
 	private int type;
 	private int priority;
 	private CustomerContactor customerContactor;
@@ -31,4 +34,11 @@ public class Warning {
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
+	public Date getValidity() {
+		return validity;
+	}
+	public void setValidity(Date validity) {
+		this.validity = validity;
+	}
+	
 }

@@ -4,18 +4,19 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
 <title>标准器具信息查询</title>
-	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
-    <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
-	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
-    <link rel="stylesheet" type="text/css" href="../../Inc/Style/Style.css" />
-		<script type="text/javascript" src="../../Inc/JScript/jquery-1.6.min.js"></script>
-		<script type="text/javascript" src="../../Inc/JScript/jquery.easyui.min.js"></script>
-        <script type="text/javascript"	src="../../Inc/JScript/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
-            <script type="text/javascript" src="../../JScript/letter.js"></script>
-            <script type="text/javascript" src="../../uploadify/swfobject.js"></script>
-			<script type="text/javascript" src="../../uploadify/jquery.uploadify.v2.1.4.js"></script>
-            <script type="text/javascript" src="../../JScript/upload.js"></script>
-            <script type="text/javascript" src="../../JScript/json2.js"></script>
+	 <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
+        <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
+        <link rel="stylesheet" type="text/css" href="../../Inc/Style/Style.css" />
+        <link rel="stylesheet" type="text/css" href="../../uploadify/uploadify.css" />
+        <script type="text/javascript" src="../../Inc/JScript/jquery-1.6.min.js"></script>
+        <script type="text/javascript" src="../../Inc/JScript/jquery.easyui.min.js"></script>
+        <script type="text/javascript" src="../../uploadify/swfobject.js"></script>
+        <script type="text/javascript" src="../../uploadify/jquery.uploadify.v2.1.4.js"></script>
+        <script type="text/javascript" src="../../Inc/JScript/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../../JScript/upload.js"></script>
+        <script type="text/javascript" src="../../JScript/letter.js"></script>
+ 		<script type="text/javascript" src="../../JScript/json2.js"></script>
 	<script>
 		$(function(){
 				
@@ -313,6 +314,13 @@
 							myExport();
 						}
 				},'-',{
+						text:'已超期标准器具',
+						iconCls:'icon-tip',
+						handler:function(){
+								$('#table2').datagrid('options').queryParams={'OverValid':encodeURI(1)};
+								$('#table2').datagrid('reload');
+						}
+				},'-',{
 						text:'预警标准器具',
 						iconCls:'icon-tip',
 						handler:function(){
@@ -516,10 +524,10 @@
 					if(result.IsOK)
 					{
 						var Copy = result.CertificateCopy_filesetname;
-						var num = $('#CertificateCopy').uploadifySettings('queueSize');
-						
+						var num = $('#addCertificateCopy').uploadifySettings('queueSize');
+						alert('ffffff');
 						if (num > 0) { //有选择文件
-							doUploadByUploadify(Copy,'CertificateCopy',false);
+							doUploadByUploadify(Copy,'addCertificateCopy',false);
 						}		
 						closed();
 					}
@@ -551,7 +559,7 @@
 			}
 		});
 	}
-		
+
 		function closed(){
 			$('#add').dialog('close');
 			$('#edit').dialog('close');
@@ -560,6 +568,7 @@
 		}
 		
 		function query(){
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/StandardApplianceServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'queryname':encodeURI($('#queryname').val()),'queryModel':encodeURIComponent($('#queryModel').val())
 			,'queryReleaseNumber':encodeURI($('#queryReleaseNumber').val()),'queryKeeper':encodeURI($('#queryKeeper').combobox('getValue')),'queryLocaleCode':encodeURI($('#queryLocaleCode').val()),'queryPermanentCode':encodeURI($('#queryPermanentCode').val()),'queryInspectMonth':encodeURI($('#queryInspectMonth').val()),'queryStatus':encodeURI($('#queryStatus').combobox('getValue')),'queryDept':encodeURI($('#queryDept').val())};
@@ -572,6 +581,7 @@
 		function queryTestlog(){
 			if($('#table2').datagrid('getSelected')==null)
 				return;
+			$('#testlog').datagrid('unselectAll');
 			$('#testlog').datagrid('options').url='/jlyw/TestLogServlet.do?method=2';
 			$('#testlog').datagrid('options').queryParams={'StdAppId':encodeURI($('#addStandardApplianceId').val()),'queryValidDateFrom':encodeURI($('#queryValidDateFrom').datebox('getValue')),'queryValidDateEnd':encodeURI($('#queryValidDateEnd').datebox('getValue')),'queryTestDateFrom':encodeURI($('#queryTestDateFrom').datebox('getValue')),'queryTestDateEnd':encodeURI($('#queryTestDateEnd').datebox('getValue')),'queryTester':encodeURI($('#queryTester').val()),'queryCertificateId':encodeURI($('#queryCertificateId').val()),'queryStatus':encodeURI($('#queryTestLogStatus').combobox('getValue'))};
 			$('#testlog').datagrid('reload');
@@ -718,11 +728,11 @@
 				</tr>
                 <tr>
                     <td align="right">检定单位：</td>
-				  	<td align="left"><input id="queryTester" name="queryTester" style="width:152px;" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=12"></input></td>
+				  	<td align="left"><input id="queryTester" name="queryTester" style="width:152px;" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=12"></input></td>
 					<td align="right">证书编号：</td>
 				  	<td align="left"><input id="queryCertificateId" name="queryCertificateId"  class="easyui-validatebox" type="text"/></td>
                     <td align="right">状态：</td>
-				  	<td align="left"><select id="queryTestLogStatus" name="queryTestLogStatus" class="easyui-combobox" style="width:152px" required="true" panelHeight="auto">
+				  	<td align="left"><select id="queryTestLogStatus" name="queryTestLogStatus" class="easyui-combobox" style="width:152px" panelHeight="auto">
                                     <option value="0">正常</option>
                                     <option value="1">注销</option>
                                 </select></td>
@@ -863,7 +873,7 @@
 				<tr  height="50px">
 					<td align="right">检定单位：</td>
 					<td align="left" >
-						<input id="addTester" name="Tester" type="text" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=12"/>
+						<input id="addTester" name="Tester" type="text" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=12"/>
 					</td>
 					<td align="right">检定证书&nbsp;&nbsp;<br />编&nbsp;&nbsp;&nbsp;&nbsp;号：</td>
 					<td align="left" ><input id="addCertificateId" name="CertificateId" type="text" class="easyui-validatebox" required="true"/></td>

@@ -180,7 +180,7 @@
 					<td align="right">建标单位：</td>
 					<td align="left"><input id="CreatedBy" name="CreatedBy" type="text" class="easyui-validatebox" required="true"/></td>
 					<td align="right">发证单位：</td>
-					<td align="left"><input id="IssuedBy" name="IssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=14"/></td>
+					<td align="left"><input id="IssuedBy" name="IssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=14"/></td>
 				</tr>
 				
 				<tr height="30px">
@@ -199,7 +199,7 @@
 				
 				<tr height="30px">
 					<td align="right">社&nbsp;会&nbsp;证&nbsp;&nbsp;<br />发证机关：</td>
-					<td align="left"><input id="SIssuedBy" name="SIssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=15"/></td>
+					<td align="left"><input id="SIssuedBy" name="SIssuedBy" style="width:152px;" required="true" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=15"/></td>
 					<td align="right">社&nbsp;会&nbsp;证&nbsp;&nbsp;<br />证&nbsp;书&nbsp;号：</td>
 					<td align="left"><input id="SCertificateCode" name="SCertificateCode" type="text"  class="easyui-validatebox" required="true"/></td>
 				</tr>

@@ -31,7 +31,7 @@
 								}
 							}
 						}
-						$(this).combobox('reload','/jlyw/UserServlet.do?method=6&QueryName='+newValue);
+						$(this).combobox('reload','/jlyw/UserServlet.do?method=16&QueryName='+newValue);
 					}
 				});
 			
@@ -63,9 +63,10 @@
 					{field:'Range',title:'测量范围',width:80,align:'center'},
 					{field:'Uncertain',title:'不确定度',width:80,align:'center'},
 					{field:'TestCycle',title:'检定周期',width:80,align:'center'},
-					{field:'SeriaNumber',title:'出厂编号',width:80,align:'center'},
+					{field:'SeriaNumber',title:'证书编号',width:80,align:'center'},
 					{field:'Manufacturer',title:'生产厂商',width:120,align:'center'},
 					{field:'ReleaseDate',title:'出厂日期',width:80,align:'center'},
+					{field:'ReleaseNumber',title:'出厂编号',width:80,align:'center'},
 					{field:'Num',title:'器具数量',width:80,align:'center'},
 					{field:'Price',title:'器具价格',width:80,align:'center'},
 					{field:'Status',title:'器具状态',width:80,align:'center',
@@ -157,7 +158,7 @@
 					{field:'ConfirmDate',title:'溯源结果确认日期',width:120,align:'center'},
 					{field:'Copy',title:'检定证书扫描件',width:120,align:'center',
 						formatter : function(value,rowData,rowIndex){
-							if(value=="")
+							if(value==""||value==null)
 								return "";
 							//var res = eval("("+value+")");
 							return "<a href='/jlyw/FileDownloadServlet.do?method=0&FileId="+value._id+"&FileType="+value.filetype+ "' target='_blank' title='点击下载该文件' >"+value.filename+"</a>";
@@ -197,8 +198,9 @@
 		function queryTestlog(){
 			if($('#table2').datagrid('getSelected')==null)
 				return;
+			$('#testlog').datagrid('unselectAll');
 			$('#testlog').datagrid('options').url='/jlyw/TestLogServlet.do?method=2';
-			$('#testlog').datagrid('options').queryParams={'StdAppId':encodeURI($('#addStandardApplianceId').val()),'queryValidDateFrom':encodeURI($('#queryValidDateFrom').datebox('getValue')),'queryValidDateEnd':encodeURI($('#queryValidDateEnd').datebox('getValue')),'queryTestDateFrom':encodeURI($('#queryTestDateFrom').datebox('getValue')),'queryTestDateEnd':encodeURI($('#queryTestDateEnd').datebox('getValue')),'queryTester':encodeURI($('#queryTester').val()),'queryCertificateId':encodeURI($('#queryCertificateId').val()),'queryStatus':encodeURI($('#queryTestLogStatus').combobox('getValue'))};
+			$('#testlog').datagrid('options').queryParams={'StdAppId':encodeURI($('#table2').datagrid('getSelected').Id),'queryValidDateFrom':encodeURI($('#queryValidDateFrom').datebox('getValue')),'queryValidDateEnd':encodeURI($('#queryValidDateEnd').datebox('getValue')),'queryTestDateFrom':encodeURI($('#queryTestDateFrom').datebox('getValue')),'queryTestDateEnd':encodeURI($('#queryTestDateEnd').datebox('getValue')),'queryTester':encodeURI($('#queryTester').val()),'queryCertificateId':encodeURI($('#queryCertificateId').val()),'queryStatus':encodeURI($('#queryTestLogStatus').combobox('getValue'))};
 			$('#testlog').datagrid('reload');
 			$('#queryTestLogStatus').combobox('setValue',"");
 		}
@@ -335,11 +337,11 @@
 				</tr>
                 <tr>
                     <td align="right">检定单位：</td>
-				  	<td align="left"><input id="queryTester" name="queryTester" style="width:152px;" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" uel="/jlyw/BaseTypeServlet.do?method=4&type=12"></input></td>
+				  	<td align="left"><input id="queryTester" name="queryTester" style="width:152px;" class="easyui-combobox" panelHeight="auto" valueField="name" textField="name" url="/jlyw/BaseTypeServlet.do?method=4&type=12"></input></td>
 					<td align="right">证书编号：</td>
 				  	<td align="left"><input id="queryCertificateId" name="queryCertificateId"  class="easyui-validatebox" type="text"/></td>
                     <td align="right">状态：</td>
-				  	<td align="left"><select id="queryTestLogStatus" name="queryTestLogStatus" class="easyui-combobox" style="width:152px" required="true" panelHeight="auto">
+				  	<td align="left"><select id="queryTestLogStatus" name="queryTestLogStatus" class="easyui-combobox" style="width:152px" panelHeight="auto">
                                     <option value="0">正常</option>
                                     <option value="1">注销</option>
                                 </select></td>

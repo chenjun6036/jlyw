@@ -313,7 +313,7 @@ public class RelationShipServlet extends HttpServlet {
 						option.put("TgtApp_Name", temp.getTargetAppliance().getName());
 						option.put("TgtApp_StandardName", temp.getTargetAppliance().getApplianceStandardName().getName());
 						option.put("TgtApp_Code", temp.getTargetAppliance().getCode());
-						option.put("TgtApp_Status", temp.getTargetAppliance().getStatus());					
+						option.put("TgtApp_Status", temp.getTargetAppliance().getStatus());	
 						
 						options.put(option);
 					}
@@ -413,6 +413,7 @@ public class RelationShipServlet extends HttpServlet {
 					k = new KeyValueWithOperator("standard.name", "%" + queryStr + "%", "like");
 				else if(param.equals("2"))
 					k = new KeyValueWithOperator("targetAppliance.name", "%" + queryStr + "%", "like");
+				//System.out.println(queryStr);
 				
 				if(k == null)
 				{
@@ -439,7 +440,7 @@ public class RelationShipServlet extends HttpServlet {
 						option.put("TgtApp_StandardName", temp.getTargetAppliance().getApplianceStandardName().getName());
 						option.put("TgtApp_Code", temp.getTargetAppliance().getCode());
 						option.put("TgtApp_Status", temp.getTargetAppliance().getStatus());
-						
+					
 						options.put(option);
 					}
 				}
@@ -456,6 +457,7 @@ public class RelationShipServlet extends HttpServlet {
 			}
 			resp.setContentType("text/json;charset=utf-8");
 			resp.getWriter().write(res8.toString());
+
 			break;
 		case 9://删除标准与受检器具的关系
 			int std_tgtapp_id = Integer.valueOf(req.getParameter("id"));
@@ -883,6 +885,227 @@ public class RelationShipServlet extends HttpServlet {
 				resp.setContentType("text/json;charset=utf-8");
 				resp.getWriter().write(retObj17.toString());
 			}
+			break;
+		case 18://查询所有标准器具与受检器具的关系(编辑原始记录汇中，选择计量标准标准器具和技术规范中用)
+			JSONObject res18 = new JSONObject();
+			try{
+				String param = req.getParameter("param");
+				String queryStr = req.getParameter("queryStr");
+				if(param!=null&&queryStr!=null)
+				{
+					param = URLDecoder.decode(param, "utf-8");
+					queryStr = URLDecoder.decode(queryStr, "utf-8");
+				}
+				
+				int page = 1;
+				if (req.getParameter("page") != null)
+					page = Integer.parseInt(req.getParameter("page").toString());
+				int rows = 10;
+				if (req.getParameter("rows") != null)
+					rows = Integer.parseInt(req.getParameter("rows").toString());
+				
+				int total;
+				List<TgtAppStdApp> result;
+				TgtAppStdAppManager tgtapp_stdapp_Mgr5 = new TgtAppStdAppManager();
+				KeyValueWithOperator k = null;
+				if(param.equals("1"))
+					k = new KeyValueWithOperator("standardAppliance.name", "%" + queryStr + "%", "like");
+				else if(param.equals("2"))
+					k = new KeyValueWithOperator("targetAppliance.name", "%" + queryStr + "%", "like");
+				
+				if(k == null)
+				{
+					result = tgtapp_stdapp_Mgr5.findPagedAll(page, rows);
+					total = tgtapp_stdapp_Mgr5.getTotalCount();
+				}
+				else
+				{
+					result = tgtapp_stdapp_Mgr5.findPagedAll(page, rows, k);
+					total = tgtapp_stdapp_Mgr5.getTotalCount(k);
+				}
+				JSONArray options18 = new JSONArray();
+				if(result!=null&&result.size()>0)
+				{
+					for(TgtAppStdApp temp : result)
+					{
+						JSONObject option = new JSONObject();
+						option.put("id", temp.getStandardAppliance().getId());
+						
+						option.put("name",temp.getStandardAppliance().getName());;
+						option.put("localecode",temp.getStandardAppliance().getLocaleCode());
+						option.put("model", temp.getStandardAppliance().getModel());
+						option.put("range", temp.getStandardAppliance().getRange());
+						option.put("uncertain", temp.getStandardAppliance().getUncertain());
+						option.put("release", temp.getStandardAppliance().getManufacturer()+temp.getStandardAppliance().getSeriaNumber());
+						option.put("permanentcode", temp.getStandardAppliance().getPermanentCode());
+						
+						options18.put(option);
+					}
+				}
+				res18 = new JSONObject();
+				res18.put("total", total);
+				res18.put("rows", options18); 
+			}catch(Exception e){
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in RelationShipServlet-->case 18", e);
+				}else{
+					log.error("error in RelationShipServlet-->case 18", e);
+				}
+			}
+			resp.setContentType("text/json;charset=utf-8");
+			resp.getWriter().write(res18.toString());
+			break;
+		case 19://查询所有标准与受检器具的关系(编辑原始记录汇中，选择计量标准标准器具和技术规范中用)
+			JSONObject res19 = new JSONObject();
+			try{
+				String param = req.getParameter("param");
+				String queryStr = req.getParameter("queryStr");
+				if(param!=null&&queryStr!=null)
+				{
+					param = URLDecoder.decode(param, "utf-8");
+					queryStr = URLDecoder.decode(queryStr, "utf-8");
+				}
+				
+				int page = 1;
+				if (req.getParameter("page") != null)
+					page = Integer.parseInt(req.getParameter("page").toString());
+				int rows = 10;
+				if (req.getParameter("rows") != null)
+					rows = Integer.parseInt(req.getParameter("rows").toString());
+				
+				int total;
+				List<StdTgtApp> result;
+				StdTgtAppManager std_tgtapp_Mgr8 = new StdTgtAppManager();
+				KeyValueWithOperator k = null;
+				if(param.equals("1"))
+					k = new KeyValueWithOperator("standard.name", "%" + queryStr + "%", "like");
+				else if(param.equals("2"))
+					k = new KeyValueWithOperator("targetAppliance.name", "%" + queryStr + "%", "like");
+				//System.out.println(queryStr);
+				
+				if(k == null)
+				{
+					result = std_tgtapp_Mgr8.findPagedAll(page, rows);
+					total = std_tgtapp_Mgr8.getTotalCount();
+				}
+				else
+				{
+					result = std_tgtapp_Mgr8.findPagedAll(page, rows, k);
+					total = std_tgtapp_Mgr8.getTotalCount(k);
+				}
+				JSONArray options19 = new JSONArray();
+				if(result!=null&&result.size()>0)
+				{
+					for(StdTgtApp temp : result)
+					{
+						JSONObject option = new JSONObject();
+						option.put("id", temp.getStandard().getId());
+						
+						option.put("name", temp.getStandard().getName());
+						option.put("certificatecode", temp.getStandard().getCertificateCode());
+						option.put("standardcode", temp.getStandard().getStandardCode());
+						option.put("projectcode", temp.getStandard().getProjectCode());
+						option.put("issuedby", temp.getStandard().getIssuedBy());
+						option.put("issuedate", temp.getStandard().getIssueDate());
+						option.put("validdate", temp.getStandard().getValidDate());
+						option.put("range", temp.getStandard().getRange());
+						option.put("uncertain", temp.getStandard().getUncertain());
+						option.put("sissuedby", temp.getStandard().getSissuedBy());
+						option.put("scertificatecode", temp.getStandard().getScertificateCode());
+						option.put("sissuedate", temp.getStandard().getSissueDate());
+						option.put("svaliddate", temp.getStandard().getSvalidDate());
+						option.put("region", temp.getStandard().getSregion());
+						option.put("sauthorizationcode", temp.getStandard().getSauthorizationCode());
+						option.put("slocalecode", temp.getStandard().getSlocaleCode());
+						option.put("warnslot", temp.getStandard().getWarnSlot());
+						option.put("handler", temp.getStandard().getSysUser().getName());
+						option.put("projecttype", temp.getStandard().getProjectType());
+						options19.put(option);
+					}
+				}
+				res19 = new JSONObject();
+				res19.put("total", total);
+				res19.put("rows", options19);
+			}
+			catch (Exception e) {
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in RelationShipServlet-->case 19", e);
+				}else{
+					log.error("error in RelationShipServlet-->case 19", e);
+				}
+			}
+			resp.setContentType("text/json;charset=utf-8");
+			resp.getWriter().write(res19.toString());
+
+			break;
+		case 20://查询技术规范和受检器具的关系(编辑原始记录汇中，选择计量标准标准器具和技术规范中用)
+			JSONObject res20 = new JSONObject();
+			try{
+				String param = req.getParameter("param");
+				String queryStr = req.getParameter("queryStr");
+				if(param!=null&&queryStr!=null)
+				{
+					param = URLDecoder.decode(param, "utf-8");
+					queryStr = URLDecoder.decode(queryStr, "utf-8");
+				}
+				
+				int page = 1;
+				if (req.getParameter("page") != null)
+					page = Integer.parseInt(req.getParameter("page").toString());
+				int rows = 10;
+				if (req.getParameter("rows") != null)
+					rows = Integer.parseInt(req.getParameter("rows").toString());
+				
+				int total;
+				List<TgtAppSpec> result;
+				TgtAppSpecManager tgtapp_spec_Mgr = new TgtAppSpecManager();
+				KeyValueWithOperator k = null;
+				if(param.equals("1"))
+					k = new KeyValueWithOperator("targetAppliance.name", "%" + queryStr + "%", "like");
+				else if(param.equals("2"))
+					k = new KeyValueWithOperator("specification.nameCn", "%" + queryStr + "%", "like");
+				
+				if(k == null)
+				{
+					result = tgtapp_spec_Mgr.findPagedAll(page, rows);
+					total = tgtapp_spec_Mgr.getTotalCount();
+				}
+				else
+				{
+					result = tgtapp_spec_Mgr.findPagedAll(page, rows, k);
+					total = tgtapp_spec_Mgr.getTotalCount(k);
+				}
+				JSONArray options20 = new JSONArray();
+				if(result!=null&&result.size()>0)
+				{
+					for(TgtAppSpec temp : result)
+					{
+						JSONObject option = new JSONObject();
+						option.put("id", temp.getSpecification().getId());
+						
+						option.put("specificationcode", temp.getSpecification().getSpecificationCode());
+						option.put("namecn", temp.getSpecification().getNameCn());
+						option.put("type", temp.getSpecification().getType());
+						option.put("localecode", temp.getSpecification().getLocaleCode());
+						option.put("issuedate", temp.getSpecification().getIssueDate());
+						option.put("effectivedate", temp.getSpecification().getEffectiveDate());
+						option.put("repealdate", temp.getSpecification().getRepealDate());
+						
+						options20.put(option);
+					}
+				}
+				res20 = new JSONObject();
+				res20.put("total", total);
+				res20.put("rows", options20);
+			}catch(Exception e){
+				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
+					log.debug("exception in RelationShipServlet-->case 20", e);
+				}else{
+					log.error("error in RelationShipServlet-->case 20", e);
+				}
+			}
+			resp.setContentType("text/json;charset=utf-8");
+			resp.getWriter().write(res20.toString());
 			break;
 		}
 	}

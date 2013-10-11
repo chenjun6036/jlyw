@@ -21,6 +21,15 @@
 				valueField:'standardname',
 				textField:'standardname',
 				onSelect:function(){},
+				onLoadSuccess:function(){
+					
+					var data = $('#Search_Appli').combobox('getData');
+					if(data.length==1){
+						if(data[0]!=null){
+							$("#Search_Appli").combobox('select',data[0].standardname);
+						}
+					}
+				},
 				onChange:function(newValue, oldValue){
 					var allData = $(this).combobox('getData');
 					if(allData != null && allData.length > 0){
@@ -34,6 +43,32 @@
 					$(this).combobox('reload','/jlyw/ApplianceStandardNameServlet.do?method=0&ApplianceStandardName='+newValue);
 					}
 			});
+			
+			$('#Search_PopularName').combobox({
+				//url:'/jlyw/ApplianceStandardNameServlet.do?method=0',
+				valueField:'name',
+				textField:'name',
+				onSelect:function(record){
+					try{
+						//现场委托单查询——仅在新建现场委托单界面用到
+						$("#Search_Appli").combobox('reload','/jlyw/AppliancePopularNameServlet.do?method=9&PopularName='+encodeURI(record.name));
+					}catch(ex){}
+				},
+				onChange:function(newValue, oldValue){
+					var allData = $(this).combobox('getData');
+					if(allData != null && allData.length > 0){
+						for(var i=0; i<allData.length; i++)
+						{
+							if(newValue==allData[i].id){
+								return false;
+							}
+						}
+					}
+					$(this).combobox('reload','/jlyw/AppliancePopularNameServlet.do?method=8&AppliancePopularName='+newValue);
+					}
+			});
+			
+			
 			$('#Customer').combobox({
 				valueField:'name',
 				textField:'name',
@@ -375,7 +410,9 @@
 								valueField:'Name',
 								textField:'Name'
 							});
-							
+							if($('#Search_PopularName').combobox('getValue')!=''&&$('#Search_PopularName').combobox('getValue').length>0){
+								$('#CertificateName').combobox('setValue',$('#Search_PopularName').combobox('getValue'));
+							}
 							//
 							$('#Model1').combobox({
 								url:'/jlyw/TargetApplianceServlet.do?method=12&Type=1&standardNameName=' + encodeURI(select.StandardName),
@@ -711,6 +748,58 @@
 		function cancel_Quotation(){
 			$('#quotation_edit').window('close');
 		}
+		
+		function Add_NewAppliance(){//打开新增新器具条目对话框
+			$('#addNew').window('open');
+		}
+		
+		function newcancel(){
+			
+			$('#addNew').dialog('close');
+		}
+		
+		
+		//将新器具加入datagrid
+		function newadd(){
+			if($('#newQuantity').val()==''){
+				$.messager.alert('提示','请将数据填写完整！','info');
+			}
+			else{
+				if($('#newQuantity').val()=='0'){
+					$.messager.alert('提示','请输入大于0的台件数！','info');
+					return false;
+				}																
+				//var table_appli_row = $('#table_appli').datagrid('getSelected');
+				var table_item_rows = $('#table4').datagrid('getRows');
+				var index = $('#table4').datagrid('getRows').length;
+				var name_obj=document.getElementById("newSiteTest");
+				var certype_obj=document.getElementById("newCertType");
+											
+		
+				$('#table4').datagrid('insertRow',{
+					index:index,
+					row:{
+						CertificateName:$('#newCertificateName').val(),
+						StandardName: "",
+						StandardNameId: "",
+						Model:$('#newModel').val(),
+						Accuracy:$('#newAccuracy').val(),
+						Range:$('#newRange').val(),
+						Quantity:$('#newQuantity').val(),
+						AppFactoryCode:$('#newAppFactoryCode').val(),
+						AppManageCode:$('#newAppManageCode').val(),
+						Manufacturer:$('#newManufacturer').val(),
+						CertType:certype_obj.options[certype_obj.selectedIndex].value,
+						SiteTest:name_obj.options[name_obj.selectedIndex].value,
+						MinCost:$('#newMinFee').val(),
+						MaxCost:$('#newMaxFee').val(),
+						Remark:$('#newRemark').val()
+					}
+				});							
+				$('#addNew').dialog('close');
+				$('#table_appli').datagrid('clearSelections');				
+			}
+		}
 	</script>
 </head>
 
@@ -850,7 +939,10 @@
 					<tr>
 						<td style="padding-left:2px">
 							<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="Add_QuotaItem()">加入报价单条目</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="Add_NewAppliance()">增加新器具</a>
 						</td>
+						<td align="right">常用名称:</td>
+						<td width="18%"><input id="Search_PopularName" style="width:140px" name="Search_PopularName" type="text" /></td>
 						<td align="right">受检器具标准名:</td>
 						<td width="21%"><input id="Search_Appli" name="Search_Appli" type="text" style="width:152px" /></td>
 						<td width="9%"><a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="query_appli()">查询</a></td>
@@ -956,6 +1048,81 @@
 			</form>
 		</div>
 		
+		
+		
+		<div id="addNew" class="easyui-window" title="新增新器具条目" style="padding: 10px;width: 800;"
+		iconCls="icon-add" closed="true" maximizable="false" minimizable="false" collapsible="false" modal="true">
+			<form id="form3" method="post">
+				<table id="table1" style="padding: 30px;width: 800;height: 500;">
+					<tr height="35px" style="padding-left:10px">
+						<td align="right">受检器具&nbsp;<br />证书名称:</td>
+						<td align="left"><input id="newCertificateName" name="CertificateName" type="text" style="width:152px"/></td>
+						<td align="right">型号规格:</td>
+						<td align="left"><input id="newModel" name="Model"  type="text" style="width:152px" /></td>
+					</tr>
+					
+					<tr height="35px" style="padding-left:10px">
+						<td align="right">测量范围:</td>
+						<td align="left"><input id="newRange" name="Range"  type="text" style="width:152px" /></td>
+						<td align="right">准确度等级:</td>
+						<td align="left"><input id="newAccuracy" name="Accuracy"  type="text" style="width:152px" /></td>
+					</tr>
+					
+					<tr height="35px" style="padding-left:10px">
+						<td align="right">台/件&nbsp;数:</td>
+						<td align="left"><input id="newQuantity" name="Quantity" type="text" class="easyui-numberbox" value="1" required="true" /></td>
+						<td align="right">出厂编号:</td>
+						<td align="left"><input id="newAppFactoryCode" name="AppFactoryCode" type="text"/></td>
+					</tr>
+					
+					
+					<tr height="35px" style="padding-left:10px">
+						<td align="right">管理编号:</td>
+						<td align="left"><input id="newAppManageCode" name="AppManageCode" type="text" /></td>
+						<td align="right">制&nbsp;造&nbsp;厂:</td>
+						<td align="left"><input id="newManufacturer" name="Manufacturer" type="text" /></td>
+					</tr>
+					
+					<tr height="35px" style="padding-left:10px">
+						<td align="right">现场检验:</td>
+						<td align="left" >
+							<select id="newSiteTest" name="SiteTest" style="width:152px">   
+								<option value="1" selected="selected">否</option>
+								<option value="0">是</option>
+							</select>
+						</td>
+						<td align="right">证书类型:</td>
+						<td align="left">
+							<select id="newCertType" name="CertType" style="width:152px" />
+								<option value="1" selected="selected">检定</option>
+								<option value="4">检验</option>
+								<option value="2">校准</option>
+								<option value="3">检测</option>
+							</select>
+						</td>
+						
+					</tr>
+					<tr height="35px" style="padding-left:10px">
+						<td align="right">最小费用:</td>
+						<td align="left"><input id="newMinFee" name="newMinFee" type="text" class="easyui-numberbox"  required="true" /></td>
+						<td align="right">最大费用:</td>
+						<td align="left"><input id="newMaxFee" name="newMaxFee" type="text" class="easyui-numberbox" required="true"/></td>
+					</tr>
+				
+					<tr height="35px" style="padding-left:10px">
+						
+						<td align="left">备&nbsp;&nbsp;&nbsp;&nbsp;注:</td>
+						<td align="right"><input id="newRemark" name="Remark" type="text" style="width:152px" /></td>
+					</tr>
+					
+					<tr height="50px">	
+						<td align="center" colspan="4"><a class="easyui-linkbutton" iconCls="icon-ok" href="javascript:void(0)" onclick="newadd()">新增</a>&nbsp;<a class="easyui-linkbutton" iconCls="icon-cancel" href="javascript:void(0)" onclick="newcancel()">关闭</a></td>
+						
+						
+					</tr>
+				</table>
+			</form>
+		</div>
 		<form id="printquotation" name="printquotation" method="post" action="/jlyw/QuotationServlet.do?method=7" target="QuotPrintFrame">
 				<input id="quotationId1" name="quotationId" type="hidden" />
 				

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>回访信息管理</title>
+<title>记录处理结果</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -56,8 +56,9 @@
 								$('#customerName1').combobox('reload','/jlyw/CustomerServlet.do?method=6&CustomerName='+newValue);
 						}, 500);
 				}
-			})});
-		function cancel(){
+				});});
+			
+		function cancel1(){
 			$('#query1').form('clear');
 		}
 		
@@ -76,7 +77,7 @@
                 striped: true,
                 singleSelect:true, 
 				url:'/jlyw/CrmServlet.do?method=1',
-				queryParams:{'Status':encodeURI('2')},
+				queryParams:{'Status':encodeURI('2'),'flag':1},
 				sortName:'Id',
 				sortOrder:'asc',
 				remoteSort: false,
@@ -147,7 +148,8 @@
 						iconCls:'icon-save',
 						handler:function(){
 								ShowWaitingDlg("正在导出，请稍后......");
-							$('#par').val(JSON.stringify($('#table1').datagrid('options').queryParams));
+								$('#table1').datagrid('options').queryParams={'Status':encodeURI('2'),'CustomerName':encodeURI($('#customerName1').combobox('getValue')),'StartDate':encodeURI($('#startDate').datebox('getValue')),'EndDate':encodeURI($('#endDate').datebox('getValue'))};
+								$('#par').val(JSON.stringify($('#table1').datagrid('options').queryParams));
 							$('#frm_export').form('submit',{
 								success:function(data){
 									var result = eval("("+ data +")");
@@ -216,7 +218,7 @@
 		<tr>
 			<td></td>
 			<td width="25%" align="right"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-search" onclick="search1()">查询</a></td>
-			<td width="25%" align="left"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-reload"  onclick="cancel()">重置</a></td>
+			<td width="25%" align="left"><a href="javascript:void(0)" class="easyui-linkbutton" icon="icon-reload"  onclick="cancel1()">重置</a></td>
 			<td ></td>
 		</tr>
 	</table>
@@ -323,7 +325,7 @@
 		</tr>
 	<tr>
 		<td align="right">客户评分：</td>
-		<td><input id="mark" name="Mark"  class="easyui-validatebox"/></td>
+		<td><input id="mark" name="Mark" required="true"  class="easyui-numberbox" min="0" max="100"/></td>
 	</tr>
 		<tr height="50px">	
 			<td></td>

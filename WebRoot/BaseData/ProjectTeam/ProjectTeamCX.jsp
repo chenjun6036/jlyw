@@ -290,6 +290,7 @@
 		
 		
 		function query(){
+			$('#table2').datagrid('unselectAll');
 			$('#table2').datagrid('options').url='/jlyw/ProjectTeamServlet.do?method=2';
 			$('#table2').datagrid('options').queryParams={'ProjectTeamName':encodeURI($('#name').val()),'DepartmentName':encodeURI($('#deptname').val())};
 			$('#table2').datagrid('reload');

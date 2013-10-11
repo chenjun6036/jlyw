@@ -88,7 +88,7 @@
         <property name="accountBank" type="java.lang.String">
             <column name="AccountBank" length="100" />
         </property>
-        <property name="payVia" type="java.lang.Integer">
+<property name="payVia" type="java.lang.Integer">
             <column name="PayVia" />
         </property>
         <property name="payType" type="java.lang.Integer">
@@ -124,6 +124,11 @@
         <property name="satisfaction" type="java.lang.Integer">
             <column name="Satisfaction" />
         </property>
-        
+        <set name="contactors" inverse="true">
+            <key>
+                <column name="CustomerId" />
+            </key>
+            <one-to-many class="com.jlyw.hibernate.CustomerContactor" />
+        </set>
     </class>
 </hibernate-mapping>

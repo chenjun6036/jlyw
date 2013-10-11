@@ -688,7 +688,8 @@
   	<servlet-name>CertificateFeeAssignServlet</servlet-name>
   	<url-pattern>/CertificateFeeAssignServlet.do</url-pattern>
   </servlet-mapping>
-  <servlet-mapping>
+  
+<servlet-mapping>
     <servlet-name>CrmServlet</servlet-name>
     <url-pattern>/CrmServlet.do</url-pattern>
   </servlet-mapping>

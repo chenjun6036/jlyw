@@ -260,7 +260,7 @@ private QuotationItemDAO m_dao = new QuotationItemDAO();
 		//result.add(((QuotationItem)obj).getId().toString());
 		result.add(((QuotationItem)obj).getQuotation().getNumber());
 		result.add(((QuotationItem)obj).getCertificateName()==null?"":((QuotationItem)obj).getCertificateName().toString());
-		result.add(((QuotationItem)obj).getStandardName()==null?"":((QuotationItem)obj).getStandardName().toString());
+		result.add(((QuotationItem)obj).getStandardName()==null?((QuotationItem)obj).getCertificateName().toString():((QuotationItem)obj).getStandardName().toString());
 		result.add(((QuotationItem)obj).getModel()==null?"":((QuotationItem)obj).getModel().toString());
 		result.add(((QuotationItem)obj).getRange()==null?"":((QuotationItem)obj).getRange().toString());
 		result.add(((QuotationItem)obj).getAccuracy()==null?"":((QuotationItem)obj).getAccuracy().toString());
@@ -286,16 +286,19 @@ private QuotationItemDAO m_dao = new QuotationItemDAO();
 		result.add(((QuotationItem)obj).getManufacturer()==null?"":((QuotationItem)obj).getManufacturer().toString());	
 		result.add(((QuotationItem)obj).getQuantity()==null?"1":((QuotationItem)obj).getQuantity().toString());	
 		String cost="";
-		if(((QuotationItem)obj).getMinCost().equals(((QuotationItem)obj).getMaxCost()))
-			cost=((QuotationItem)obj).getMinCost();
-		else
-			cost=String.format("%s~%s", ((QuotationItem)obj).getMinCost(),((QuotationItem)obj).getMaxCost());
-		
 		String totalcost="";
-		if(((QuotationItem)obj).getMinCost().equals(((QuotationItem)obj).getMaxCost()))
-			totalcost=String.format("%s",Double.parseDouble(((QuotationItem)obj).getMinCost())*((QuotationItem)obj).getQuantity());
-		else
-			totalcost=String.format("%s~%s", Double.parseDouble(((QuotationItem)obj).getMinCost())*((QuotationItem)obj).getQuantity(),Double.parseDouble(((QuotationItem)obj).getMaxCost())*((QuotationItem)obj).getQuantity());
+		if(((QuotationItem)obj).getMinCost()!=null&&((QuotationItem)obj).getMinCost().length()>0){
+			if(((QuotationItem)obj).getMinCost().equals(((QuotationItem)obj).getMaxCost()))
+				cost=((QuotationItem)obj).getMinCost();
+			else
+				cost=String.format("%s~%s", ((QuotationItem)obj).getMinCost(),((QuotationItem)obj).getMaxCost());
+			
+			
+			if(((QuotationItem)obj).getMinCost().equals(((QuotationItem)obj).getMaxCost()))
+				totalcost=String.format("%s",Double.parseDouble(((QuotationItem)obj).getMinCost())*((QuotationItem)obj).getQuantity());
+			else
+				totalcost=String.format("%s~%s", Double.parseDouble(((QuotationItem)obj).getMinCost())*((QuotationItem)obj).getQuantity(),Double.parseDouble(((QuotationItem)obj).getMaxCost())*((QuotationItem)obj).getQuantity());
+		}
 		result.add(cost);
 		result.add(totalcost);
 		

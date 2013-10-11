@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=gbk" />
-<title>器具标准名信息管理</title>
+<title>器具标准名信息管理(模板)</title>
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/default/easyui.css" />
     <link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../../Inc/Style/themes/icon2.css" />
@@ -204,7 +204,7 @@
 	 			title:'生产厂商',
 	 			width:390,
 	 			height:300,
-				singleSelect:true, 
+				singleSelect:false, 
 				fit: false,
 				nowrap: false,
 				striped: true,
@@ -276,20 +276,24 @@
 						text:'注销',
 						iconCls:'icon-remove',
 						handler:function(){
-							var select = $('#manufacturer').datagrid('getSelected');
-							if(select)
+							var rows = $('#manufacturer').datagrid('getSelections');
+							if(rows.length!=0)
 							{
 								$.messager.confirm('提示','确认注销吗？',function(r){
 								if(r){
-										$.ajax({
-											type:'POST',
-											url:'/jlyw/ApplianceManufacturerServlet.do?method=4',
-											data:'id='+select.Id,
-											dataType:"html",
-											success:function(data, textStatus){
-												$('#manufacturer').datagrid('reload');
-											}
-										});
+									var idStr="";
+									for(var i =0; i < rows.length; i++){
+										idStr = idStr + rows[i].Id + "|";
+									}
+									$.ajax({
+										type:'POST',
+										url:'/jlyw/ApplianceManufacturerServlet.do?method=4',
+										data:'idStr='+idStr,
+										dataType:"html",
+										success:function(data, textStatus){
+											$('#manufacturer').datagrid('reload');
+										}
+									});
 									
 								}
 								});

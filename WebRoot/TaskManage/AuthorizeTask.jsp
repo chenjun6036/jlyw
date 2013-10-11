@@ -118,7 +118,7 @@
 				rownumbers:true,
 				toolbar:"#task-table-search-toolbar",
 				onLoadSuccess:function(data){
-					if(data.rows.length > 0){
+					if(data.rows.length ==1){
 						$(this).datagrid('selectRow', 0);
 					}
 				}

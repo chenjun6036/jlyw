@@ -1,6 +1,7 @@
 package com.jlyw.servlet;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
@@ -20,6 +22,7 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.jlyw.hibernate.SysUser;
+import com.jlyw.util.MergeFile;
 import com.jlyw.util.MongoDBUtil;
 import com.jlyw.util.SystemCfgUtil;
 import com.jlyw.util.UIDUtil;
@@ -27,7 +30,7 @@ import com.jlyw.util.UploadDownLoadUtil;
 
 public class FileServlet extends HttpServlet {
 	private static Log log = LogFactory.getLog(FileServlet.class);
-	
+	private static Object MutexObjectOfPrint = new Object();		
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -42,6 +45,7 @@ public class FileServlet extends HttpServlet {
 		Integer method = Integer.parseInt(req.getParameter("method"));	//判断请求的方法类型
 		switch (method) {
 		case 0: //根据文件ID删除文件
+			
 			JSONObject retJSON = new JSONObject();
 			try{
 				String FileType = req.getParameter("FileType");
@@ -129,85 +133,103 @@ public class FileServlet extends HttpServlet {
 				resp.setContentType("text/json;charset=utf-8");
 				resp.getWriter().write(retJSON.toString());
 			}
+			
 			break;
-		case 1 : //输出PDF（用于打印）
-			try{
-				String FileId = req.getParameter("FileId");
-				String FileType = req.getParameter("FileType");
-				MongoDBUtil.CollectionType type;
-				switch(Integer.parseInt(FileType)){
-				case UploadDownLoadUtil.Type_OriginalRecord:
-					type = MongoDBUtil.CollectionType.OriginalRecord;
-					break;
-				case UploadDownLoadUtil.Type_Certificate:
-					type = MongoDBUtil.CollectionType.Certificate;
-					break;
-				case UploadDownLoadUtil.Type_Template:
-					type = MongoDBUtil.CollectionType.Template;
-					break; 
-				case UploadDownLoadUtil.Type_Attachment:
-					type = MongoDBUtil.CollectionType.Attachment;
-					break;
-				case UploadDownLoadUtil.Type_Sharing:
-					type = MongoDBUtil.CollectionType.Sharing;
-					break;
-				case UploadDownLoadUtil.Type_Others:
-				default:
-					type = MongoDBUtil.CollectionType.Others;
-					break;
-				}
-				JSONObject retObj = MongoDBUtil.getFileInfoById(FileId, type);
-				
-				if(retObj != null){
-					/*java.io.OutputStream outStream = resp.getOutputStream();
-					resp.setHeader("Content-type","application/pdf");
-					try{
-						MongoDBUtil.gridFSDownloadById(outStream, FileId, type);
-					}catch(Exception e){
-						log.debug("excpetion in FileDownloadServlet-->case 0-->MongoDBUtil.gridFSDownloadById", e);
-					}finally{
-						outStream.close();
-					}*/
-					File tempFile = null;
-					try{
-						tempFile = File.createTempFile(UIDUtil.get22BitUID(), ".pdf");
-						MongoDBUtil.gridFSDownloadById(tempFile, FileId, type);
-						PdfReader  reader = new PdfReader(tempFile.getCanonicalPath());
-						
-						StringBuffer script = new StringBuffer();
-						script.append("this.print({bUI: false,bSilent: true,bShrinkToFit: false});").append("this.closeDoc();");
-						java.io.OutputStream outStream = resp.getOutputStream();
-						resp.setHeader("Content-type","application/pdf");
-						PdfStamper stamp = null;
-						try {
-						  stamp = new PdfStamper(reader, outStream);
-						  stamp.setViewerPreferences(PdfWriter.HideMenubar 
-								  | PdfWriter.HideToolbar | PdfWriter.HideWindowUI);
-						  stamp.addJavaScript(script.toString());
-						  
-						} catch (DocumentException e) {
-						  log.error("error in FileDownloadServlet-->case 1", e);
+		case 1 : //输出PDF（用于打印）			
+			try{				
+				String FileIds = req.getParameter("FileIds").trim();
+				JSONArray FileIdsArray = new JSONArray(FileIds);	//文件ID
+				PdfReader[] files = new PdfReader[FileIdsArray.length()];
+				File[] tempFiles = new File[FileIdsArray.length()];
+				//根据文件ID循环下载文件，并加入到PdfReader数组中
+				for(int i=0;i<FileIdsArray.length();i++){
+					String FileId = (String)FileIdsArray.getJSONObject(i).getString("FileId");
+					String FileType = req.getParameter("FileType");
+					MongoDBUtil.CollectionType type;
+					switch(Integer.parseInt(FileType)){
+					case UploadDownLoadUtil.Type_OriginalRecord:
+						type = MongoDBUtil.CollectionType.OriginalRecord;
+						break;
+					case UploadDownLoadUtil.Type_Certificate:
+						type = MongoDBUtil.CollectionType.Certificate;
+						break;
+					case UploadDownLoadUtil.Type_Template:
+						type = MongoDBUtil.CollectionType.Template;
+						break; 
+					case UploadDownLoadUtil.Type_Attachment:
+						type = MongoDBUtil.CollectionType.Attachment;
+						break;
+					case UploadDownLoadUtil.Type_Sharing:
+						type = MongoDBUtil.CollectionType.Sharing;
+						break;
+					case UploadDownLoadUtil.Type_Others:
+					default:
+						type = MongoDBUtil.CollectionType.Others;
+						break;
+					}
+					JSONObject retObj = MongoDBUtil.getFileInfoById(FileId, type);					
+					if(retObj != null){
+						File tempFile = null;
+						tempFiles[i] = tempFile;
+						try{
+							tempFile = File.createTempFile(UIDUtil.get22BitUID(), ".pdf");
+							MongoDBUtil.gridFSDownloadById(tempFile, FileId, type);
+							PdfReader  reader1 = new PdfReader(tempFile.getCanonicalPath());
+							files[i]=reader1;
+						}catch(Exception e){
+							log.debug("excpetion in FileDownloadServlet-->case 1-->MongoDBUtil.gridFSDownloadById", e);
 						}finally{
-							if(stamp != null){
-								stamp.close();
-								stamp = null;
-							}
-							outStream.close();
+							/*if(tempFile != null && tempFile.exists()){ //放到了合成PDF之后
+								tempFile.delete();
+								tempFile = null;
+							}*/
 						}
-
-					}catch(Exception e){
-						log.debug("excpetion in FileDownloadServlet-->case 1-->MongoDBUtil.gridFSDownloadById", e);
-					}finally{
-						if(tempFile != null && tempFile.exists()){
-							tempFile.delete();
-							tempFile = null;
+					}else{
+						resp.setContentType("text/html;charset=GBK");
+						resp.getWriter().print("指定文件不存在！");
+						return;
+					}
+				}
+							
+				//合成文件并打印
+				//synchronized(MutexObjectOfPrint) {
+				File resultFile =  File.createTempFile(UIDUtil.get22BitUID(), ".pdf");				
+				FileOutputStream newFile = new FileOutputStream(resultFile);
+				MergeFile.mergePdfFiles(files, newFile);//合成文件			
+				PdfReader  reader = new PdfReader(resultFile.getCanonicalPath());				
+				StringBuffer script = new StringBuffer();
+				script.append("this.print({bUI: false,bSilent: true,bShrinkToFit: false});").append("\r\nthis.closeDoc();");
+				java.io.OutputStream outStream = resp.getOutputStream();
+				
+				resp.setHeader("Content-type","application/pdf");
+				PdfStamper stamp = null;
+				try {
+				  stamp = new PdfStamper(reader, outStream);
+				  stamp.setViewerPreferences(PdfWriter.HideMenubar 
+						  | PdfWriter.HideToolbar | PdfWriter.HideWindowUI);
+				  stamp.addJavaScript(script.toString());
+				  
+				} catch (DocumentException e) {
+				  log.error("error in FileDownloadServlet-->case 1", e);
+				}finally{
+					if(stamp != null){
+						stamp.close();
+						stamp = null;
+					}
+					outStream.close();
+					
+					for(int i=0;i<tempFiles.length;i++){
+						if(tempFiles[i] != null && tempFiles[i].exists()){
+							tempFiles[i].delete();
+							tempFiles[i] = null;
 						}
 					}
-				}else{
-					resp.setContentType("text/html;charset=GBK");
-					resp.getWriter().print("指定文件不存在！");
-					return;
+					if(resultFile != null && resultFile.exists()){
+						resultFile.delete();
+						resultFile = null;
+					}
 				}
+			//}
 			}catch(Exception e){
 				if(e.getClass() == java.lang.Exception.class){	//自定义的消息
 					log.debug("exception in FileDownloadServlet-->case 1", e);
@@ -215,6 +237,7 @@ public class FileServlet extends HttpServlet {
 					log.error("error in FileDownloadServlet-->case 1", e);
 				}
 			}
+			
 			break;
 		case 3: //输出图片（用于页面查看图片）
 			try{

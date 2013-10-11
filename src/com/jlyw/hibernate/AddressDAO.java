@@ -34,6 +34,12 @@ public class AddressDAO extends BaseHibernateDAO {
 	public static final String ADDRESS_EN = "addressEn";
 	public static final String COMPLAIN_TEL = "complainTel";
 	public static final String WEB_SITE = "webSite";
+	public static final String AUTHORIZATION_STATEMENT = "authorizationStatement";
+	public static final String AUTHORIZATION_STATEMENT_EN = "authorizationStatementEn";
+	public static final String CNASSTATEMENT = "cnasstatement";
+	public static final String CNASSTATEMENT_EN = "cnasstatementEn";
+	public static final String STANDARD_STATEMENT = "standardStatement";
+	public static final String STANDARD_STATEMENT_EN = "standardStatementEn";
 
 	public void save(Address transientInstance) {
 		log.debug("saving Address instance");
@@ -72,9 +78,9 @@ public class AddressDAO extends BaseHibernateDAO {
 	public List findByExample(Address instance) {
 		log.debug("finding Address instance by example");
 		try {
-			List results = getSession().createCriteria(
-					"com.jlyw.hibernate.Address").add(Example.create(instance))
-					.list();
+			List results = getSession()
+					.createCriteria("com.jlyw.hibernate.Address")
+					.add(Example.create(instance)).list();
 			log.debug("find by example successful, result size: "
 					+ results.size());
 			return results;
@@ -145,6 +151,31 @@ public class AddressDAO extends BaseHibernateDAO {
 
 	public List findByWebSite(Object webSite) {
 		return findByProperty(WEB_SITE, webSite);
+	}
+
+	public List findByAuthorizationStatement(Object authorizationStatement) {
+		return findByProperty(AUTHORIZATION_STATEMENT, authorizationStatement);
+	}
+
+	public List findByAuthorizationStatementEn(Object authorizationStatementEn) {
+		return findByProperty(AUTHORIZATION_STATEMENT_EN,
+				authorizationStatementEn);
+	}
+
+	public List findByCnasstatement(Object cnasstatement) {
+		return findByProperty(CNASSTATEMENT, cnasstatement);
+	}
+
+	public List findByCnasstatementEn(Object cnasstatementEn) {
+		return findByProperty(CNASSTATEMENT_EN, cnasstatementEn);
+	}
+
+	public List findByStandardStatement(Object standardStatement) {
+		return findByProperty(STANDARD_STATEMENT, standardStatement);
+	}
+
+	public List findByStandardStatementEn(Object standardStatementEn) {
+		return findByProperty(STANDARD_STATEMENT_EN, standardStatementEn);
 	}
 
 	public List findAll() {

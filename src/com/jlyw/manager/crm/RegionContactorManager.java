@@ -170,13 +170,13 @@ public class RegionContactorManager {
 		}
 	}
 	/////////////////传进来一查询语句，返回结果数
-	public int getTotalCountByHQL1(String queryString,List<Object> arr) {
-		try{
-			return m_dao.getTotalCountByHQL1(queryString, arr);
-		}catch(Exception ex){
-			return 0;
-		}
-	}
+//	public int getTotalCountByHQL134(String queryString,List<Object> arr) {
+//		try{
+//			return m_dao.getTotalCountByHQL1(queryString, arr);
+//		}catch(Exception ex){
+//			return 0;
+//		}
+//	}
 	
 	/*public List<String> formatExcel(Object obj) {
 		List<String> result = new ArrayList<String>();

@@ -93,8 +93,7 @@ public class ExportUtil {
 			os = new FileOutputStream(f);
 			wb.write(os);
 			os.flush();
-		}
-		catch(Exception e){
+		}catch(Exception e){
 			e.printStackTrace();
 			throw new Exception(String.format("导出Excel失败！：原因：%s", e.getMessage()==null?"无":e.getMessage()));
 		}finally{

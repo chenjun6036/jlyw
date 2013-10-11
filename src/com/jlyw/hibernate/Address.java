@@ -21,6 +21,12 @@ public class Address implements java.io.Serializable {
 	private String addressEn;
 	private String complainTel;
 	private String webSite;
+	private String authorizationStatement;
+	private String authorizationStatementEn;
+	private String cnasstatement;
+	private String cnasstatementEn;
+	private String standardStatement;
+	private String standardStatementEn;
 
 	// Constructors
 
@@ -41,7 +47,11 @@ public class Address implements java.io.Serializable {
 	/** full constructor */
 	public Address(String name, String address, String brief, Integer status,
 			String tel, String headName, String headNameEn, String fax,
-			String zipCode, String addressEn, String complainTel, String webSite) {
+			String zipCode, String addressEn, String complainTel,
+			String webSite, String authorizationStatement,
+			String authorizationStatementEn, String cnasstatement,
+			String cnasstatementEn, String standardStatement,
+			String standardStatementEn) {
 		this.name = name;
 		this.address = address;
 		this.brief = brief;
@@ -54,6 +64,12 @@ public class Address implements java.io.Serializable {
 		this.addressEn = addressEn;
 		this.complainTel = complainTel;
 		this.webSite = webSite;
+		this.authorizationStatement = authorizationStatement;
+		this.authorizationStatementEn = authorizationStatementEn;
+		this.cnasstatement = cnasstatement;
+		this.cnasstatementEn = cnasstatementEn;
+		this.standardStatement = standardStatement;
+		this.standardStatementEn = standardStatementEn;
 	}
 
 	// Property accessors
@@ -160,6 +176,54 @@ public class Address implements java.io.Serializable {
 
 	public void setWebSite(String webSite) {
 		this.webSite = webSite;
+	}
+
+	public String getAuthorizationStatement() {
+		return this.authorizationStatement;
+	}
+
+	public void setAuthorizationStatement(String authorizationStatement) {
+		this.authorizationStatement = authorizationStatement;
+	}
+
+	public String getAuthorizationStatementEn() {
+		return this.authorizationStatementEn;
+	}
+
+	public void setAuthorizationStatementEn(String authorizationStatementEn) {
+		this.authorizationStatementEn = authorizationStatementEn;
+	}
+
+	public String getCnasstatement() {
+		return this.cnasstatement;
+	}
+
+	public void setCnasstatement(String cnasstatement) {
+		this.cnasstatement = cnasstatement;
+	}
+
+	public String getCnasstatementEn() {
+		return this.cnasstatementEn;
+	}
+
+	public void setCnasstatementEn(String cnasstatementEn) {
+		this.cnasstatementEn = cnasstatementEn;
+	}
+
+	public String getStandardStatement() {
+		return this.standardStatement;
+	}
+
+	public void setStandardStatement(String standardStatement) {
+		this.standardStatement = standardStatement;
+	}
+
+	public String getStandardStatementEn() {
+		return this.standardStatementEn;
+	}
+
+	public void setStandardStatementEn(String standardStatementEn) {
+		this.standardStatementEn = standardStatementEn;
 	}
 
 }

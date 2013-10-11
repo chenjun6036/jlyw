@@ -100,14 +100,18 @@
 						},
 						{field:'AuthorizerName',title:'批准人',width:80,align:'center',
 							formatter:function(value, rowData, rowIndex){
-								if(value==null||value=="" || rowData.VerifyAndAuthorizeExcelId != rowData.ExcelId || rowData.VerifyAndAuthorizeCertificateId != rowData.CertificateId){
+								if(value=="" || rowData.VerifyAndAuthorizeExcelId != rowData.ExcelId || rowData.VerifyAndAuthorizeCertificateId != rowData.CertificateId){
 									return "";
 								}else{
 									if(rowData.AuthorizeResult == ""){		//尚未审批
 										return "<span title='尚未签字'>"+value+"</span>";
 									}
 									else if(rowData.AuthorizeResult == "1" || rowData.AuthorizeResult == 1 ){ //批准通过
-										return "<span style='color: #0033FF' title='批准时间："+rowData.AuthorizeTime+"\r\n批准结果：通过\r\n备注："+rowData.AuthorizeRemark+"'>"+value+"</span>";
+										if(rowData.IsAuthBgRuning==true){
+											return "<span style='color: #009933' title='批准时间："+rowData.AuthorizeTime+"\r\n批准结果：通过(后台签字执行中...)\r\n备注："+rowData.AuthorizeRemark+"'>"+value+"</span>";
+										}else{
+											return "<span style='color: #0033FF' title='批准时间："+rowData.AuthorizeTime+"\r\n批准结果：通过\r\n备注："+rowData.AuthorizeRemark+"'>"+value+"</span>";
+										}
 									}else{	//批准未通过
 										return "<span style='color: #FF0000' title='批准时间："+rowData.AuthorizeTime+"\r\n批准结果：未通过\r\n备注："+rowData.AuthorizeRemark+"'>"+value+"</span>";
 									}
@@ -475,6 +479,69 @@
 				rownumbers:true	,
 				pagination:false
 			});
+
+			$('#LSOriginalRecord').datagrid({
+				title:'历史原始记录',
+				width:980,
+				height:300,
+				singleSelect:true, 
+				fit: false,
+				nowrap: false,
+				striped: true,
+	//			collapsible:true,
+				url:'/jlyw/OriginalRecordServlet.do?method=21',
+	//			sortName: 'userid',
+	// 			sortOrder: 'desc',
+				remoteSort: false,
+	//			idField:'OriginalRecordId',
+				columns:[
+					[
+						{field:'CertificateCode',title:'证书编号',width:80,align:'center'},
+						{field:'Doc',title:'原始记录Excel',width:160,align:'center',
+							formatter:function(value, rowData, rowIndex){
+								if(value=="" || value==null || rowData.Doc == ""){
+									return "";
+								}else{
+									if(rowData.Doc == ""){
+										return "<span style='color: #FF0000'>未完成</span>";
+									}else{
+										return "<a style='text-decoration:underline' href='/jlyw/FileDownloadServlet.do?method=0&FileId="+rowData.Doc+"&FileType=101' target='_blank' title='点击下载该原始记录' ><span style='color: #0033FF'>"+ rowData.ExcelCode +"</span></a>"
+									}
+								}
+							}
+						},
+						{field:'Pdf',title:'原始记录PDF',width:160,align:'center',
+							formatter:function(value, rowData, rowIndex){
+								if(value=="" || value==null || rowData.Doc == ""){
+									return "";
+								}else{
+									if(rowData.Pdf == ""){
+										return "<span style='color: #FF0000'>未完成</span>";
+									}else{
+										return "<a style='text-decoration:underline' href='/jlyw/FileDownloadServlet.do?method=0&FileId="+rowData.Pdf+"&FileType=101' target='_blank' title='点击下载该原始记录' ><span style='color: #0033FF'>"+ rowData.ExcelCode +"</span></a>"
+									}
+								}
+							}
+						},
+						{field:'CertificatePdf',title:'证书PDF',width:160,align:'center',
+							formatter:function(value, rowData, rowIndex){
+								if(value=="" || value==null || rowData.CertificateDoc == ""){
+									return "";
+								}else{
+									if(rowData.CertificatePdf == ""){
+										return "<span style='color: #FF0000'>未完成</span>";
+									}else{
+										return "<a style='text-decoration:underline' href='/jlyw/FileDownloadServlet.do?method=0&FileId="+rowData.CertificatePdf+"&FileType=102' target='_blank' title='点击下载该证书' ><span style='color: #0033FF'>"+ rowData.CertificateCode +"</span></a>"
+									}
+								}
+							}
+						},
+						{field:'LastEditTime',title:'最后编辑时间',width:160,align:'center'}
+					]
+				],
+				pagination:false,
+				rownumbers:true
+			});
 			
 			doLoadCommissionSheet();
 			
@@ -515,6 +582,9 @@
 					$('#attachment_info_table').datagrid('options').queryParams={'FilesetName':''};
 					$('#attachment_info_table').datagrid('reload');
 
+					$('#LSOriginalRecord').datagrid('options').queryParams={'CommissionSheetId':''};
+					$('#LSOriginalRecord').datagrid('reload');
+
 					return $("#SearchForm").form('validate');
 				},
 				success:function(data){
@@ -553,6 +623,10 @@
 						//加载附件信息
 						$('#attachment_info_table').datagrid('options').queryParams={'FilesetName':result.CommissionObj.Attachment};
 						$('#attachment_info_table').datagrid('reload');	
+
+						//加载历史原始记录
+						$('#LSOriginalRecord').datagrid('options').queryParams={'CommissionSheetId':$('#CommissionId').val()};
+						$('#LSOriginalRecord').datagrid('reload');
 											
 					}else{
 						$.messager.alert('查询失败！',result.msg,'error');
@@ -562,7 +636,7 @@
 		}
 		
 		function printCom(){
-			Preview1(printObj);
+			Preview2(printObj);
 		}
 		
 		function goback(){
@@ -621,7 +695,7 @@
                       </td>
                       <td width="77" align="right">委托日期：</td>
                       <td width="187"  align="left"><input style="width:151px;" class="easyui-datebox" name="CommissionDate" id="CommissionDate" type="text" /></td>
-                      <td width="100"  align="right">委托单状态：</td>
+                      <td width="100"  align="right">委&nbsp;托&nbsp;单<br/>状&nbsp;&nbsp;&nbsp;&nbsp;态：</td>
                       <td width="187" align="left"><input style="width:151px;" class="easyui-combobox" name="CommissionStatus" id="CommissionStatus" editable="false"/></td>
                       <td width="120" align="right">报告形式：</td>
 					  <td width="187" align="left"><select id="ReportType" name="ReportType" style="width:152px">
@@ -693,18 +767,30 @@
                             <option selected="selected" value="1" >非强制检定</option>
                             <option value="0">强制检定</option>
                         </select>
-    
                     </td>
-                    <td align="left"><input id="Ness" name="Ness" type="checkbox" disabled="disabled"/>加&nbsp;&nbsp;急</td>
-                    <td align="left">&nbsp;</td>
+                    <td align="right">现&nbsp;&nbsp;&nbsp;&nbsp;场<br/>负&nbsp;责&nbsp;人：</td>
+                    <td align="left"><input id="LocaleCommissionStaff" name="LocaleCommissionStaff" type="text" readonly="readonly"/></td>
                 </tr>
                 <tr>
                     <td align="right">外观附件：</td>
                     <td align="left"><input id="Appearance" name="Appearance" type="text" readonly="readonly"/></td>
                     <td align="right">其他要求：</td>
                     <td align="left"><input id="OtherRequirements" name="OtherRequirements" type="text" readonly="readonly"/></td>
-                    <td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
-                    <td align="left" colspan="3"><input id="Remark" name="Remark" type="text" readonly="readonly" style="width:350px"/></td>
+                    <td align="right">台头名称：</td>
+                   	<td align="left"><input id="HeadNameName" name="HeadNameName" type="text" readonly="readonly"/></td>
+                    <td align="left" colspan = "2"><input id="Ness" name="Ness" type="checkbox" disabled="disabled"/>加&nbsp;&nbsp;急</td>
+                </tr>
+                <tr>
+                	<td align="right">派&nbsp;定&nbsp;人：</td>
+                    <td align="left"><input id="Allotee" name="Allotee" type="text" readonly="readonly"/></td>
+                    <td align="right">存放位置：</td>
+                    <td align="left"><input id="Location" name="Location" type="text" readonly="readonly"/></td>
+                    <td align="right">完工存放位置：</td>
+                    <td align="left" colspan="3"><input id="FinishLocation" name="FinishLocation" type="text" readonly="readonly"/></td>
+                </tr>
+                <tr>
+                	<td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注：</td>
+                    <td align="left" colspan="7"><input id="Remark" name="Remark" type="text" readonly="readonly" style="width:450px"/></td>
                 </tr>
                 <tr height="50">
                     <td width="300" align="right"><a class="easyui-linkbutton" iconCls="icon-print" href="javascript:void(0)" onClick="printCom()">打印委托单</a></td>
@@ -734,6 +820,9 @@
              </div>
              <div style="padding:20px;" title="委托单附件">
                 <table id="attachment_info_table" url="/jlyw/FileDownloadServlet.do?method=4&FileType=104" iconCls="icon-tip"></table>
+             </div>
+             <div style="padding:20px;" title="历史原始记录">
+                <table id="LSOriginalRecord" iconCls="icon-tip"></table>
              </div>
         </div>
 	  <!--<div id="p2" class="easyui-panel" style="width:900px;height:120px;padding:10px;"

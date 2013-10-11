@@ -154,4 +154,18 @@ private SubContractDAO m_dao = new SubContractDAO();
 			return null;
 		}
 	}
+	
+	/**
+	* 分页显示数据
+	*@param queryString:查询语句（HQL）
+	* @param arr 查询语句中?对应的值
+	* @return 分页后的数据列表- List
+	*/
+	public List findPagedAllByHQL(String queryString, int currentPage, int pageSize, List<Object> arr){
+		try{
+			return m_dao.findPageAllByHQL(queryString, currentPage, pageSize, arr);
+		}catch(Exception e){
+			return null;
+		}
+	}
 }

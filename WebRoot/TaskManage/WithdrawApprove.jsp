@@ -172,7 +172,7 @@
 				</tr>
 				<tr >
 					<td align="right">样品存放位置：</td>
-					<td align="left"><input id="Location" name="Location" style="width:150px;" type="text"></td>
+					<td align="left"><input id="Location" name="Location" style="width:150px;" type="text" class="easyui-validatebox" required="true"></td>
 					<td></td>
 				</tr>
 				<tr style="padding-top:15px" >

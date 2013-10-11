@@ -80,28 +80,28 @@
         var date1 = nowDate.getFullYear()+'/'+(nowDate.getMonth()<9?('0'+(nowDate.getMonth()+1)):(nowDate.getMonth()+1))+'/'+(nowDate.getDate()<10?('0'+nowDate.getDate()):nowDate.getDate());
 		function Mytable(){
 			LODOP.PRINT_INIT("打印控件功能演示_Lodop功能_分页打印综合表格");
-			LODOP.SET_PRINT_PAGESIZE(2,0,0,"A4");
+			LODOP.SET_PRINT_PAGESIZE(1,0,0,"A4");
 			
-			LODOP.ADD_PRINT_TABLE(80,"1%","98%",550,document.getElementById("div1").innerHTML);
+			LODOP.ADD_PRINT_TABLE(80,"1%","98%",900,document.getElementById("div1").innerHTML);
 			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 			
 			LODOP.ADD_PRINT_TEXT(20,700,135,20,"第#页/共&页");
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",2);
 			LODOP.SET_PRINT_STYLEA(0,"Horient",1);
-			LODOP.ADD_PRINT_IMAGE(20,25,115,25,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
+			LODOP.ADD_PRINT_IMAGE(10,25,55,58,"<img border='0' src='/jlyw/WebPrint/CZJL_Black_2.bmp'/>");
 			LODOP.SET_PRINT_STYLEA(0,"Stretch",1);	
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
 			
-			LODOP.ADD_PRINT_TEXT(18,300,500,20,"常州市计量测试技术研究所-预留委托单");
+			LODOP.ADD_PRINT_TEXT(18,150,500,20,"常州市计量测试技术研究所-预留委托单");
 			LODOP.SET_PRINT_STYLEA(0,"FontSize",18);
 			LODOP.SET_PRINT_STYLEA(0,"FontColor","#000000");
 			LODOP.SET_PRINT_STYLEA(0,"Bold",1);
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
 			
-			LODOP.ADD_PRINT_SHAPE(1,760,23,850,1,0,2,"#000000");
+			LODOP.ADD_PRINT_SHAPE(1,1095,23,610,1,0,2,"#000000");
 			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
 			
-			LODOP.ADD_PRINT_TEXT(750,900,400,30,"Http://www.czjl.net");
+			LODOP.ADD_PRINT_TEXT(1085,630,400,30,"http://www.czjl.net");
 			LODOP.SET_PRINT_STYLEA(0,"FontSize",12);
 			LODOP.SET_PRINT_STYLEA(000,"FontColor","#000000");
 			LODOP.SET_PRINT_STYLEA(0,"Italic",1);

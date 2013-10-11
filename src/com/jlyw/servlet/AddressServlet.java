@@ -40,10 +40,16 @@ public class AddressServlet extends HttpServlet {
 			try {
 				List<Address> addrList = addrMgr.findByVarProperty(new KeyValueWithOperator("status", 0, "="));
 				if(addrList != null){
+					int i=1;
 					for(Address addr : addrList){
 						JSONObject jsonObj = new JSONObject();
+						
 						jsonObj.put("address", addr.getAddress());
 						jsonObj.put("id", addr.getId());
+						if(i==1){
+							jsonObj.put("selected", true);
+						}
+						i++;
 						jsonArray.put(jsonObj);	
 					}
 				}
@@ -56,6 +62,7 @@ public class AddressServlet extends HttpServlet {
 			}finally{
 				resp.setContentType("text/json;charset=gbk");
 				resp.getWriter().write(jsonArray.toString());
+				//System.out.println(jsonArray.toString());
 			}
 			break;
 		case 1: //查询所有的计量所单位的台头名称
@@ -63,10 +70,17 @@ public class AddressServlet extends HttpServlet {
 			try {
 				List<Address> addrList = addrMgr.findByVarProperty(new KeyValueWithOperator("status", 0, "="));
 				if(addrList != null){
+					int i=1;
 					for(Address addr : addrList){
 						JSONObject jsonObj = new JSONObject();
+						
 						jsonObj.put("headname", addr.getHeadName());	//台头名称
+						jsonObj.put("address", addr.getAddress());
 						jsonObj.put("id", addr.getId());
+						if(i==1){
+							jsonObj.put("selected", true);
+						}
+						i++;
 						jsonArray1.put(jsonObj);	
 					}
 				}
@@ -132,6 +146,12 @@ public class AddressServlet extends HttpServlet {
 						option.put("ComplainTel", addr.getComplainTel());
 						option.put("WebSite", addr.getWebSite());
 						option.put("Status", addr.getStatus());
+						option.put("AuthorizationStatement", addr.getAuthorizationStatement());
+						option.put("AuthorizationStatementEn", addr.getAuthorizationStatementEn());
+						option.put("CNASStatement", addr.getCnasstatement());
+						option.put("CNASStatementEn", addr.getCnasstatementEn());
+						option.put("StandardStatement", addr.getStandardStatement());
+						option.put("StandardStatementEn", addr.getStandardStatementEn());
 						
 						options.put(option);
 					}
@@ -233,6 +253,12 @@ public class AddressServlet extends HttpServlet {
 		String ZipCode = req.getParameter("ZipCode");
 		String ComplainTel = req.getParameter("ComplainTel");
 		String WebSite = req.getParameter("WebSite");
+		String AuthorizationStatement = req.getParameter("AuthorizationStatement");
+		String CNASStatement = req.getParameter("CNASStatement");
+		String StandardStatement = req.getParameter("StandardStatement");
+		String AuthorizationStatementEn = req.getParameter("AuthorizationStatementEn");
+		String CNASStatementEn = req.getParameter("CNASStatementEn");
+		String StandardStatementEn = req.getParameter("StandardStatementEn");
 		
 		addr.setName(Name);
 		addr.setAddress(Address);
@@ -246,6 +272,12 @@ public class AddressServlet extends HttpServlet {
 		addr.setZipCode(ZipCode);
 		addr.setComplainTel(ComplainTel);
 		addr.setWebSite(WebSite);
+		addr.setAuthorizationStatement(AuthorizationStatement);
+		addr.setCnasstatement(CNASStatement);
+		addr.setStandardStatement(StandardStatement);
+		addr.setAuthorizationStatementEn(AuthorizationStatementEn);
+		addr.setCnasstatementEn(CNASStatementEn);
+		addr.setStandardStatementEn(StandardStatementEn);
 		
 		return addr;
 	}

@@ -264,12 +264,13 @@ private LocaleApplianceItemDAO m_dao = new LocaleApplianceItemDAO();
 				
 				m_dao.save(localeApplianceItem);				
 			}
-			driVeDAO.save(drivingvehicle);
-			VehicleMission veMission=new VehicleMission();
-			veMission.setDrivingVehicle(drivingvehicle);
-			veMission.setLocaleMission(localeMission);
-			veMIDAO.save(veMission);
-			
+			if(drivingvehicle!=null){
+				driVeDAO.save(drivingvehicle);
+				VehicleMission veMission=new VehicleMission();
+				veMission.setDrivingVehicle(drivingvehicle);
+				veMission.setLocaleMission(localeMission);
+				veMIDAO.save(veMission);
+			}
 			tran.commit();
 			return true;
 		} catch (Exception e) {
